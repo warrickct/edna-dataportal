@@ -185,6 +185,7 @@ class SampleQuery:
             result = q.all()
             if mutate_result:
                 result = mutate_result(result)
+                # Warrick: comment out cache for testing
             cache.set(key, result)
         return result
 
