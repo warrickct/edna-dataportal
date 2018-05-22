@@ -229,7 +229,9 @@ class DataImporter:
                 os.chmod(fname, 0o644)
                 logger.warning("writing out taxonomy data to CSV tempfile: %s" % fname)
                 w = csv.writer(temp_fd)
+                # w: creates header for the temp file.
                 w.writerow(['id', 'code', 'kingdom_id', 'phylum_id', 'class_id', 'order_id', 'family_id', 'genus_id', 'species_id', 'amplicon_id'])
+                # w: For every row in the .taxonomy file starting at 1 (Not 0) do the following.
                 for _id, row in enumerate(_taxon_rows_iter(), 1):
                     otu_lookup[otu_hash(row['otu'])] = _id
                     out_row = [_id, row['otu']]
@@ -247,7 +249,10 @@ class DataImporter:
             os.unlink(fname)
         return otu_lookup
 
+    
     def load_soil_contextual_metadata(self):
+        """Loads the soil.xlsx into rows variable. Then maps the soil ontologies to the rows"""
+
         logger.warning("loading Soil contextual metadata")
 
         def _make_context():
@@ -274,6 +279,8 @@ class DataImporter:
         self._session.commit()
 
     def load_marine_contextual_metadata(self):
+        """Loads the marine.xlsx into rows variable. Then maps the marine ontologies to the rows"""
+
         logger.warning("loading Marine contextual metadata")
 
         def _make_context():

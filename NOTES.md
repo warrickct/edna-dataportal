@@ -73,3 +73,21 @@ http://localhost:8000/ (should be at least). Also there's a /log and /tables sub
 5. Calls importer functions. One function creates a lookup table
 
 When I ran the ingest command using just the /data directory as the path (therefore including the gavin water data files) I got the error index not found from function load_soil_metadata in importer.py so I'm assuming I will actually need to alter something here.
+
+## The way the ingester works (when running the ingester script)
+
+1. loads in the marine and soil contextual data.
+
+2. First pass on the .taxonomy file it defines ontologies
+
+3. Second pass on .taxonomy file it defines OTUs
+
+4. Writes a new file temporarily stores taxonomy data for processing which tuples looks like this: 215520,AA ... GTGC,2,65,197,466,848,2754,1,1
+
+5. Reads through the .taxonomy file once again and references the temp taxonomy data file on step 4.
+
+6. Now goes though OTU abundance tables (/data/2018-03/16S/AMD_16S_table_20180223.txt). Does two passes for some reason.
+
+7. Writes OTU abundance data to new csv tempfile /data/bpaotu-6ig_m8up
+
+8. Loads in the data from the step 7 temp file into the database I think?
