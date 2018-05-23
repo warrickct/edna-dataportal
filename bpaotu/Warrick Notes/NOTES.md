@@ -1,30 +1,32 @@
 
-# Set up editor
+# Grahame's Notes
+
+## Set up editor
 
 cd ~/bpaotu
 . ~/venv/bin/activate
 code .
 
-# Start app
+## Start app
 
 Grahame's instruction: docker-compose up
 (Make sure you're in the ~/bpaotu directory)
 
-# Copy in the data:
+## Copy in the data
 
 cp -r /path/to/2018-03 ./data/dev/
 
-# Extract whichever amplicon
+## Extract whichever amplicon
 
 cd data/dev/2018-03
 tar xzvf 16S.tar.gz
 
-# Run the ingest
+## Run the ingest
 
 docker-compose exec runserver bash
 /app/docker-entrypoint.sh django-admin otu_ingest /data/2018-03/
 
-# Getting into the DB
+## Getting into the DB
 
 warrick@warrick-OptiPlex-9030-AIO:~/bpaotu$ docker-compose exec db bash
 root@d24533722fbf:/# psql -U postgres webapp
@@ -35,32 +37,32 @@ Get into the OTU schema (SQLAlchemy rather than Django)
 webapp=# set search_path=otu;
 webapp=# \dt
 
-# TODO
+## TODO
 
 Edit otu.py columns to accommodate our data
 Edit query.py (gradual filtering etc) to accommodate our data
 Create autofills for known categories from our data.
 
-## Sub-todo
+### Sub-todo
 
 * Find out if importer.py or otu_ingest.py need to be altered for when our data is imported. Examine how their settings are determined.
 
-# Django files
+## Django files
 
 otu.py - responsible for sorting the ingested data into columns for the database schema.
 query.py - uses SQLAlchemy to generate iterative queries. Useful for joining queries together.
 
-# Docker things
+## Docker things
 
 /app/docker-entrypoint.sh django-admin otu_ingest /data/2018-03/ basically clears out the adundance and contextual databases and replaces it with a new one made from the importer + the data specified.
 
-# Website for testing
+## Website for testing
 
-http://localhost:8000/ (should be at least). Also there's a /log and /tables subdirectory that show some dev things.
+<http://localhost:8000/> (should be at least). Also there's a /log and /tables subdirectory that show some dev things.
 
-# Details
+## Details
 
-## Ingesting the data
+### Ingesting the data
 
 1. not 100% sure what docker-cmpose exec runserver does. Runserver is within one of the docker compose files though.
 
@@ -74,7 +76,7 @@ http://localhost:8000/ (should be at least). Also there's a /log and /tables sub
 
 When I ran the ingest command using just the /data directory as the path (therefore including the gavin water data files) I got the error index not found from function load_soil_metadata in importer.py so I'm assuming I will actually need to alter something here.
 
-## The way the ingester works (when running the ingester script)
+### The way the ingester works (when running the ingester script)
 
 1. loads in the marine and soil contextual data.
 
