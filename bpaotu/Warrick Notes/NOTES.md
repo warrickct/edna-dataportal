@@ -8,7 +8,7 @@ code .
 # Start app
 
 Grahame's instruction: docker-compose up
-Me: Does he mean ./develop.sh up?
+(Make sure you're in the ~/bpaotu directory)
 
 # Copy in the data:
 
