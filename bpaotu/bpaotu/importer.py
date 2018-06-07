@@ -386,17 +386,15 @@ class DataImporter:
         have_bpaids = set([t[0] for t in self._session.query(SampleContext.id)])
         # logger.warning(have_bpaids) #{'KKP', 'LG', 'OT', ...}
         
-        def _missing_bpa_ids(fname):
-            have_bpaids = set([t[0] for t in self._session.query(SampleContext.id)])
-            with open(fname, 'r') as fd:
-                bpa_ids, _ = otu_rows(fd)
-                for bpa_id in bpa_ids:
-                    if bpa_id not in have_bpaids:
-                        yield bpa_id
-
-
+        # w: not going to handle missing cases yet
+        #  w: todo: make the PK for the otu table the otu name for now. Restructure the SampleOTU table to sampleContext.id (string), otu.code(string), value. Might also have to make changes to SampleContext waterdata loader
+        _make_sample_otus():
+            logger.warning("making sample otus start")
+            for row in rows:
+                logger.warning("iterate through site colulmns")                
             
-        
+        rows = glob(self._import_base + '/waterdata/data/*.tsv')[0]
+
 
     # w: Creates the abundance data, aka the combined data of the otu and it's abundance
     def load_otu_abundance(self, otu_lookup):
