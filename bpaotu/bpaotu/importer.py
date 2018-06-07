@@ -33,6 +33,8 @@ from .otu import (
     OTUFamily,
     OTUGenus,
     OTUSpecies,
+    # w: Including OTU to write directly to it.
+    OTU,
     SampleContext,
     SampleHorizonClassification,
     SampleStorageMethod,
@@ -181,8 +183,40 @@ class DataImporter:
         r.update((t, pl['Marine']) for t in marine_only)
         return r
 
+    # w: custom taxonomy loader
+    def load_waterdata_taxonomies(self):
+        logger.warning("Loading custom waterdata taxonomies")
+
+        def _make_taxonomy():
+            # w: iterate the metadata. Take name, x, y and then yield it.
+            file = open(rows, "r")
+            reader = csv.DictReader(file, delimiter='\t')
+            for index, row in enumerate(reader):
+                # w: corresponds to species name
+                logger.warning(row[''])
+                # w: simple primary key based on row index for now. Starts at 1
+                logger.warning(index + 1)
+                attrs = {
+                    'id': index,
+                    'code': row[''],
+                }
+                logger.warning(attrs)
+                #w: pass my little triple field tuple into SampleContext.
+                yield OTU(**attrs)
+
+        logger.warning("loading in waterdata contextual instead")
+        rows = glob(self._import_base + '/waterdata/data/*.tsv')[0]
+        self._session.bulk_save_objects(_make_taxonomy())
+        self._session.commit()
+
     def load_taxonomies(self):
+        '''
+        Loads up the taxonomies.
+        '''
         # md5(otu code) -> otu ID, returned
+
+        # w: simple redirect to custom waterdata method
+        self.load_waterdata_taxonomies()
 
         otu_lookup = {}
         ontologies = OrderedDict([
@@ -202,6 +236,10 @@ class DataImporter:
                 imported = 0
                 with open(fname) as fd:
                     for row in csv.reader(fd, dialect='excel-tab'):
+                        # w: START: shortcut the taxon for testing
+                        if imported > 50:
+                            break
+                        # w:END:
                         if row[0].startswith('#'):
                             continue
                         otu = row[0]
@@ -255,6 +293,9 @@ class DataImporter:
 
         logger.warning("loading Soil contextual metadata")
 
+        # w: Skipping this for testing.
+        return
+
         def _make_context():
             for row in rows:
                 bpa_id = row['bpa_id']
@@ -278,8 +319,38 @@ class DataImporter:
         self._session.bulk_save_objects(_make_context())
         self._session.commit()
 
+    # w: Made simple method for import water data .tsv file.
+    def load_waterdata_contextual_metadata(self):
+        '''
+        w: Custom waterdata loading
+        '''
+
+        def _make_context():
+            # w: iterate the metadata. Take name, x, y and then yield it.
+            file = open(rows, "r")
+            reader = csv.DictReader(file, delimiter='\t')
+            for row in reader:
+                # logger.warning(row)
+                attrs = {
+                    'id': row['site'],
+                    'x': row['x'],
+                    'y': row['y']
+                }
+                logger.warning(attrs)
+                #w: pass my little triple field tuple into SampleContext.
+                yield SampleContext(**attrs)
+
+        logger.warning("loading in waterdata contextual instead")
+        rows = glob(self._import_base + '/waterdata/metadata/*.tsv')[0]
+        self._session.bulk_save_objects(_make_context())
+        self._session.commit()
+        
     def load_marine_contextual_metadata(self):
         """Loads the marine.xlsx into rows variable. Then maps the marine ontologies to the rows"""
+
+        # w: simple redirect/short circuit
+        self.load_waterdata_contextual_metadata()
+        return
 
         logger.warning("loading Marine contextual metadata")
 
@@ -305,6 +376,8 @@ class DataImporter:
         mappings = self._load_ontology(DataImporter.marine_ontologies, rows)
         self._session.bulk_save_objects(_make_context())
         self._session.commit()
+
+    # TODO: Create a combination table. sample id, site fk, otu fk, value
 
     def load_otu_abundance(self, otu_lookup):
         def otu_rows(fd):
