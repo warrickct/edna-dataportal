@@ -382,8 +382,20 @@ class DataImporter:
     # w:TODO: Create a combination table. sample id, site fk, otu fk, value
     def load_waterdata_otu_abundance(self):
         logger.warning("Running custom waterdata abundance loader")
+        # w: returns a list of all the site ids.
         have_bpaids = set([t[0] for t in self._session.query(SampleContext.id)])
-        logger.warning(have_bpaids) #{'KKP', 'LG', 'OT', ...}
+        # logger.warning(have_bpaids) #{'KKP', 'LG', 'OT', ...}
+        
+        def _missing_bpa_ids(fname):
+            have_bpaids = set([t[0] for t in self._session.query(SampleContext.id)])
+            with open(fname, 'r') as fd:
+                bpa_ids, _ = otu_rows(fd)
+                for bpa_id in bpa_ids:
+                    if bpa_id not in have_bpaids:
+                        yield bpa_id
+
+
+            
         
 
     # w: Creates the abundance data, aka the combined data of the otu and it's abundance
@@ -407,6 +419,7 @@ class DataImporter:
                 pass
             return bpa_ids, reader
 
+        # w: grabs all the site ids in the database, compares to the ones in the file. Adds the missing ones to the site table.
         def _missing_bpa_ids(fname):
             have_bpaids = set([t[0] for t in self._session.query(SampleContext.id)])
             with open(fname, 'r') as fd:
