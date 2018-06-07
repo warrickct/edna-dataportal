@@ -193,14 +193,14 @@ class DataImporter:
             reader = csv.DictReader(file, delimiter='\t')
             for index, row in enumerate(reader):
                 # w: corresponds to species name
-                logger.warning(row[''])
+                # logger.warning(row[''])
                 # w: simple primary key based on row index for now. Starts at 1
-                logger.warning(index + 1)
+                # logger.warning(index + 1)
                 attrs = {
                     'id': index,
                     'code': row[''],
                 }
-                logger.warning(attrs)
+                # logger.warning(attrs)
                 #w: pass my little triple field tuple into SampleContext.
                 yield OTU(**attrs)
 
@@ -212,11 +212,13 @@ class DataImporter:
     def load_taxonomies(self):
         '''
         Loads up the taxonomies.
+        w: It does this by taking .taxonomy and the codes as input, making a csv then executing a postgres COPY command to transfer the temp.csv data into the OTU table.
         '''
         # md5(otu code) -> otu ID, returned
 
-        # w: simple redirect to custom waterdata method
+        # w: TEMP: simple redirect to custom waterdata method
         self.load_waterdata_taxonomies()
+        return
 
         otu_lookup = {}
         ontologies = OrderedDict([
@@ -336,7 +338,7 @@ class DataImporter:
                     'x': row['x'],
                     'y': row['y']
                 }
-                logger.warning(attrs)
+                # logger.warning(attrs)
                 #w: pass my little triple field tuple into SampleContext.
                 yield SampleContext(**attrs)
 
@@ -348,7 +350,7 @@ class DataImporter:
     def load_marine_contextual_metadata(self):
         """Loads the marine.xlsx into rows variable. Then maps the marine ontologies to the rows"""
 
-        # w: simple redirect/short circuit
+        # w: TEMP: simple redirect/short circuit
         self.load_waterdata_contextual_metadata()
         return
 
@@ -377,9 +379,21 @@ class DataImporter:
         self._session.bulk_save_objects(_make_context())
         self._session.commit()
 
-    # TODO: Create a combination table. sample id, site fk, otu fk, value
+    # w:TODO: Create a combination table. sample id, site fk, otu fk, value
+    def load_waterdata_otu_abundance(self):
+        logger.warning("Running custom waterdata abundance loader")
+        have_bpaids = set([t[0] for t in self._session.query(SampleContext.id)])
+        logger.warning(have_bpaids) #{'KKP', 'LG', 'OT', ...}
+        
 
+    # w: Creates the abundance data, aka the combined data of the otu and it's abundance
     def load_otu_abundance(self, otu_lookup):
+        
+        # w:TEMP: redirect to customer waterdata method. I do this instead of just changing the otu_ingest method directly incase I forget that I edited that file (for now)
+        logger.warning("loading_otu_abundance redirecting to waterdata_abundance loader")
+        self.load_waterdata_otu_abundance()
+        return
+        
         def otu_rows(fd):
             reader = csv.reader(fd, dialect='excel-tab')
             header = next(reader)
@@ -422,6 +436,7 @@ class DataImporter:
                         yield [bpa_id, otu_id, count]
                 ImportFileLog.make_file_log(fname, file_type='Abundance', rows_imported=imported, rows_skipped=0)
 
+        # w: Goes through all the .txt files
         logger.warning('Loading OTU abundance tables')
         missing_bpa_ids = set()
         for fname in glob(self._import_base + '/*/*.txt'):
