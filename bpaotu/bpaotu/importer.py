@@ -404,7 +404,7 @@ class DataImporter:
                         bpa_id = column
                         count = row[column]
                         try:
-                            count = int(count)
+                            count = float(count)
                         except:
                             logger.warning('count invalid, defaulting to 0')
                             count = 0

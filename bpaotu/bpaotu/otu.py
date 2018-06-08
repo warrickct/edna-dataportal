@@ -238,7 +238,10 @@ class SampleOTU(SchemaMixin, Base):
     # w: TEST: testing if I can jsut use the bacteria name as the FK for now.
     otu_id = Column(String, ForeignKey(SCHEMA + '.otu.code'), primary_key=True)
 
-    count = Column(Integer, nullable=False)
+    # w: custom column dealing with float abundance instead of int count.
+    count = Column(Float, nullable=False)
+
+    # count = Column(Integer, nullable=False)
 
     # w: think I have to make this represent as strings too
     # def __repr__(self):
