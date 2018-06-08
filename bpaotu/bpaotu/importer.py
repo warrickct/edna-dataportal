@@ -36,8 +36,6 @@ from .otu import (
 
     # w: Including OTU to write directly to it.
     OTU,
-    # w: Including SampleOTU as well because he uses COPY TO command
-    SampleOTU,
 
     SampleContext,
     SampleHorizonClassification,
@@ -411,9 +409,6 @@ class DataImporter:
                         logger.warning(column)
                         logger.warning(count)
                         yield [bpa_id, otu_id, count]
-                        
-
-
 
         with tempfile.NamedTemporaryFile(mode='w', dir='/data', prefix='bpaotu-', delete=False) as temp_fd:
             fname = temp_fd.name
