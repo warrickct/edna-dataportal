@@ -96,9 +96,15 @@ class OTUSpecies(OntologyMixin, Base):
 
 class OTU(SchemaMixin, Base):
     __tablename__ = 'otu'
-    id = Column(Integer, primary_key=True)
+
+    # w: commenting out the id being the pk for now.
+    # id = Column(Integer, primary_key=True)
+
+    # w: replacement id column without being pk
+    id = Column(Integer)
+
     # w: will just steal this already made code field to store the taxonomy name
-    code = Column(String(length=1024))  # long GATTACAt-ype string
+    code = Column(String(length=1024), primary_key=True)  # long GATTACAt-ype string
 
     # we query OTUs via heirarchy, so indexes on the first few
     # layers are sufficient
@@ -227,11 +233,20 @@ class SampleOTU(SchemaMixin, Base):
     '''
     __tablename__ = 'sample_otu'
     sample_id = Column(String, ForeignKey(SCHEMA + '.sample_context.id'), primary_key=True)
-    otu_id = Column(Integer, ForeignKey(SCHEMA + '.otu.id'), primary_key=True)
+
+    # otu_id = Column(Integer, ForeignKey(SCHEMA + '.otu.id'), primary_key=True)
+    # w: TEST: testing if I can jsut use the bacteria name as the FK for now.
+    otu_id = Column(String, ForeignKey(SCHEMA + '.otu.code'), primary_key=True)
+
     count = Column(Integer, nullable=False)
 
+    # w: think I have to make this represent as strings too
+    # def __repr__(self):
+    #     return "<SampleOTU(%d,%d,%d)>" % (self.sample_id, self.otu_id, self.count)
+
+    # TEMP: 
     def __repr__(self):
-        return "<SampleOTU(%d,%d,%d)>" % (self.sample_id, self.otu_id, self.count)
+        return "<SampleOTU(%s,%s,%d)>" % (self.sample_id, self.otu_id, self.count)
 
 
 def make_engine():

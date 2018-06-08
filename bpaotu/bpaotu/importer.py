@@ -33,8 +33,12 @@ from .otu import (
     OTUFamily,
     OTUGenus,
     OTUSpecies,
+
     # w: Including OTU to write directly to it.
     OTU,
+    # w: Including SampleOTU as well because he uses COPY TO command
+    SampleOTU,
+
     SampleContext,
     SampleHorizonClassification,
     SampleStorageMethod,
@@ -333,8 +337,10 @@ class DataImporter:
             reader = csv.DictReader(file, delimiter='\t')
             for row in reader:
                 # logger.warning(row)
+                # w: Had to make the site_id uppercase to match abundance data.
+                site_id = row['site'].upper()
                 attrs = {
-                    'id': row['site'],
+                    'id': site_id,
                     'x': row['x'],
                     'y': row['y']
                 }
@@ -385,15 +391,78 @@ class DataImporter:
         # w: returns a list of all the site ids.
         have_bpaids = set([t[0] for t in self._session.query(SampleContext.id)])
         # logger.warning(have_bpaids) #{'KKP', 'LG', 'OT', ...}
+
+        def _make_sample_otus():
+            path = glob(self._import_base + '/waterdata/data/*.tsv')[0]
+            file = open(path, 'r')
+            reader = csv.DictReader(file, delimiter='\t')
+            to_make = {}
+            for row in reader:
+                otu_id = row['']
+                for column in row:
+                    if column != '':
+                        bpa_id = column
+                        count = row[column]
+                        try:
+                            count = int(count)
+                        except:
+                            logger.warning('count invalid, defaulting to 0')
+                            count = 0
+                        logger.warning(column)
+                        logger.warning(count)
+                        yield [bpa_id, otu_id, count]
+                        
+
+
+
+        with tempfile.NamedTemporaryFile(mode='w', dir='/data', prefix='bpaotu-', delete=False) as temp_fd:
+            fname = temp_fd.name
+            os.chmod(fname, 0o644)
+            logger.warning("writing out waterdata otu abundance to csv tempfile: %s" % fname)
+            w = csv.writer(temp_fd)
+            w.writerow(['sample_id', 'otu_id', 'count'])
+            # w: got the headers set up so just iterate the .tsv
+            w.writerows(_make_sample_otus())
+            try:
+                self._engine.execute(
+                    text('''COPY otu.sample_otu from :csv CSV header''')
+                    .execution_options(autocommit=True),
+                    csv=fname
+                )
+            except:
+                logger.critical("unable to import")
+                traceback.print_exc()
+
         
         # w: not going to handle missing cases yet
         #  w: todo: make the PK for the otu table the otu name for now. Restructure the SampleOTU table to sampleContext.id (string), otu.code(string), value. Might also have to make changes to SampleContext waterdata loader
-        _make_sample_otus():
-            logger.warning("making sample otus start")
-            for row in rows:
-                logger.warning("iterate through site colulmns")                
+        # def _make_sample_otus():
+        #     logger.warning("making sample otus start")
+        #     file = open(path, "r")
+        #     reader = csv.DictReader(file, delimiter='\t')
+        #     for row in reader:
+        #         otu_code = row['']
+        #         logger.warning(otu_code)
+        #         for column in row:
+        #             if (column != otu_code):
+        #                 site_id = column
+        #                 count = row[column]
+        #                 logger.warning(count)
+        #                 attrs = {
+        #                     'id': site_id,
+        #                     'otu_id': otu_code,
+        #                     'count': 0,
+        #                 }
+        #                 yield SampleOTU(**attrs)
+
+        
+
             
-        rows = glob(self._import_base + '/waterdata/data/*.tsv')[0]
+        # path = glob(self._import_base + '/waterdata/data/*.tsv')[0]
+        # self._session.bulk_save_objects(_make_sample_otus())
+        # self._session.commit()
+
+
 
 
     # w: Creates the abundance data, aka the combined data of the otu and it's abundance
