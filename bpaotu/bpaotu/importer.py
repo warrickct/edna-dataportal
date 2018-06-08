@@ -332,17 +332,21 @@ class DataImporter:
         w: Custom waterdata loading
         '''
 
-        def _clean_fields(field):
+        def _clean_field(field):
             replacements = [
+                ('\s', '_'),
                 ('&', '_and_'),
                 ('/', '_or_'),
-                ('mmmmm', '_or_'),
-                ('/', '_or_'),
+                ('-', '_dash_'),
+                ('\(|\)', '_bracket_'),
+                ('_{2,}', '_'),
             ]
 
             for old, new in replacements:
                 field = re.sub(old, new, field)
-                field.upper()
+            field.lower()
+            field = '_' + field
+            logger.warning(field)
             return field
 
         def _make_context2():
@@ -356,7 +360,7 @@ class DataImporter:
                 site_id = row['site'].upper()
                 attrs ={}
                 for field in row:
-                      
+                      _clean_field(field)
                 # logger.warning(attrs)
                 yield SampleContext(**attrs)
 
