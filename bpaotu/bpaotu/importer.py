@@ -52,6 +52,9 @@ from .otu import (
     SCHEMA,
     make_engine)
 
+# w: Another custom import
+import re
+
 
 logger = logging.getLogger("rainbow")
 
@@ -329,12 +332,42 @@ class DataImporter:
         w: Custom waterdata loading
         '''
 
+        def _clean_fields(field):
+            replacements = [
+                ('&', '_and_'),
+                ('/', '_or_'),
+                ('mmmmm', '_or_'),
+                ('/', '_or_'),
+            ]
+
+            for old, new in replacements:
+                field = re.sub(old, new, field)
+                field.upper()
+            return field
+
+        def _make_context2():
+            # w: iterate the metadata. Take name, x, y and then yield it.
+            file = open(rows, "r")
+            reader = csv.DictReader(file, delimiter='\t')
+            for row in reader:
+                # logger.warning(row)
+                # TODO: Add the additional metadata columns. Probably best to iterate through it.
+                # w: Had to make the site_id uppercase to match abundance data.
+                site_id = row['site'].upper()
+                attrs ={}
+                for field in row:
+                      
+                # logger.warning(attrs)
+                yield SampleContext(**attrs)
+
+        # TEMP:
         def _make_context():
             # w: iterate the metadata. Take name, x, y and then yield it.
             file = open(rows, "r")
             reader = csv.DictReader(file, delimiter='\t')
             for row in reader:
                 # logger.warning(row)
+                # TODO: Add the additional metadata columns. Probably best to iterate through it.
                 # w: Had to make the site_id uppercase to match abundance data.
                 site_id = row['site'].upper()
                 attrs = {
@@ -343,18 +376,18 @@ class DataImporter:
                     'y': row['y']
                 }
                 # logger.warning(attrs)
-                #w: pass my little triple field tuple into SampleContext.
                 yield SampleContext(**attrs)
 
         logger.warning("loading in waterdata contextual instead")
         rows = glob(self._import_base + '/waterdata/metadata/*.tsv')[0]
-        self._session.bulk_save_objects(_make_context())
+        # TEMP: testing automated field generation
+        self._session.bulk_save_objects(_make_context2())
         self._session.commit()
         
     def load_marine_contextual_metadata(self):
         """Loads the marine.xlsx into rows variable. Then maps the marine ontologies to the rows"""
 
-        # w: TEMP: simple redirect/short circuit
+        # w:TEMP: simple redirect/short circuit
         self.load_waterdata_contextual_metadata()
         return
 
@@ -383,10 +416,11 @@ class DataImporter:
         self._session.bulk_save_objects(_make_context())
         self._session.commit()
 
-    # w:TODO: Create a combination table. sample id, site fk, otu fk, value
     def load_waterdata_otu_abundance(self):
         logger.warning("Running custom waterdata abundance loader")
-        # w: returns a list of all the site ids.
+        # w:todo: returns a list of all the site ids.
+        # w:todo: Make it reference otu id instead of the name. Will mean I need to use the "otu_lookup" hashtable/dictionary.
+        # w:todo: Handle errors (missing sites/otus/invalid values).
         have_bpaids = set([t[0] for t in self._session.query(SampleContext.id)])
         # logger.warning(have_bpaids) #{'KKP', 'LG', 'OT', ...}
 
@@ -427,38 +461,6 @@ class DataImporter:
             except:
                 logger.critical("unable to import")
                 traceback.print_exc()
-
-        
-        # w: not going to handle missing cases yet
-        #  w: todo: make the PK for the otu table the otu name for now. Restructure the SampleOTU table to sampleContext.id (string), otu.code(string), value. Might also have to make changes to SampleContext waterdata loader
-        # def _make_sample_otus():
-        #     logger.warning("making sample otus start")
-        #     file = open(path, "r")
-        #     reader = csv.DictReader(file, delimiter='\t')
-        #     for row in reader:
-        #         otu_code = row['']
-        #         logger.warning(otu_code)
-        #         for column in row:
-        #             if (column != otu_code):
-        #                 site_id = column
-        #                 count = row[column]
-        #                 logger.warning(count)
-        #                 attrs = {
-        #                     'id': site_id,
-        #                     'otu_id': otu_code,
-        #                     'count': 0,
-        #                 }
-        #                 yield SampleOTU(**attrs)
-
-        
-
-            
-        # path = glob(self._import_base + '/waterdata/data/*.tsv')[0]
-        # self._session.bulk_save_objects(_make_sample_otus())
-        # self._session.commit()
-
-
-
 
     # w: Creates the abundance data, aka the combined data of the otu and it's abundance
     def load_otu_abundance(self, otu_lookup):
