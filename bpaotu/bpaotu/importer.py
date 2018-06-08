@@ -344,7 +344,8 @@ class DataImporter:
 
             for old, new in replacements:
                 field = re.sub(old, new, field)
-            field.lower()
+            field = field.lower()
+            logger.warning(field)
             field = '_' + field
             logger.warning(field)
             return field
@@ -359,9 +360,10 @@ class DataImporter:
                 # w: Had to make the site_id uppercase to match abundance data.
                 site_id = row['site'].upper()
                 attrs ={}
-                for field in row:
-                      _clean_field(field)
-                # logger.warning(attrs)
+                for field, value in row.items():
+                      cleaned_field = _clean_field(field)
+                      attrs[cleaned_field] = value
+                logger.warning(attrs)
                 yield SampleContext(**attrs)
 
         # TEMP:
