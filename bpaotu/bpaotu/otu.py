@@ -230,7 +230,7 @@ class SampleContext(SchemaMixin, Base):
 
     # w:TODO: REGEX THIS
     # TEST: (commenting out site as it's not a float)
-    # _site = Column(Float)
+    _site = Column(String)
     _x = Column(Float)
     _y = Column(Float)
     _road_len = Column(Float)

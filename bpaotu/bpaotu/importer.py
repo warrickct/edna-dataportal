@@ -345,9 +345,9 @@ class DataImporter:
             for old, new in replacements:
                 field = re.sub(old, new, field)
             field = field.lower()
-            logger.warning(field)
+            # logger.warning(field)
             field = '_' + field
-            logger.warning(field)
+            # logger.warning(field)
             return field
 
         def _make_context2():
@@ -361,8 +361,9 @@ class DataImporter:
                 site_id = row['site'].upper()
                 attrs ={}
                 for field, value in row.items():
-                      cleaned_field = _clean_field(field)
-                      attrs[cleaned_field] = value
+                    logger.warning(row)
+                    cleaned_field = _clean_field(field)
+                    attrs[cleaned_field] = value
                 logger.warning(attrs)
                 yield SampleContext(**attrs)
 
@@ -444,10 +445,10 @@ class DataImporter:
                         try:
                             count = float(count)
                         except:
-                            logger.warning('count invalid, defaulting to 0')
+                            # logger.warning('count invalid, defaulting to 0')
                             count = 0
-                        logger.warning(column)
-                        logger.warning(count)
+                        # logger.warning(column)
+                        # logger.warning(count)
                         yield [bpa_id, otu_id, count]
 
         with tempfile.NamedTemporaryFile(mode='w', dir='/data', prefix='bpaotu-', delete=False) as temp_fd:
