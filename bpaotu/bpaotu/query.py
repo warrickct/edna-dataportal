@@ -445,4 +445,4 @@ def apply_otu_filter(otu_attr, q, op_and_val):
 
 apply_amplicon_filter = partial(apply_otu_filter, 'amplicon_id')
 # w: applied quickfix to query
-apply_environment_filter = partial(apply_op_and_val_filter, SampleContext.x)
+apply_environment_filter = partial(apply_op_and_val_filter, SampleContext._x)
