@@ -243,7 +243,7 @@ class DataImporter:
                 imported = 0
                 with open(fname) as fd:
                     for row in csv.reader(fd, dialect='excel-tab'):
-                        # w: START: shortcut the taxon for testing
+                        # w:START: shortcut the taxon for testing
                         if imported > 50:
                             break
                         # w:END:
@@ -366,7 +366,7 @@ class DataImporter:
                 logger.warning(attrs)
                 yield SampleContext(**attrs)
 
-        # TEMP:
+        # TEMP: Testing with hardcoded fields. Won't work if context class doesn't match.
         def _make_context():
             # w: iterate the metadata. Take name, x, y and then yield it.
             file = open(rows, "r")

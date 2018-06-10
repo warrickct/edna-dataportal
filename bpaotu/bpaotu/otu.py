@@ -200,12 +200,13 @@ class SampleContext(SchemaMixin, Base):
     # # as required we can work with the project managers to resolve data quality issues which force
     # # use to use a CIText column
 
-    # w: primary key example = "ABK"
-    id = Column(String, primary_key=True)
+    # w: Making the row iteration the site id now.
+    id = Column(Integer, primary_key=True)
 
     # w: trying to keep meta fields simple for now.
-    x = with_units('lng', Float)
-    y = with_units('lat', Float)
+    # w: no longer using these fields as they're included in the large column set below
+    # x = with_units('lng', Float)
+    # y = with_units('lat', Float)
 
     # w: example  columns
     # a16s_comment = Column(CIText)
@@ -224,11 +225,12 @@ class SampleContext(SchemaMixin, Base):
     \(|\) -> '_bracket_'
     '__' -> '_' (from 1+ to 1.)
     Made all lowercase for consistency
-    prepend underscore to avoid keyword conflicts.
+    prepend underscore to var name to avoid keyword conflicts (OR) was causing issue.
     '''
 
     # w:TODO: REGEX THIS
-    _site = Column(Float)
+    # TEST: (commenting out site as it's not a float)
+    # _site = Column(Float)
     _x = Column(Float)
     _y = Column(Float)
     _road_len = Column(Float)
@@ -372,25 +374,28 @@ class SampleOTU(SchemaMixin, Base):
     Combined table + site abundance values.
     '''
     __tablename__ = 'sample_otu'
-    sample_id = Column(String, ForeignKey(SCHEMA + '.sample_context.id'), primary_key=True)
 
-    # otu_id = Column(Integer, ForeignKey(SCHEMA + '.otu.id'), primary_key=True)
     # w: TEST: testing if I can jsut use the bacteria name as the FK for now.
-    otu_id = Column(String, ForeignKey(SCHEMA + '.otu.code'), primary_key=True)
-
     # w: custom column dealing with float abundance instead of int count.
-    count = Column(Float, nullable=False)
-
-    # count = Column(Integer, nullable=False)
-
     # w: think I have to make this represent as strings too
-    # def __repr__(self):
-    #     return "<SampleOTU(%d,%d,%d)>" % (self.sample_id, self.otu_id, self.count)
+    sample_id = Column(String, ForeignKey(SCHEMA + '.sample_context.id'), primary_key=True)
+    otu_id = Column(String, ForeignKey(SCHEMA + '.otu.code'), primary_key=True)
+    count = Column(Float, nullable=False)
 
     # TEMP: 
     def __repr__(self):
         return "<SampleOTU(%s,%s,%d)>" % (self.sample_id, self.otu_id, self.count)
 
+    # ORIG:START: Original class contents. Rewrote the FK columns, the tostring and the PK.
+    # sample_id = Column(Integer, ForeignKey(SCHEMA + '.sample_context.id'), primary_key=True)
+
+    # otu_id = Column(Integer, ForeignKey(SCHEMA + '.otu.id'), primary_key=True)
+    # count = Column(Integer, nullable=False)
+
+    # def __repr__(self):
+    #     return "<SampleOTU(%d,%d,%d)>" % (self.sample_id, self.otu_id, self.count)
+    # ORIG:END:
+    
 
 def make_engine():
     conf = settings.DATABASES['default']
