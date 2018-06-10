@@ -378,7 +378,7 @@ class SampleOTU(SchemaMixin, Base):
     # w: TEST: testing if I can jsut use the bacteria name as the FK for now.
     # w: custom column dealing with float abundance instead of int count.
     # w: think I have to make this represent as strings too
-    sample_id = Column(String, ForeignKey(SCHEMA + '.sample_context.id'), primary_key=True)
+    sample_id = Column(Integer, ForeignKey(SCHEMA + '.sample_context.id'), primary_key=True)
     otu_id = Column(String, ForeignKey(SCHEMA + '.otu.code'), primary_key=True)
     count = Column(Float, nullable=False)
 
