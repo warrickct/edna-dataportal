@@ -216,7 +216,8 @@ class SampleContext(SchemaMixin, Base):
     # ammonium = with_units('μmol/L', Float)
     # ammonium_nitrogen = with_units('mg/Kg', Float)
 
-    #replacements:
+
+    # w: Cleaned up the columns using the regex patterns below.
     '''
     ' ' to _
     / to '_or_'
@@ -228,9 +229,8 @@ class SampleContext(SchemaMixin, Base):
     prepend underscore to var name to avoid keyword conflicts (OR) was causing issue.
     '''
 
-    # w:TODO: REGEX THIS
-    # TEST: (commenting out site as it's not a float)
     _site = Column(CIText)
+
     _x = Column(Float)
     _y = Column(Float)
     _road_len = Column(Float)

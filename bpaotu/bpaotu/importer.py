@@ -446,7 +446,7 @@ class DataImporter:
                     if column != '':
                         # ? : Is it quicker/better to query the database or keep the id:name dictionary in working memory? What's more scalable.
                         # FIXME: Some are returning empty sets probably due to case sensitive.
-                        bpa_id = test_query = [t[0] for t in self._session.query(SampleContext.id).filter(SampleContext._site == column)]
+                        bpa_id = [t[0] for t in self._session.query(SampleContext.id).filter(SampleContext._site == column)][0]
                         count = row[column]
                         try:
                             count = float(count)

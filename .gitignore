@@ -11,7 +11,8 @@ media/
 .ropeproject
 .vscode
 build
-data/
+data/*
+!data/2018-03/waterdata
 *.tags
 *.tags1
 .env_local
