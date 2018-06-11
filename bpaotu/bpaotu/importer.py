@@ -354,17 +354,16 @@ class DataImporter:
             # w: iterate the metadata. Take name, x, y and then yield it.
             file = open(rows, "r")
             reader = csv.DictReader(file, delimiter='\t')
-            for row in reader:
+            for line, row in enumerate(reader):
                 # logger.warning(row)
                 # TODO: Add the additional metadata columns. Probably best to iterate through it.
                 # w: Had to make the site_id uppercase to match abundance data.
-                site_id = row['site'].upper()
                 attrs ={}
+                attrs['id'] = line
                 for field, value in row.items():
-                    logger.warning(row)
                     cleaned_field = _clean_field(field)
                     attrs[cleaned_field] = value
-                logger.warning(attrs)
+                # logger.warning(attrs)
                 yield SampleContext(**attrs)
 
         # TEMP: Testing with hardcoded fields. Won't work if context class doesn't match.
@@ -428,10 +427,14 @@ class DataImporter:
         # w:todo: returns a list of all the site ids.
         # w:todo: Make it reference otu id instead of the name. Will mean I need to use the "otu_lookup" hashtable/dictionary.
         # w:todo: Handle errors (missing sites/otus/invalid values).
-        have_bpaids = set([t[0] for t in self._session.query(SampleContext.id)])
-        # logger.warning(have_bpaids) #{'KKP', 'LG', 'OT', ...}
+        sample_ids = set([t[0] for t in self._session.query( SampleContext.id)])
+        logger.warning(sample_ids) #{'KKP', 'LG', 'OT', ...}
 
-        def _make_sample_otus():
+        # TEST:
+        test_query = set([t[0] for t in self._session.query(SampleContext._site)])
+        logger.warning(test_query)
+
+        def _make_sample_otus():    
             path = glob(self._import_base + '/waterdata/data/*.tsv')[0]
             file = open(path, 'r')
             reader = csv.DictReader(file, delimiter='\t')
@@ -439,8 +442,11 @@ class DataImporter:
             for row in reader:
                 otu_id = row['']
                 for column in row:
+                    # w: skipping over otu name field
                     if column != '':
-                        bpa_id = column
+                        # ? : Is it quicker/better to query the database or keep the id:name dictionary in working memory? What's more scalable.
+                        # FIXME: Some are returning empty sets probably due to case sensitive.
+                        bpa_id = test_query = [t[0] for t in self._session.query(SampleContext.id).filter(SampleContext._site == column)]
                         count = row[column]
                         try:
                             count = float(count)
