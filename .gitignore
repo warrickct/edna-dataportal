@@ -11,8 +11,15 @@ media/
 .ropeproject
 .vscode
 build
-data/*
-!data/2018-03/waterdata
+
+#allowing tracking of waterdata temporarily
+data/nginx
+data/dev/*
+!data/dev/2018-03/
+data/dev/2018-03/*
+!data/dev/2018-03/waterdata/
+
+
 *.tags
 *.tags1
 .env_local

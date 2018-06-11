@@ -379,6 +379,7 @@ class SampleOTU(SchemaMixin, Base):
     # w: custom column dealing with float abundance instead of int count.
     # w: think I have to make this represent as strings too
     sample_id = Column(Integer, ForeignKey(SCHEMA + '.sample_context.id'), primary_key=True)
+    # TODO: Make the OTU FK be an Integer or something  
     otu_id = Column(String, ForeignKey(SCHEMA + '.otu.code'), primary_key=True)
     count = Column(Float, nullable=False)
 
