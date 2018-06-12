@@ -192,27 +192,121 @@ class DataImporter:
     def load_waterdata_taxonomies(self):
         logger.warning("Loading custom waterdata taxonomies")
 
-        def _make_taxonomy():
+        otu_lookup = {}
+        ontologies = OrderedDict([
+            ('kingdom', OTUKingdom),
+            ('phylum', OTUPhylum),
+            ('class', OTUClass),
+            ('order', OTUOrder),
+            ('family', OTUFamily),
+            ('genus', OTUGenus),
+            ('species', OTUSpecies),
+            ('amplicon', OTUAmplicon),
+        ])
+
+        def _normalize_taxonomy(ontology_parts):
+            '''
+            Pads or trims the taxonomic list size to match the number of columns in the otu table.
+            '''
+            changes = 0
+            while len(ontology_parts) < len(ontologies):
+                unclassified_padding = ";Other"
+                ontology_parts.append(unclassified_padding)
+                changes += 1
+            while len(ontology_parts) > len(ontologies):
+                ontology_parts = ontology_parts[:-1]
+                changes -= 1
+            logger.info('List is %s compared to original', changes)
+            logger.info(ontology_parts)
+            assert(len(ontology_parts) == len(ontologies))
+            return ontology_parts
+
+        def _taxon_rows_iter():
+            # TODO: do the iterations and cleaning of the rows here.
             # w: iterate the metadata. Take name, x, y and then yield it.
+            rows = glob(self._import_base + '/waterdata/data/*.tsv')[0]
             file = open(rows, "r")
             reader = csv.DictReader(file, delimiter='\t')
+            imported = 0
             for index, row in enumerate(reader):
                 # w: corresponds to species name
                 # logger.warning(row[''])
                 # w: simple primary key based on row index for now. Starts at 1
                 # logger.warning(index + 1)
-                attrs = {
-                    'id': index,
-                    'code': row[''],
-                }
-                # logger.warning(attrs)
-                #w: pass my little triple field tuple into SampleContext.
-                yield OTU(**attrs)
+                # TODO: 1. Assign row to name
+                # TODO: 2. Split name at ';'
+                # TODO: 3. use '[a-z]__' regex pattern to determine classification
+                # TODO: 4. Assign them ontologies.
+                # TODO: 5. 
+                # TODO: 6. 
+                # TODO: 7. 
+                otu_name = row['']
+                ontology_parts = otu_name.split(';')
+                ontology_parts = _normalize_taxonomy(ontology_parts)
+                logger.info(ontology_parts)
+                obj = dict(zip(ontologies.keys(), ontology_parts))
+                obj['otu'] = otu_name
+                imported += 1
+                yield obj
+                '''
+                # w: Don't need the matching thing at the moment. Might if they are put into the wrong columns
+                # for split in ontology_parts:
+                #     match_result = re.match('[A-z](?=__[A-z])', split)
+                #     if match_result:
+                #         taxon_initial = match_result.group(0)
+                #         for ontology in ontologies:
+                #             if ontology.startswith(taxon_initial):
+                #                 logger.info("match")
+                #                 logger.info(split)
+                #                 logger.info(ontology)
+                #     elif match_result is None:
+                #         logger.info(split)
+                #         logger.info("no match")
 
-        logger.warning("loading in waterdata contextual instead")
-        rows = glob(self._import_base + '/waterdata/data/*.tsv')[0]
-        self._session.bulk_save_objects(_make_taxonomy())
-        self._session.commit()
+
+                # attrs = {
+                #     'id': index,
+                #     'code': row[''],
+                # }
+                # # logger.warning(attrs)
+                # #w: pass my little triple field tuple into SampleContext.
+                # yield OTU(**attrs)
+                '''
+
+        logger.warning("loading water data taxonomies - pass 1, defining ontologies")
+        mappings = self._load_ontology(ontologies, _taxon_rows_iter())
+        
+        logger.warning("loading waterdata taxonomies - pass 2, defining OTUs")
+        try:
+            with tempfile.NamedTemporaryFile(mode='w', dir='/data', prefix='bpaotu-', delete=False) as temp_fd:
+                fname = temp_fd.name
+                os.chmod(fname, 0o644)
+                logger.warning("writing out taxonomy data to CSV tempfile: %s" % fname)
+                w = csv.writer(temp_fd)
+                # w: creates header for the temp file.
+                w.writerow(['id', 'code', 'kingdom_id', 'phylum_id', 'class_id', 'order_id', 'family_id', 'genus_id', 'species_id', 'amplicon_id'])
+                # w: For every row in the .taxonomy file starting at 1 (Not 0) do the following.
+                for _id, row in enumerate(_taxon_rows_iter(), 1):
+                    otu_lookup[otu_hash(row['otu'])] = _id
+                    out_row = [_id, row['otu']]
+                    for field in ontologies:
+                        if field not in row:
+                            out_row.append('')
+                        else:
+                            out_row.append(mappings[field][row[field]])
+                    w.writerow(out_row)
+                logger.warning("loading taxonomy data from temporary CSV file")
+                self._engine.execute(
+                    text('''COPY otu.otu from :csv CSV header''').execution_options(autocommit=True),
+                    csv=fname)
+        finally:
+            os.unlink(fname)
+        return otu_lookup
+        
+
+        # w: not using these at the moment.
+        # self._session.bulk_save_objects(_make_taxonomy())
+        # self._session.commit()
 
     def load_taxonomies(self):
         '''
@@ -428,11 +522,11 @@ class DataImporter:
         # w:todo: Make it reference otu id instead of the name. Will mean I need to use the "otu_lookup" hashtable/dictionary.
         # w:todo: Handle errors (missing sites/otus/invalid values).
         sample_ids = set([t[0] for t in self._session.query( SampleContext.id)])
-        logger.warning(sample_ids) #{'KKP', 'LG', 'OT', ...}
+        # logger.warning(sample_ids) #{'KKP', 'LG', 'OT', ...}
 
         # TEST:
         test_query = set([t[0] for t in self._session.query(SampleContext._site)])
-        logger.warning(test_query)
+        # logger.warning(test_query)
 
         def _make_sample_otus():    
             path = glob(self._import_base + '/waterdata/data/*.tsv')[0]
