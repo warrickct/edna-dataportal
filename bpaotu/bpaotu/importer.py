@@ -209,6 +209,10 @@ class DataImporter:
             Pads or trims the taxonomic list size to match the number of columns in the otu table.
             '''
             changes = 0
+            for index, part in enumerate(ontology_parts):
+                part = re.sub('[A-z]__', '', part)
+                ontology_parts[index] = part
+                logger.info(part)    
             while len(ontology_parts) < len(ontologies):
                 unclassified_padding = ";Other"
                 ontology_parts.append(unclassified_padding)

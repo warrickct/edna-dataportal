@@ -75,7 +75,8 @@ class TaxonomyOptions:
         result = cache.get(key)
         if not result:
             result = self._possibilities(amplicon, state)
-            cache.set(key, result)
+            # w: removed cache to see filter results debugging
+            # cache.set(key, result)
         return result
 
     def _possibilities(self, amplicon, state):

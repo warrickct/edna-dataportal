@@ -99,17 +99,10 @@ class OTU(SchemaMixin, Base):
 
     # w: commenting out the id being the pk for now.
     id = Column(Integer, primary_key=True)
-
-    # w: replacement id column without being pk
-    # id = Column(Integer)
-
-    # w: will just steal this already made code field to store the taxonomy name
     code = Column(String(length=1024))  # long GATTACAt-ype string
 
     # we query OTUs via heirarchy, so indexes on the first few
     # layers are sufficient
-
-    # w: not using these for now.
     kingdom_id = ontology_fkey(OTUKingdom, index=True)
     phylum_id = ontology_fkey(OTUPhylum, index=True)
     class_id = ontology_fkey(OTUClass, index=True)
@@ -201,11 +194,6 @@ class SampleContext(SchemaMixin, Base):
 
     # w: Making the row iteration the site id now.
     id = Column(Integer, primary_key=True)
-
-    # w: trying to keep meta fields simple for now.
-    # w: no longer using these fields as they're included in the large column set below
-    # x = with_units('lng', Float)
-    # y = with_units('lat', Float)
 
     # w: example  columns
     # a16s_comment = Column(CIText)
