@@ -520,7 +520,9 @@ class DataImporter:
             to_make = {}
             for row in reader:
                 otu_code = row['']
-                otu_id = [t[0] for t in self._session.query(SampleContext.id).filter(OTU.code == otu_code)][0]
+                otu_id = [t[0] for t in self._session.query(OTU.id).filter(OTU.code == otu_code)][0]
+                logger.info('otu code: %s', otu_code)
+                logger.info('otu returned PK: %s', otu_id)
                 for column in row:
                     # w: skipping over otu name field
                     if column != '':
