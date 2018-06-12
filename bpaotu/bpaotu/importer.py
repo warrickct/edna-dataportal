@@ -243,35 +243,13 @@ class DataImporter:
                 otu_name = row['']
                 ontology_parts = otu_name.split(';')
                 ontology_parts = _normalize_taxonomy(ontology_parts)
-                logger.info(ontology_parts)
+                # logger.info(ontology_parts)
                 obj = dict(zip(ontologies.keys(), ontology_parts))
                 obj['otu'] = otu_name
                 imported += 1
                 yield obj
-                '''
-                # w: Don't need the matching thing at the moment. Might if they are put into the wrong columns
-                # for split in ontology_parts:
-                #     match_result = re.match('[A-z](?=__[A-z])', split)
-                #     if match_result:
-                #         taxon_initial = match_result.group(0)
-                #         for ontology in ontologies:
-                #             if ontology.startswith(taxon_initial):
-                #                 logger.info("match")
-                #                 logger.info(split)
-                #                 logger.info(ontology)
-                #     elif match_result is None:
-                #         logger.info(split)
-                #         logger.info("no match")
+                # ImportFileLog.make_file_log(fname, file_type='Taxonomy', rows_imported=imported, rows_skipped=0)
 
-
-                # attrs = {
-                #     'id': index,
-                #     'code': row[''],
-                # }
-                # # logger.warning(attrs)
-                # #w: pass my little triple field tuple into SampleContext.
-                # yield OTU(**attrs)
-                '''
 
         logger.warning("loading water data taxonomies - pass 1, defining ontologies")
         mappings = self._load_ontology(ontologies, _taxon_rows_iter())
@@ -294,6 +272,8 @@ class DataImporter:
                             out_row.append('')
                         else:
                             out_row.append(mappings[field][row[field]])
+                    # TEST:
+                    logger.info(out_row)
                     w.writerow(out_row)
                 logger.warning("loading taxonomy data from temporary CSV file")
                 self._engine.execute(

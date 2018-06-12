@@ -98,50 +98,49 @@ class OTU(SchemaMixin, Base):
     __tablename__ = 'otu'
 
     # w: commenting out the id being the pk for now.
-    # id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True)
 
     # w: replacement id column without being pk
-    id = Column(Integer)
+    # id = Column(Integer)
 
     # w: will just steal this already made code field to store the taxonomy name
-    code = Column(String(length=1024), primary_key=True)  # long GATTACAt-ype string
+    code = Column(String(length=1024))  # long GATTACAt-ype string
 
     # we query OTUs via heirarchy, so indexes on the first few
     # layers are sufficient
 
     # w: not using these for now.
-    # kingdom_id = ontology_fkey(OTUKingdom, index=True)
-    # phylum_id = ontology_fkey(OTUPhylum, index=True)
-    # class_id = ontology_fkey(OTUClass, index=True)
-    # order_id = ontology_fkey(OTUOrder)
-    # family_id = ontology_fkey(OTUFamily)
-    # genus_id = ontology_fkey(OTUGenus)
-    # species_id = ontology_fkey(OTUSpecies)
-    # amplicon_id = ontology_fkey(OTUAmplicon, index=True)
+    kingdom_id = ontology_fkey(OTUKingdom, index=True)
+    phylum_id = ontology_fkey(OTUPhylum, index=True)
+    class_id = ontology_fkey(OTUClass, index=True)
+    order_id = ontology_fkey(OTUOrder)
+    family_id = ontology_fkey(OTUFamily)
+    genus_id = ontology_fkey(OTUGenus)
+    species_id = ontology_fkey(OTUSpecies)
+    amplicon_id = ontology_fkey(OTUAmplicon, index=True)
 
-    # kingdom = relationship(OTUKingdom)
-    # phylum = relationship(OTUPhylum)
-    # klass = relationship(OTUClass)
-    # order = relationship(OTUOrder)
-    # family = relationship(OTUFamily)
-    # genus = relationship(OTUGenus)
-    # species = relationship(OTUSpecies)
-    # amplicon = relationship(OTUAmplicon)
+    kingdom = relationship(OTUKingdom)
+    phylum = relationship(OTUPhylum)
+    klass = relationship(OTUClass)
+    order = relationship(OTUOrder)
+    family = relationship(OTUFamily)
+    genus = relationship(OTUGenus)
+    species = relationship(OTUSpecies)
+    amplicon = relationship(OTUAmplicon)
 
     def __repr__(self):
         return "<OTU(%d: %s,%s,%s,%s,%s,%s,%s,%s)>" % (
             self.id,
             # w: custom name field
-            # self.name,
-            # w: just having the pk and full id for now.
-            # self.amplicon_id,
-            # self.kingdom_id,
-            # self.phylum_id,
-            # self.class_id,
-            # self.order_id,
-            # self.family_id,
-            # self.genus_id,
-            # self.species_id
+            self.name,
+            self.amplicon_id,
+            self.kingdom_id,
+            self.phylum_id,
+            self.class_id,
+            self.order_id,
+            self.family_id,
+            self.genus_id,
+            self.species_id
             )
 
 
@@ -380,7 +379,7 @@ class SampleOTU(SchemaMixin, Base):
     # w: think I have to make this represent as strings too
     sample_id = Column(Integer, ForeignKey(SCHEMA + '.sample_context.id'), primary_key=True)
     # TODO: Make the OTU FK be an Integer or something  
-    otu_id = Column(String, ForeignKey(SCHEMA + '.otu.code'), primary_key=True)
+    otu_id = Column(Integer, ForeignKey(SCHEMA + '.otu.id'), primary_key=True)
     count = Column(Float, nullable=False)
 
     # TEMP: 
