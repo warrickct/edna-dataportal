@@ -429,12 +429,12 @@ class DataImporter:
             # logger.warning(field)
             return field
 
-        def _make_context2():
+        def _make_context():
             # w: iterate the metadata. Take name, x, y and then yield it.
             file = open(rows, "r")
             reader = csv.DictReader(file, delimiter='\t')
             for line, row in enumerate(reader):
-                # logger.warning(row)
+                logger.warning(row)
                 # TODO: Add the additional metadata columns. Probably best to iterate through it.
                 # w: Had to make the site_id uppercase to match abundance data.
                 attrs ={}
@@ -445,28 +445,10 @@ class DataImporter:
                 # logger.warning(attrs)
                 yield SampleContext(**attrs)
 
-        # TEMP: Testing with hardcoded fields. Won't work if context class doesn't match.
-        def _make_context():
-            # w: iterate the metadata. Take name, x, y and then yield it.
-            file = open(rows, "r")
-            reader = csv.DictReader(file, delimiter='\t')
-            for row in reader:
-                # logger.warning(row)
-                # TODO: Add the additional metadata columns. Probably best to iterate through it.
-                # w: Had to make the site_id uppercase to match abundance data.
-                site_id = row['site'].upper()
-                attrs = {
-                    'id': site_id,
-                    'x': row['x'],
-                    'y': row['y']
-                }
-                # logger.warning(attrs)
-                yield SampleContext(**attrs)
-
         logger.warning("loading in waterdata contextual instead")
         rows = glob(self._import_base + '/waterdata/metadata/*.tsv')[0]
         # TEMP: testing automated field generation
-        self._session.bulk_save_objects(_make_context2())
+        self._session.bulk_save_objects(_make_context())
         self._session.commit()
         
     def load_marine_contextual_metadata(self):
