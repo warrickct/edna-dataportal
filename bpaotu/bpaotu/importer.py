@@ -221,7 +221,7 @@ class DataImporter:
             while len(ontology_parts) > len(ontologies):
                 ontology_parts = ontology_parts[:-1]
                 changes -= 1
-            logger.info('List is %s compared to original', changes)
+            # logger.info('List is %s compared to original', changes)
             # logger.info(ontology_parts)
             assert(len(ontology_parts) == len(ontologies))
             return ontology_parts
@@ -434,7 +434,6 @@ class DataImporter:
             file = open(rows, "r")
             reader = csv.DictReader(file, delimiter='\t')
             for line, row in enumerate(reader):
-                logger.warning(row)
                 # TODO: Add the additional metadata columns. Probably best to iterate through it.
                 # w: Had to make the site_id uppercase to match abundance data.
                 attrs ={}
@@ -500,12 +499,14 @@ class DataImporter:
             file = open(path, 'r')
             reader = csv.DictReader(file, delimiter='\t')
             to_make = {}
-            for row in reader:
+            for index, row in enumerate(reader):
                 otu_code = row['']
+                if 890 <= index <= 920:
+                    logger.info(len(row))
                 for t in self._session.query(OTU.id).filter(OTU.code == otu_code):
                     otu_id = t[0] # [0][0]
-                    logger.info('otu code: %s', otu_code)
-                    logger.info('otu returned PK: %s', otu_id)
+                    # logger.info('otu code: %s', otu_code)
+                    # logger.info('otu returned PK: %s', otu_id)
                 for column in row:
                     # w: skipping over otu name field
                     if column != '':
