@@ -209,19 +209,20 @@ class DataImporter:
             Pads or trims the taxonomic list size to match the number of columns in the otu table.
             '''
             changes = 0
-            for index, part in enumerate(ontology_parts):
-                part = re.sub('[A-z]__', '', part)
-                ontology_parts[index] = part
-                logger.info(part)    
+            # TODO: Remove the '[a-z]__' prefix from the parts.
+            # for index, part in enumerate(ontology_parts):
+            #     part = re.sub('[A-z]__', '', part)
+            #     ontology_parts[index] = part
+            #     logger.info(part)    
             while len(ontology_parts) < len(ontologies):
-                unclassified_padding = ";Other"
+                unclassified_padding = "Other"
                 ontology_parts.append(unclassified_padding)
                 changes += 1
             while len(ontology_parts) > len(ontologies):
                 ontology_parts = ontology_parts[:-1]
                 changes -= 1
             logger.info('List is %s compared to original', changes)
-            logger.info(ontology_parts)
+            # logger.info(ontology_parts)
             assert(len(ontology_parts) == len(ontologies))
             return ontology_parts
 
@@ -277,7 +278,7 @@ class DataImporter:
                         else:
                             out_row.append(mappings[field][row[field]])
                     # TEST:
-                    logger.info(out_row)
+                    # logger.info(out_row)
                     w.writerow(out_row)
                 logger.warning("loading taxonomy data from temporary CSV file")
                 self._engine.execute(
@@ -518,7 +519,8 @@ class DataImporter:
             reader = csv.DictReader(file, delimiter='\t')
             to_make = {}
             for row in reader:
-                otu_id = row['']
+                otu_code = row['']
+                otu_id = [t[0] for t in self._session.query(SampleContext.id).filter(OTU.code == otu_code)][0]
                 for column in row:
                     # w: skipping over otu name field
                     if column != '':
