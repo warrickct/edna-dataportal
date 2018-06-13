@@ -190,6 +190,7 @@ class SampleQuery:
             cache.set(key, result)
         return result
 
+    # TODO: This doesn't work with the waterdata sample context table
     def matching_sample_ids_and_environment(self):
         q = self._session.query(SampleContext.id, SampleContext.environment_id)
         subq = self._build_taxonomy_subquery()
