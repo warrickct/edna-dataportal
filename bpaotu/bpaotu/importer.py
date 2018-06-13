@@ -215,7 +215,7 @@ class DataImporter:
             #     ontology_parts[index] = part
             #     logger.info(part)    
             while len(ontology_parts) < len(ontologies):
-                unclassified_padding = "Other"
+                unclassified_padding = "other"
                 ontology_parts.append(unclassified_padding)
                 changes += 1
             while len(ontology_parts) > len(ontologies):
@@ -234,58 +234,64 @@ class DataImporter:
             reader = csv.DictReader(file, delimiter='\t')
             imported = 0
             for index, row in enumerate(reader):
-                # w: corresponds to species name
-                # logger.warning(row[''])
-                # w: simple primary key based on row index for now. Starts at 1
-                # logger.warning(index + 1)
-                # TODO: 1. Assign row to name
-                # TODO: 2. Split name at ';'
-                # TODO: 3. use '[a-z]__' regex pattern to determine classification
-                # TODO: 4. Assign them ontologies.
-                # TODO: 5. 
-                # TODO: 6. 
-                # TODO: 7. 
                 otu_name = row['']
                 ontology_parts = otu_name.split(';')
                 ontology_parts = _normalize_taxonomy(ontology_parts)
                 # logger.info(ontology_parts)
                 obj = dict(zip(ontologies.keys(), ontology_parts))
                 obj['otu'] = otu_name
+                # logger.info(obj)
                 imported += 1
                 yield obj
-                # ImportFileLog.make_file_log(fname, file_type='Taxonomy', rows_imported=imported, rows_skipped=0)
+            # ImportFileLog.make_file_log(fname, file_type='Taxonomy', rows_imported=imported, rows_skipped=0)
 
 
         logger.warning("loading water data taxonomies - pass 1, defining ontologies")
         mappings = self._load_ontology(ontologies, _taxon_rows_iter())
         
-        logger.warning("loading waterdata taxonomies - pass 2, defining OTUs")
-        try:
-            with tempfile.NamedTemporaryFile(mode='w', dir='/data', prefix='bpaotu-', delete=False) as temp_fd:
-                fname = temp_fd.name
-                os.chmod(fname, 0o644)
-                logger.warning("writing out taxonomy data to CSV tempfile: %s" % fname)
-                w = csv.writer(temp_fd)
-                # w: creates header for the temp file.
-                w.writerow(['id', 'code', 'kingdom_id', 'phylum_id', 'class_id', 'order_id', 'family_id', 'genus_id', 'species_id', 'amplicon_id'])
-                # w: For every row in the .taxonomy file starting at 1 (Not 0) do the following.
-                for _id, row in enumerate(_taxon_rows_iter(), 1):
-                    otu_lookup[otu_hash(row['otu'])] = _id
-                    out_row = [_id, row['otu']]
-                    for field in ontologies:
-                        if field not in row:
-                            out_row.append('')
-                        else:
-                            out_row.append(mappings[field][row[field]])
-                    # TEST:
-                    # logger.info(out_row)
-                    w.writerow(out_row)
-                logger.warning("loading taxonomy data from temporary CSV file")
-                self._engine.execute(
-                    text('''COPY otu.otu from :csv CSV header''').execution_options(autocommit=True),
-                    csv=fname)
-        finally:
-            os.unlink(fname)
+        # TEST:
+        def _make_taxon():
+            for index, row in enumerate(_taxon_rows_iter()):
+                attrs = {
+                    'id': index,
+                    'code': row['otu'],
+                }
+                for field in ontologies:
+                    attrs[field + '_id'] = mappings[field][row[field]]
+                logger.info(attrs)
+                yield OTU(**attrs)
+            
+        self._session.bulk_save_objects(_make_taxon())
+        self._session.commit()
+
+        # logger.warning("loading waterdata taxonomies - pass 2, defining OTUs")
+        # try:
+        #     with tempfile.NamedTemporaryFile(mode='w', dir='/data', prefix='bpaotu-', delete=False) as temp_fd:
+        #         fname = temp_fd.name
+        #         os.chmod(fname, 0o644)
+        #         logger.warning("writing out taxonomy data to CSV tempfile: %s" % fname)
+        #         w = csv.writer(temp_fd)
+        #         # w: creates header for the temp file.
+        #         w.writerow(['id', 'code', 'kingdom_id', 'phylum_id', 'class_id', 'order_id', 'family_id', 'genus_id', 'species_id', 'amplicon_id'])
+        #         # w:NOTE: Not starting from 2nd line for our data
+        #         for _id, row in enumerate(_taxon_rows_iter()):
+        #             otu_lookup[otu_hash(row['otu'])] = _id
+        #             out_row = [_id, row['otu']]
+        #             for field in ontologies:
+        #                 if field not in row:
+        #                     out_row.append('')
+        #                 else:
+        #                     out_row.append(mappings[field][row[field]])
+        #             # TEST:
+        #             # logger.info(out_row)
+        #             w.writerow(out_row)
+        #         logger.warning("loading taxonomy data from temporary CSV file")
+        #         self._engine.execute(
+        #             text('''COPY otu.otu from :csv CSV header''').execution_options(autocommit=True),
+        #             csv=fname)
+        # finally:
+        #     logger.info("finished")
+        #     # os.unlink(fname)
         return otu_lookup
         
 
@@ -322,10 +328,6 @@ class DataImporter:
                 imported = 0
                 with open(fname) as fd:
                     for row in csv.reader(fd, dialect='excel-tab'):
-                        # w:START: shortcut the taxon for testing
-                        if imported > 50:
-                            break
-                        # w:END:
                         if row[0].startswith('#'):
                             continue
                         otu = row[0]
@@ -492,17 +494,31 @@ class DataImporter:
 
         # TEST:
         test_query = set([t[0] for t in self._session.query(SampleContext._site)])
-        # logger.warning(test_query)
+        logger.warning('number of sites in full query: %s', len(test_query))
+
+        # TEST: Testing to see if abundance rows match tsv row count:
+        # BUG:.tsv file amount doesn't match the database row count. Must have some duplicates or something.
+        def _abundance_test(reader):
+            abundance_q = [t[0] for t in self._session.query(OTU.code)]
+
+            # abundance_q = set([t[0] for t in self._session.query(OTU.code)])
+            logger.info('number of otus in full query: %s', len(abundance_q))
+            missing = 0
+            for row in reader:
+                otu_name = row[''] 
+                if otu_name not in abundance_q:
+                    missing +=1
+                    # logger.info('not found in abundance_q: %s', otu_name)
+            logger.info('missing %d', missing)
 
         def _make_sample_otus():    
             path = glob(self._import_base + '/waterdata/data/*.tsv')[0]
             file = open(path, 'r')
             reader = csv.DictReader(file, delimiter='\t')
+            # TEST:
             to_make = {}
             for index, row in enumerate(reader):
                 otu_code = row['']
-                if 890 <= index <= 920:
-                    logger.info(len(row))
                 for t in self._session.query(OTU.id).filter(OTU.code == otu_code):
                     otu_id = t[0] # [0][0]
                     # logger.info('otu code: %s', otu_code)
