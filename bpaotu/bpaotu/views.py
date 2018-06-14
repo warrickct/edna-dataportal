@@ -421,7 +421,8 @@ def otu_search(request):
         })
     else:
         res.update({
-            'data': [{"bpa_id": t[0], "environment": get_environment(t[1])} for t in results],
+            # w: Removed the environment_id from the results.
+            'data': [{"bpa_id": t[0]} for t in results],
             'recordsTotal': result_count,
             'recordsFiltered': result_count,
         })

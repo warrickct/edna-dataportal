@@ -186,13 +186,13 @@ class SampleQuery:
             result = q.all()
             if mutate_result:
                 result = mutate_result(result)
-                # Warrick: comment out cache for testing
+                # w: Warrick: comment out cache for testing
             cache.set(key, result)
         return result
 
     # TODO: This doesn't work with the waterdata sample context table
     def matching_sample_ids_and_environment(self):
-        q = self._session.query(SampleContext.id, SampleContext.environment_id)
+        q = self._session.query(SampleContext.id, SampleContext._x)
         subq = self._build_taxonomy_subquery()
         q = self._apply_filters(q, subq).order_by(SampleContext.id)
         return self._q_all_cached('matching_sample_ids_and_environment', q)
