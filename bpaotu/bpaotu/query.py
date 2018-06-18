@@ -187,7 +187,7 @@ class SampleQuery:
             if mutate_result:
                 result = mutate_result(result)
                 # w: Warrick: comment out cache for testing
-            cache.set(key, result)
+            #cache.set(key, result)
         return result
 
     # TODO: This doesn't work with the waterdata sample context table

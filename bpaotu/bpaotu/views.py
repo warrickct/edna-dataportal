@@ -329,6 +329,7 @@ def required_table_headers(request):
     data = []
     for t in results:
         count = 2
+        # TODO: Need to make this return something more useful for the eDNA webapp possibly.
         data_dict = {"bpa_id": t[0], "environment": get_environment(t[1])}
 
         for rh in required_headers:

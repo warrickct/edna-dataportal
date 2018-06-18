@@ -168,6 +168,8 @@ class DataImporter:
         # flip around to name -> id
         pl = dict((t[1], t[0]) for t in environment_lookup.items())
 
+        # TODO: Work out why it's throwing key error
+
         soil_fields = set()
         marine_fields = set()
         for field_info in soil_field_spec:
@@ -185,6 +187,24 @@ class DataImporter:
         marine_only = marine_fields - soil_fields
         r = {}
         r.update((t, pl['Soil']) for t in soil_only)
+        r.update((t, pl['Marine']) for t in marine_only)
+        return r
+
+    # w: Custom classify to exclude soil data 
+    @classmethod
+    def classify_fieldsTEST(cls, environment_lookup):
+        # flip around to name -> id
+        pl = dict((t[1], t[0]) for t in environment_lookup.items())
+
+        marine_fields = set()
+        for data_type, fields in marine_field_specs.items():
+            for field_info in fields:
+                field_name = field_info[0]
+                if field_name in DataImporter.marine_ontologies:
+                    field_name += '_id'
+                marine_fields.add(field_name)
+        marine_only = marine_fields
+        r = {}
         r.update((t, pl['Marine']) for t in marine_only)
         return r
 
