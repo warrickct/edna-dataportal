@@ -269,7 +269,8 @@ class DataImporter:
         logger.warning("loading water data taxonomies - pass 1, defining ontologies")
         mappings = self._load_ontology(ontologies, _taxon_rows_iter())
         
-        # TEST:
+        # TODO: This is a temp
+        # TEMP: This is not the same way that Grahame implemented the taxon ingesting. He wrote it all to a csv then did the COPY command as a bulk sort of order. Try to fix it so it works the same.
         def _make_taxon():
             for index, row in enumerate(_taxon_rows_iter()):
                 attrs = {
