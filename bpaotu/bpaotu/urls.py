@@ -17,8 +17,9 @@ urlpatterns = [
     url(r'^private/api/v1/submit_to_galaxy$', views.submit_to_galaxy, name="submit_to_galaxy"),
     url(r'^private/api/v1/export$', views.otu_export, name="otu_export"),
     url(r'^ingest/$', views.otu_log, name="otu_log"),                                                                               # Display ingest names that do not match list.
-    # w:TEST: TRYING CUSTOM URL PATTERN
-    url(r'^vis/$', views.vis, name="vis"),
+    # w:TEST:START: TRYING CUSTOM URL PATTERN
+    url(r'^vis$', views.vis, name="vis"),
+    # w:TEST:END:
 
     url(r'^tables/$', views.tables, name="tables"),                                                                                 # Custom datatables columns.
     url(r'^private/api/v1/required_table_headers/$', views.required_table_headers, name="required_table_headers"),                  # Custom datatables columns.

@@ -284,7 +284,15 @@ def param_to_filters_without_checks(query_str):
 @csrf_exempt
 @require_GET
 def vis(request):
-    logger.info('VIS REQUESTEDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDd')
+    logger.info('VIS REQUESTEDDDDDDDDDDDDDDDDDDDDDDDDDDDD')
+
+    arg1 =request.GET['hi']
+    logger.info(arg1)
+
+    return JsonResponse({
+        'fizz': 'buzz',
+        'arg1': arg1,
+    })
 
     
 
