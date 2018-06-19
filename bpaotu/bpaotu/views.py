@@ -280,6 +280,7 @@ def param_to_filters_without_checks(query_str):
         taxonomy_filter=taxonomy_filter), errors)
 
 
+# w:NOTE: This one has something to do with abundance querying
 @csrf_exempt
 @require_POST
 def required_table_headers(request):
@@ -330,6 +331,7 @@ def required_table_headers(request):
     for t in results:
         count = 2
         # TODO: Need to make this return something more useful for the eDNA webapp possibly.
+        # NOTE: Returns {"bpa_id": 7032, "environment": "Soil"}
         data_dict = {"bpa_id": t[0], "environment": get_environment(t[1])}
 
         for rh in required_headers:

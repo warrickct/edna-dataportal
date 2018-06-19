@@ -6,6 +6,7 @@ from . import views
 
 admin.autodiscover()
 
+# w:TODO: Need to make a custom API pattern for getting the full otu.code, sample_context._site thing and the sample_otu.value.
 urlpatterns = [
     url(r'^$', views.OTUSearch.as_view()),
     url(r'^private/api/v1/amplicon-options$', views.amplicon_options, name="amplicon_options"),

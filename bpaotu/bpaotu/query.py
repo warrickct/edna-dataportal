@@ -152,7 +152,7 @@ class OntologyInfo:
         vals.sort(key=lambda v: v[1])
         return vals
 
-
+# w: This is the one that queries for the abundances.
 class SampleQuery:
     """
     find samples IDs which match the given taxonomical and
