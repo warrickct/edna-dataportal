@@ -279,6 +279,15 @@ def param_to_filters_without_checks(query_str):
         contextual_filter=contextual_filter,
         taxonomy_filter=taxonomy_filter), errors)
 
+# TEST: Adding custom API for the visualisation
+# W: I think it's worth creating a custom API for the visualisation as the exisiting apis the page state + POSTing forms? Unless I created an identical search form.
+@csrf_exempt
+@require_GET
+def vis(request):
+    logger.info('VIS REQUESTEDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDd')
+
+    
+
 
 # w:NOTE: This one has something to do with abundance querying
 @csrf_exempt
@@ -331,6 +340,7 @@ def required_table_headers(request):
     for t in results:
         count = 2
         # TODO: Need to make this return something more useful for the eDNA webapp possibly.
+        # TODO: does not need changing for the visualisation integration. May need changing for data portal searching.
         # NOTE: Returns {"bpa_id": 7032, "environment": "Soil"}
         data_dict = {"bpa_id": t[0], "environment": get_environment(t[1])}
 
