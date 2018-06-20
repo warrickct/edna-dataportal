@@ -296,6 +296,26 @@ class SampleQuery:
         q = self._contextual_filter.apply(q)
         return q
 
+# w: TEST: Making a test query to mimic the .tsv data for now.
+class WaterQuery:
+    def __init__(self):
+        self._session = Session()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exec_type, exc_value, traceback):
+        self._session.close()
+
+    def get_all_sample_otus(self, term):
+        vals = (
+            self._session.query(OTU.code, SampleContext._site, SampleOTU.count).filter(SampleOTU.otu_id == OTU.id)
+            .filter(SampleOTU.sample_id == SampleContext.id)
+            .filter(OTU.code.like("%" + term + "%"))
+            .all()
+        )
+        return vals
+
 
 class ContextualFilter:
     mode_operators = {

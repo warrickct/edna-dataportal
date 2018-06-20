@@ -27,6 +27,9 @@ from .query import (
     TaxonomyOptions,
     OntologyInfo,
     SampleQuery,
+    # TEST:TEMP:START:
+    WaterQuery,
+    # TEST:TEMP:END:
     ContextualFilter,
     ContextualFilterTermDate,
     ContextualFilterTermFloat,
@@ -286,12 +289,18 @@ def param_to_filters_without_checks(query_str):
 def vis(request):
     logger.info('VIS REQUESTEDDDDDDDDDDDDDDDDDDDDDDDDDDDD')
 
-    arg1 =request.GET['hi']
-    logger.info(arg1)
+    term = request.GET['term']
+
+    with OntologyInfo() as query:
+        result = query.get_values(OTUKingdom)
+
+    with WaterQuery() as wq:
+        water_result = wq.get_all_sample_otus(term)
 
     return JsonResponse({
         'fizz': 'buzz',
-        'arg1': arg1,
+        'res': result,
+        'water_res': water_result,
     })
 
     
