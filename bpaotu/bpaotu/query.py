@@ -318,8 +318,9 @@ class WaterQuery:
 
     def get_all_sample_otus2(self, term):
         vals = (
-            self._session.query(OTU.code, SampleContext._site, SampleOTU.count).filter(SampleOTU.otu_id == OTU.id)
-            .filter(SampleOTU.sample_id == SampleContext.id)
+            self._session.query(OTU.code, SampleContext._site, SampleOTU.count)
+            .join(SampleOTU)
+            .join(SampleContext)
             .filter(OTU.code.like("%" + term + "%"))
             .all()
         )
