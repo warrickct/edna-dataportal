@@ -295,11 +295,11 @@ def vis(request):
         result = query.get_values(OTUKingdom)
 
     with WaterQuery() as wq:
-        water_result = wq.get_all_sample_otus(term)
+        water_result = wq.get_all_sample_otus2(term)
 
     return JsonResponse({
-        'fizz': 'buzz',
-        'res': result,
+        # 'fizz': 'buzz',
+        # 'res': result,
         'water_res': water_result,
     })
 
