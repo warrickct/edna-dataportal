@@ -263,7 +263,7 @@ class DataImporter:
                 }
                 for field in ontologies:
                     attrs[field + '_id'] = mappings[field][row[field]]
-                logger.info(attrs)
+                # logger.info(attrs)
                 yield OTU(**attrs)
             
         self._session.bulk_save_objects(_make_taxon())
