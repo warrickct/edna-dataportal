@@ -290,18 +290,23 @@ def vis(request):
     logger.info('VIS REQUESTEDDDDDDDDDDDDDDDDDDDDDDDDDDDD')
 
     term = request.GET['term']
-
-    with OntologyInfo() as query:
-        result = query.get_values(OTUKingdom)
-
     with WaterQuery() as wq:
-        water_result = wq.get_all_sample_otus2(term)
+        if term:
+            # TEST:
+            water_result = wq.get_full_abundance_nested()
+            # water_result = wq.get_all_sample_otus(term)
+        else:
+            water_result = wq.get_all_sample_otus('')
 
-    return JsonResponse({
-        # 'fizz': 'buzz',
-        # 'res': result,
-        'water_res': water_result,
+    # TODO: compress the response somehow or return the response in some grouped way.
+
+    response = JsonResponse({
+        'data': water_result,
     })
+    # response['Access-Control-Allow-Origin'] = 'http://localhost:5500/'
+    response['Access-Control-Allow-Origin'] = '*'
+
+    return response
 
     
 

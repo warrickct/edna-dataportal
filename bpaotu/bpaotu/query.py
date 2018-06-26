@@ -307,24 +307,37 @@ class WaterQuery:
     def __exit__(self, exec_type, exc_value, traceback):
         self._session.close()
 
-    # def get_all_sample_otus(self, term):
-    #     vals = (
-    #         self._session.query(OTU.code, SampleContext._site, SampleOTU.count).filter(SampleOTU.otu_id == OTU.id)
-    #         .filter(SampleOTU.sample_id == SampleContext.id)
-    #         .filter(OTU.code.like("%" + term + "%"))
-    #         .all()
-    #     )
-    #     return vals
+    def get_all_sample_otus(self, term):
 
-    def get_all_sample_otus2(self, term):
-        vals = (
-            self._session.query(OTU.code, SampleContext._site, SampleOTU.count)
-            .join(SampleOTU)
-            .join(SampleContext)
-            .filter(OTU.code.like("%" + term + "%"))
+        if term is None or term != '':
+            vals = (
+                self._session.query(OTU.code, SampleContext._site, SampleOTU.count)
+                .join(SampleOTU)
+                .join(SampleContext)
+                .filter(OTU.code.like("%" + term + "%"))
+                .all()
+            )
+        else:
+            vals = (
+                self._session.query(OTU.code, SampleContext._site, SampleOTU.count)
+                .join(SampleOTU)
+                .join(SampleContext)
+                .all()
+            )
+        logger.info(vals)
+        return vals
+
+    def get_full_abundance_nested(self):
+        # NOTE: Need to specify a filter/all() method otherwise just returns the query.
+        query_result = {}
+        count_data = (
+            otus = 
+            self._session.query(SampleOTU.otu_id.distinct(), SampleOTU.sample_id, SampleOTU.count)
+            .filter(SampleOTU.count > 0)
             .all()
         )
-        return vals
+        logger.info(count_data)
+        return count_data
 
 
 class ContextualFilter:
