@@ -308,7 +308,6 @@ class EdnaAbundanceQuery:
         self._session.close()
 
     def get_all_sample_otus(self, term):
-
         if term is None or term != '':
             vals = (
                 self._session.query(OTU.code, SampleContext._site, SampleOTU.count)
@@ -358,7 +357,20 @@ class EdnaAbundanceQuery:
 
 
 class EdnaMetadataQuery:
+    def __init__(self):
+        self._session = Session()
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exec_type, exc_value, traceback):
+        self._session.close()
+
+    def get_all_metadata(self):
+        result = {}
+
+        q = self._session.query(SampleContext).all()
+        return result
 
 class ContextualFilter:
     mode_operators = {

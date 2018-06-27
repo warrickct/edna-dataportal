@@ -19,9 +19,9 @@ urlpatterns = [
     url(r'^ingest/$', views.otu_log, name="otu_log"),                                                                               # Display ingest names that do not match list.
     # w:TEST:START: TRYING CUSTOM URL PATTERN
     # For getting filtered abundance data
-    url(r'^edna/abundance$', views.vis, name="vis"),
+    url(r'^edna/abundance$', views.get_edna_abundance, name="vis"),
     # For getting site meta data.
-    url(r'^edna/metadata$', views.get_all_metadata, name="site_metadata"),
+    url(r'^edna/metadata$', views.get_edna_metadata, name="site_metadata"),
     # w:TEST:END:
 
     url(r'^tables/$', views.tables, name="tables"),                                                                                 # Custom datatables columns.

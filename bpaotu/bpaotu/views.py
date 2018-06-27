@@ -287,36 +287,36 @@ def param_to_filters_without_checks(query_str):
 # W: I think it's worth creating a custom API for the visualisation as the exisiting apis the page state + POSTing forms? Unless I created an identical search form.
 @csrf_exempt
 @require_GET
-def vis(request):
+def get_edna_abundance(request):
     logger.info('Abundance api requested')
     term = request.GET['term']
-    with EdnaAbundanceQuery() as wq:
+    with EdnaAbundanceQuery() as query:
         if term:
-            water_result = wq.get_full_abundance_nested(term)
+            query_result = query.get_full_abundance_nested(term)
         else:
-            water_result = wq.get_full_abundance_nested('')
+            query_result = query.get_full_abundance_nested('')
     response = JsonResponse({
-        'data': water_result,
+        'data': query_result,
     })
-    # response['Access-Control-Allow-Origin'] = 'http://localhost:5500/'
+    # TODO: response['Access-Control-Allow-Origin'] = 'http://localhost:5500/'
     response['Access-Control-Allow-Origin'] = '*'
     return response
 
 
 @csrf_exempt
 @require_GET
-def get_all_metadata(request):
+def get_edna_metadata(request):
     logger.info('Abundance api requested')
     term = request.GET['term']
-    with EdnaAbundanceQuery() as wq:
+    with EdnaMetadataQuery() as query:
         if term:
-            water_result = wq.get_full_abundance_nested(term)
+            query_result = query.get_full_abundance_nested(term)
         else:
-            water_result = wq.get_full_abundance_nested('')
+            query_result = query.get_full_abundance_nested('')
     response = JsonResponse({
-        'data': water_result,
+        'data': query_result,
     })
-    # response['Access-Control-Allow-Origin'] = 'http://localhost:5500/'
+    # TODO: response['Access-Control-Allow-Origin'] = 'http://localhost:5500/'
     response['Access-Control-Allow-Origin'] = '*'
     return response
 
