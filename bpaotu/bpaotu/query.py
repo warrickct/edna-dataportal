@@ -5,7 +5,9 @@ from itertools import chain
 import logging
 
 import sqlalchemy
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import (
+    sessionmaker,
+)
 
 from django.core.cache import caches
 
@@ -367,10 +369,18 @@ class EdnaMetadataQuery:
         self._session.close()
 
     def get_all_metadata(self, term):
-        result = {}
-        q = self._session.query(SampleContext).all()
-        result = q
-        return result
+        q = self._session.query(SampleContext._site, SampleContext._x, SampleContext._y, SampleContext._elev).all()
+        # TEMP: hardcoding for now
+        results =[]
+        for t in q:
+            results.append({
+                'site': t[0],
+                'x': t[1],
+                'y': t[2],
+                'elev': t[3],
+            })
+        return results
+
 
 class ContextualFilter:
     mode_operators = {
