@@ -297,7 +297,7 @@ class SampleQuery:
         return q
 
 # w: TEST: Making a test query to mimic the .tsv data for now.
-class WaterQuery:
+class EdnaAbundanceQuery:
     def __init__(self):
         self._session = Session()
 
@@ -327,17 +327,37 @@ class WaterQuery:
         logger.info(vals)
         return vals
 
-    def get_full_abundance_nested(self):
-        # NOTE: Need to specify a filter/all() method otherwise just returns the query.
-        query_result = {}
-        count_data = (
-            otus = 
-            self._session.query(SampleOTU.otu_id.distinct(), SampleOTU.sample_id, SampleOTU.count)
-            .filter(SampleOTU.count > 0)
+    def get_full_abundance_nested(self, term):
+        results = []
+        otu_lookup = dict(self._session.query(OTU.id, OTU.code).all())
+        site_lookup = dict(self._session.query(SampleContext.id, SampleContext._site).all())
+        abundance_rows = (
+            self._session.query(SampleOTU.count, SampleContext._site, OTU.code)
+            .join(SampleContext)
+            .join(OTU)
+            .filter(OTU.code.like("%" + term + "%"))
             .all()
         )
-        logger.info(count_data)
-        return count_data
+        abundance_nested = {}
+        for abundance_entry in abundance_rows:
+            count = abundance_entry[0]
+            site = abundance_entry[1]
+            otu = abundance_entry[2]
+            if otu not in abundance_nested:
+                abundance_nested[otu] = {}
+            if site not in abundance_nested[otu]:
+                abundance_nested[otu][site] = count
+        for otu_key in abundance_nested:
+            row = {
+                "": otu_key
+            }
+            for site_key in abundance_nested[otu_key]:
+                row[site_key] = abundance_nested[otu_key][site_key]
+            results.append(row)
+        return results
+
+
+class EdnaMetadataQuery:
 
 
 class ContextualFilter:

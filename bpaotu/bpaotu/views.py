@@ -28,7 +28,8 @@ from .query import (
     OntologyInfo,
     SampleQuery,
     # TEST:TEMP:START:
-    WaterQuery,
+    EdnaAbundanceQuery,
+    EdnaMetadataQuery,
     # TEST:TEMP:END:
     ContextualFilter,
     ContextualFilterTermDate,
@@ -287,28 +288,37 @@ def param_to_filters_without_checks(query_str):
 @csrf_exempt
 @require_GET
 def vis(request):
-    logger.info('VIS REQUESTEDDDDDDDDDDDDDDDDDDDDDDDDDDDD')
-
+    logger.info('Abundance api requested')
     term = request.GET['term']
-    with WaterQuery() as wq:
+    with EdnaAbundanceQuery() as wq:
         if term:
-            # TEST:
-            water_result = wq.get_full_abundance_nested()
-            # water_result = wq.get_all_sample_otus(term)
+            water_result = wq.get_full_abundance_nested(term)
         else:
-            water_result = wq.get_all_sample_otus('')
-
-    # TODO: compress the response somehow or return the response in some grouped way.
-
+            water_result = wq.get_full_abundance_nested('')
     response = JsonResponse({
         'data': water_result,
     })
     # response['Access-Control-Allow-Origin'] = 'http://localhost:5500/'
     response['Access-Control-Allow-Origin'] = '*'
-
     return response
 
-    
+
+@csrf_exempt
+@require_GET
+def get_all_metadata(request):
+    logger.info('Abundance api requested')
+    term = request.GET['term']
+    with EdnaAbundanceQuery() as wq:
+        if term:
+            water_result = wq.get_full_abundance_nested(term)
+        else:
+            water_result = wq.get_full_abundance_nested('')
+    response = JsonResponse({
+        'data': water_result,
+    })
+    # response['Access-Control-Allow-Origin'] = 'http://localhost:5500/'
+    response['Access-Control-Allow-Origin'] = '*'
+    return response
 
 
 # w:NOTE: This one has something to do with abundance querying
