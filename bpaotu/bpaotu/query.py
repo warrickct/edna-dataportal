@@ -360,19 +360,25 @@ class EdnaMetadataQuery:
         self._session.close()
 
     def get_all_metadata(self, term):
-        q = (
-            self._session.query(SampleContext._site, SampleContext._x, SampleContext._y, SampleContext._elev)
-            .filter(SampleContext._site.like("%" + term + "%"))
-            .all()
-        )
+        if term:
+            query = (
+                self._session.query(SampleContext._site, SampleContext._x, SampleContext._y, SampleContext._elev)
+                .filter(SampleContext._site.like("%" + term + "%"))
+                .all()
+            )
+        else:
+            query = (
+                self._session.query(SampleContext._site, SampleContext._x, SampleContext._y, SampleContext._elev)
+                .all()
+            )
         # TEMP:TODO: hardcoding dictionary response for now. Need to replace with automated keys based off table columns.
         results =[]
-        for t in q:
+        for tuple in query :
             results.append({
-                'site': t[0],
-                'x': t[1],
-                'y': t[2],
-                'elev': t[3],
+                'site': tuple[0],
+                'x': tuple[1],
+                'y': tuple[2],
+                'elev': tuple[3],
             })
         return results
 
