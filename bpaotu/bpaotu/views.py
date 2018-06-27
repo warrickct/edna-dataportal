@@ -292,9 +292,9 @@ def get_edna_abundance(request):
     term = request.GET['term']
     with EdnaAbundanceQuery() as query:
         if term:
-            query_result = query.get_full_abundance_nested(term)
+            query_result = query.get_abundance_nested(term)
         else:
-            query_result = query.get_full_abundance_nested('')
+            query_result = query.get_abundance_nested('')
     response = JsonResponse({
         'data': query_result,
     })
@@ -310,9 +310,9 @@ def get_edna_metadata(request):
     term = request.GET['term']
     with EdnaMetadataQuery() as query:
         if term:
-            query_result = query.get_full_abundance_nested(term)
+            query_result = query.get_all_metadata(term)
         else:
-            query_result = query.get_full_abundance_nested('')
+            query_result = query.get_all_metadata('')
     response = JsonResponse({
         'data': query_result,
     })

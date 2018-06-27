@@ -326,7 +326,7 @@ class EdnaAbundanceQuery:
         logger.info(vals)
         return vals
 
-    def get_full_abundance_nested(self, term):
+    def get_abundance_nested(self, term):
         results = []
         otu_lookup = dict(self._session.query(OTU.id, OTU.code).all())
         site_lookup = dict(self._session.query(SampleContext.id, SampleContext._site).all())
@@ -366,10 +366,10 @@ class EdnaMetadataQuery:
     def __exit__(self, exec_type, exc_value, traceback):
         self._session.close()
 
-    def get_all_metadata(self):
+    def get_all_metadata(self, term):
         result = {}
-
         q = self._session.query(SampleContext).all()
+        result = q
         return result
 
 class ContextualFilter:
