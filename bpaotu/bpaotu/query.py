@@ -369,8 +369,11 @@ class EdnaMetadataQuery:
         self._session.close()
 
     def get_all_metadata(self, term):
-        q = self._session.query(SampleContext._site, SampleContext._x, SampleContext._y, SampleContext._elev).all()
-        # TEMP: hardcoding for now
+        q = (
+            self._session.query(SampleContext._site, SampleContext._x, SampleContext._y, SampleContext._elev)
+            .all()
+        )
+        # TEMP:TODO: hardcoding dictionary response for now. Need to replace with automated keys based off table columns.
         results =[]
         for t in q:
             results.append({
