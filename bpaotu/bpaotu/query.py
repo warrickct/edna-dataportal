@@ -309,36 +309,27 @@ class EdnaAbundanceQuery:
     def __exit__(self, exec_type, exc_value, traceback):
         self._session.close()
 
-    def get_all_sample_otus(self, term):
-        if term is None or term != '':
-            vals = (
-                self._session.query(OTU.code, SampleContext._site, SampleOTU.count)
-                .join(SampleOTU)
-                .join(SampleContext)
-                .filter(OTU.code.like("%" + term + "%"))
-                .all()
-            )
-        else:
-            vals = (
-                self._session.query(OTU.code, SampleContext._site, SampleOTU.count)
-                .join(SampleOTU)
-                .join(SampleContext)
-                .all()
-            )
-        logger.info(vals)
-        return vals
-
     def get_abundance_nested(self, term):
         results = []
         otu_lookup = dict(self._session.query(OTU.id, OTU.code).all())
-        site_lookup = dict(self._session.query(SampleContext.id, SampleContext._site).all())
-        abundance_rows = (
-            self._session.query(SampleOTU.count, SampleContext._site, OTU.code)
-            .join(SampleContext)
-            .join(OTU)
-            .filter(OTU.code.like("%" + term + "%"))
-            .all()
+        site_lookup = dict(
+            self._session.query(SampleContext.id, SampleContext._site).all()
         )
+        if not term:
+            abundance_rows = (
+                self._session.query(SampleOTU.count, SampleContext._site, OTU.code)
+                .join(SampleContext)
+                .join(OTU)
+                .all()
+            )
+        else:
+            abundance_rows = (
+                self._session.query(SampleOTU.count, SampleContext._site, OTU.code)
+                .join(SampleContext)
+                .join(OTU)
+                .filter(OTU.code.like("%" + term + "%"))
+                .all()
+            )
         abundance_nested = {}
         for abundance_entry in abundance_rows:
             count = abundance_entry[0]
