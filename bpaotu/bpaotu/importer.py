@@ -231,7 +231,7 @@ class DataImporter:
         def _taxon_rows_iter():
             # TODO: do the iterations and cleaning of the rows here.
             # w: iterate the metadata. Take name, x, y and then yield it.
-            rows = glob(self._import_base + '/waterdata/data/*.tsv')[0]
+            rows = glob(self._import_base + '/waterdata/data/*-test.tsv')[0]
             file = open(rows, "r")
             reader = csv.DictReader(file, delimiter='\t')
             imported = 0
@@ -505,7 +505,7 @@ class DataImporter:
             abundance_q = set([t[0] for t in self._session.query(OTU.code)])
             logger.info('number of otus in full query: %s', len(abundance_q))
             missing = 0
-            path = glob(self._import_base + '/waterdata/data/*.tsv')[0]
+            path = glob(self._import_base + '/waterdata/data/*-test.tsv')[0]
             file = open(path, 'r')
             reader = csv.DictReader(file, delimiter='\t')
             for row in reader:
@@ -533,29 +533,19 @@ class DataImporter:
             logger.info('missing %d', missing)
 
         def _make_sample_otus():    
-            path = glob(self._import_base + '/waterdata/data/*.tsv')[0]
+            path = glob(self._import_base + '/waterdata/data/*-test.tsv')[0]
             file = open(path, 'r')
             reader = csv.DictReader(file, delimiter='\t')
             # TEST:START:
             # _taxonomy_db_file_compare()
             # _samplecontext_db_file_compare()
             # TEST:END:
-
-            #TEST: 
-            valid_counts = 0
-            invalid_counts = 0
-            # TEST:END:
             for index, row in enumerate(reader):
                 otu_code = row['']
                 referenced_otus = []
+                logger.info(otu_code)
                 for t in self._session.query(OTU.id).filter(OTU.code == otu_code):
                     otu_id = t[0] # [0][0]
-                    # TEST:START:
-                    if otu_id not in referenced_otus:
-                        referenced_otus.append(otu_id)
-                    else:
-                        logger.info('otu_id has already been used for look-up %s', otu_id)
-                    # TEST:END:
                     # logger.info('otu code: %s', otu_code)
                     # logger.info('otu returned PK: %s', otu_id)
                 for column in row:
@@ -589,14 +579,11 @@ class DataImporter:
             # start adding the data rows
             w.writerows(_make_sample_otus())
             try:
-                #TEST: HI
-                hi = self._engine.execute(
+                self._engine.execute(
                     text('''COPY otu.sample_otu from :csv CSV header''')
                     .execution_options(autocommit=True),
                     csv=fname
                 )
-                # TEST:
-                logger.info(hi)
             except:
                 logger.critical("unable to import")
                 traceback.print_exc()

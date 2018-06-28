@@ -335,6 +335,12 @@ class EdnaAbundanceQuery:
             count = abundance_entry[0]
             site = abundance_entry[1]
             otu = abundance_entry[2]
+            # TEST:
+            if 'WARR' in otu:
+                logger.info(otu)
+            else:
+                logger.info('not in otu')
+            # TEST:END:
             if otu not in abundance_nested:
                 abundance_nested[otu] = {}
             if site not in abundance_nested[otu]:
