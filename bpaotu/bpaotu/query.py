@@ -362,13 +362,35 @@ class EdnaMetadataQuery:
     def get_all_metadata(self, term):
         if term:
             query = (
-                self._session.query(SampleContext._site, SampleContext._x, SampleContext._y, SampleContext._elev)
+                self._session.query(
+                    SampleContext._site, 
+                    SampleContext._x, 
+                    SampleContext._y, 
+                    SampleContext._elev,
+                    SampleContext._mean_c_percent,
+                    SampleContext._mid_ph,
+                    SampleContext._ave_lognconcen,
+                    SampleContext._prec_mean,
+                    SampleContext._water2,
+                    SampleContext._freshwater
+                    )
                 .filter(SampleContext._site.like("%" + term + "%"))
                 .all()
             )
         else:
             query = (
-                self._session.query(SampleContext._site, SampleContext._x, SampleContext._y, SampleContext._elev)
+                self._session.query(
+                    SampleContext._site, 
+                    SampleContext._x, 
+                    SampleContext._y, 
+                    SampleContext._elev, 
+                    SampleContext._mean_c_percent,
+                    SampleContext._mid_ph,
+                    SampleContext._ave_lognconcen,
+                    SampleContext._prec_mean,
+                    SampleContext._water2,
+                    SampleContext._freshwater,
+                    )
                 .all()
             )
         # TEMP:TODO: hardcoding dictionary response for now. Need to replace with automated keys based off table columns.
@@ -379,6 +401,12 @@ class EdnaMetadataQuery:
                 'x': tuple[1],
                 'y': tuple[2],
                 'elev': tuple[3],
+                'mean_C_percent': tuple[4],
+                'mid_ph': tuple[5],
+                'ave_logNconcen': tuple[6],
+                'prec_mean': tuple[7],
+                'water2': tuple[8],
+                'freshwater': tuple[9],
             })
         return results
 

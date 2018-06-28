@@ -217,7 +217,7 @@ class DataImporter:
             #     ontology_parts[index] = part
             #     logger.info(part)    
             while len(ontology_parts) < len(ontologies):
-                unclassified_padding = "other"
+                unclassified_padding = ''
                 ontology_parts.append(unclassified_padding)
                 changes += 1
             while len(ontology_parts) > len(ontologies):
@@ -496,36 +496,66 @@ class DataImporter:
         # w:todo: Handle errors (missing sites/otus/invalid values).
         sample_ids = set([t[0] for t in self._session.query( SampleContext.id)])
         # logger.warning(sample_ids) #{'KKP', 'LG', 'OT', ...}
+        logger.info('amount of sites iterating %s', len(sample_ids))
 
-        # TEST:
-        test_query = set([t[0] for t in self._session.query(SampleContext._site)])
-        logger.warning('number of sites in full query: %s', len(test_query))
-
-        # TEST: Testing to see if abundance rows match tsv row count:
-        # BUG:.tsv file amount doesn't match the database row count. Must have some duplicates or something.
-        def _abundance_test(reader):
-            abundance_q = [t[0] for t in self._session.query(OTU.code)]
-
-            # abundance_q = set([t[0] for t in self._session.query(OTU.code)])
+        def _taxonomy_db_file_compare():
+            '''
+            Simple test to if there are file rows that aren't yet in the database - Logs missing taxons.
+            '''
+            abundance_q = set([t[0] for t in self._session.query(OTU.code)])
             logger.info('number of otus in full query: %s', len(abundance_q))
             missing = 0
+            path = glob(self._import_base + '/waterdata/data/*.tsv')[0]
+            file = open(path, 'r')
+            reader = csv.DictReader(file, delimiter='\t')
             for row in reader:
                 otu_name = row[''] 
                 if otu_name not in abundance_q:
                     missing +=1
-                    # logger.info('not found in abundance_q: %s', otu_name)
+                    logger.info('not found in abundance_q: %s', otu_name)
+            logger.info('missing %d', missing)
+
+        def _samplecontext_db_file_compare():
+            '''
+            Logs site codes that are in the file but not in the database
+            '''
+            query = set([t[0] for t in self._session.query(SampleContext._site)])
+            logger.info('number of sites in full SampleContext query: %s', len(query))
+            missing = 0
+            path = glob(self._import_base + '/waterdata/metadata/*.tsv')[0]
+            file = open(path, 'r')
+            reader = csv.DictReader(file, delimiter='\t')
+            for row in reader:
+                site_name = row['site'] 
+                if site_name not in query:
+                    missing +=1
+                    logger.info('not found in query: %s', site_name)
             logger.info('missing %d', missing)
 
         def _make_sample_otus():    
             path = glob(self._import_base + '/waterdata/data/*.tsv')[0]
             file = open(path, 'r')
             reader = csv.DictReader(file, delimiter='\t')
-            # TEST:
-            to_make = {}
+            # TEST:START:
+            # _taxonomy_db_file_compare()
+            # _samplecontext_db_file_compare()
+            # TEST:END:
+
+            #TEST: 
+            valid_counts = 0
+            invalid_counts = 0
+            # TEST:END:
             for index, row in enumerate(reader):
                 otu_code = row['']
+                referenced_otus = []
                 for t in self._session.query(OTU.id).filter(OTU.code == otu_code):
                     otu_id = t[0] # [0][0]
+                    # TEST:START:
+                    if otu_id not in referenced_otus:
+                        referenced_otus.append(otu_id)
+                    else:
+                        logger.info('otu_id has already been used for look-up %s', otu_id)
+                    # TEST:END:
                     # logger.info('otu code: %s', otu_code)
                     # logger.info('otu returned PK: %s', otu_id)
                 for column in row:
@@ -533,32 +563,40 @@ class DataImporter:
                     if column != '':
                         # ? : Is it quicker/better to query the database or keep the id:name dictionary in working memory? What's more scalable.
                         # FIXME: Some are returning empty sets probably due to case sensitive.
-                        bpa_id = [t[0] for t in self._session.query(SampleContext.id).filter(SampleContext._site == column)][0]
+                        sample_id = [t[0] for t in self._session.query(SampleContext.id).filter(SampleContext._site == column)][0]
                         count = row[column]
                         try:
                             count = float(count)
+                            valid_counts += 1                     
                         except:
-                            # logger.warning('count invalid, defaulting to 0')
+                            logger.warning('count invalid, defaulting to 0')
                             count = 0
+                            invalid_counts += 1
                         # logger.warning(column)
                         # logger.warning(count)
                         # FIXME: Currently violating with duplicate keys or  psql error detail: Key (sample_id, otu_id)=(0, 901) already exists.
-                        yield [bpa_id, otu_id, count]
+                        yield [sample_id, otu_id, count]
+            logger.info('valid counts %d', valid_counts)
+            logger.info('invalid counts %d', invalid_counts)
 
         with tempfile.NamedTemporaryFile(mode='w', dir='/data', prefix='bpaotu-', delete=False) as temp_fd:
             fname = temp_fd.name
             os.chmod(fname, 0o644)
             logger.warning("writing out waterdata otu abundance to csv tempfile: %s" % fname)
             w = csv.writer(temp_fd)
+            # set up header
             w.writerow(['sample_id', 'otu_id', 'count'])
-            # w: got the headers set up so just iterate the .tsv
+            # start adding the data rows
             w.writerows(_make_sample_otus())
             try:
-                self._engine.execute(
+                #TEST: HI
+                hi = self._engine.execute(
                     text('''COPY otu.sample_otu from :csv CSV header''')
                     .execution_options(autocommit=True),
                     csv=fname
                 )
+                # TEST:
+                logger.info(hi)
             except:
                 logger.critical("unable to import")
                 traceback.print_exc()
