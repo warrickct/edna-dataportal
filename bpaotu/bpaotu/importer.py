@@ -543,11 +543,10 @@ class DataImporter:
             for index, row in enumerate(reader):
                 otu_code = row['']
                 referenced_otus = []
-                logger.info(otu_code)
                 for t in self._session.query(OTU.id).filter(OTU.code == otu_code):
                     otu_id = t[0] # [0][0]
-                    # logger.info('otu code: %s', otu_code)
-                    # logger.info('otu returned PK: %s', otu_id)
+                    logger.info('otu code: %s', otu_code)
+                    logger.info('otu returned PK: %s', otu_id)
                 for column in row:
                     # w: skipping over otu name field
                     if column != '':
@@ -557,18 +556,13 @@ class DataImporter:
                         count = row[column]
                         try:
                             count = float(count)
-                            valid_counts += 1                     
                         except:
                             logger.warning('count invalid, defaulting to 0')
                             count = 0
-                            invalid_counts += 1
                         # logger.warning(column)
                         # logger.warning(count)
                         # FIXME: Currently violating with duplicate keys or  psql error detail: Key (sample_id, otu_id)=(0, 901) already exists.
                         yield [sample_id, otu_id, count]
-            logger.info('valid counts %d', valid_counts)
-            logger.info('invalid counts %d', invalid_counts)
-
         with tempfile.NamedTemporaryFile(mode='w', dir='/data', prefix='bpaotu-', delete=False) as temp_fd:
             fname = temp_fd.name
             os.chmod(fname, 0o644)
