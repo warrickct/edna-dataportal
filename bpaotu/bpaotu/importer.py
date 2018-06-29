@@ -574,7 +574,7 @@ class DataImporter:
             w.writerows(_make_sample_otus())
             try:
                 self._engine.execute(
-                    text('''COPY otu.sample_otu from :csv CSV header''')
+                    text('''TRUNCATE otu.sample_otu; COPY otu.sample_otu from :csv CSV header''')
                     .execution_options(autocommit=True),
                     csv=fname
                 )
