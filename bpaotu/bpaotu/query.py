@@ -320,8 +320,9 @@ class EdnaAbundanceQuery:
                 self._session.query(SampleOTU.count, SampleContext._site, OTU.code)
                 .join(SampleContext)
                 .join(OTU)
-                .all()
+                # .all()
             )
+            logger.info(abundance_rows)
         else:
             abundance_rows = (
                 self._session.query(SampleOTU.count, SampleContext._site, OTU.code)
