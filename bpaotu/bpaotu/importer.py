@@ -545,8 +545,6 @@ class DataImporter:
                 referenced_otus = []
                 for t in self._session.query(OTU.id).filter(OTU.code == otu_code):
                     otu_id = t[0] # [0][0]
-                    logger.info('otu code: %s', otu_code)
-                    logger.info('otu returned PK: %s', otu_id)
                 for column in row:
                     # w: skipping over otu name field
                     if column != '':
@@ -568,16 +566,12 @@ class DataImporter:
             os.chmod(fname, 0o644)
             logger.warning("writing out waterdata otu abundance to csv tempfile: %s" % fname)
             w = csv.writer(temp_fd)
-            # set up header
             w.writerow(['sample_id', 'otu_id', 'count'])
-            # start adding the data rows
             w.writerows(_make_sample_otus())
             try:
                 self._engine.execute(
-                    text('''TRUNCATE otu.sample_otu; COPY otu.sample_otu from :csv CSV header''')
-                    .execution_options(autocommit=True),
-                    csv=fname
-                )
+                        text('''COPY otu.sample_otu from :csv CSV header''').execution_options(autocommit=True),
+                        csv=fname)
             except:
                 logger.critical("unable to import")
                 traceback.print_exc()
