@@ -557,9 +557,6 @@ class DataImporter:
                         except:
                             logger.warning('count invalid, defaulting to 0')
                             count = 0
-                        # logger.warning(column)
-                        # logger.warning(count)
-                        # FIXME: Currently violating with duplicate keys or  psql error detail: Key (sample_id, otu_id)=(0, 901) already exists.
                         yield [sample_id, otu_id, count]
         with tempfile.NamedTemporaryFile(mode='w', dir='/data', prefix='bpaotu-', delete=False) as temp_fd:
             fname = temp_fd.name
