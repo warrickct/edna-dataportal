@@ -231,7 +231,7 @@ class DataImporter:
         def _taxon_rows_iter():
             # TODO: do the iterations and cleaning of the rows here.
             # w: iterate the metadata. Take name, x, y and then yield it.
-            rows = glob(self._import_base + '/waterdata/data/*-test.tsv')[0]
+            rows = glob(self._import_base + '/waterdata/data/*fungi_data.tsv')[0]
             file = open(rows, "r")
             reader = csv.DictReader(file, delimiter='\t')
             imported = 0
@@ -452,7 +452,7 @@ class DataImporter:
                 yield SampleContext(**attrs)
 
         logger.warning("loading in waterdata contextual instead")
-        rows = glob(self._import_base + '/waterdata/metadata/*.tsv')[0]
+        rows = glob(self._import_base + '/waterdata/metadata/*fungi_metadata.tsv')[0]
         # TEMP: testing automated field generation
         self._session.bulk_save_objects(_make_context())
         self._session.commit()
@@ -505,7 +505,7 @@ class DataImporter:
             abundance_q = set([t[0] for t in self._session.query(OTU.code)])
             logger.info('number of otus in full query: %s', len(abundance_q))
             missing = 0
-            path = glob(self._import_base + '/waterdata/data/*-test.tsv')[0]
+            path = glob(self._import_base + '/waterdata/data/*fungi_data.tsv')[0]
             file = open(path, 'r')
             reader = csv.DictReader(file, delimiter='\t')
             for row in reader:
@@ -522,7 +522,7 @@ class DataImporter:
             query = set([t[0] for t in self._session.query(SampleContext._site)])
             logger.info('number of sites in full SampleContext query: %s', len(query))
             missing = 0
-            path = glob(self._import_base + '/waterdata/metadata/*.tsv')[0]
+            path = glob(self._import_base + '/waterdata/metadata/*fungi_metadata.tsv')[0]
             file = open(path, 'r')
             reader = csv.DictReader(file, delimiter='\t')
             for row in reader:
@@ -533,7 +533,7 @@ class DataImporter:
             logger.info('missing %d', missing)
 
         def _make_sample_otus():    
-            path = glob(self._import_base + '/waterdata/data/*-test.tsv')[0]
+            path = glob(self._import_base + '/waterdata/data/*fungi_data.tsv')[0]
             file = open(path, 'r')
             reader = csv.DictReader(file, delimiter='\t')
             # TEST:START:
