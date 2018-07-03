@@ -413,6 +413,7 @@ class DataImporter:
         '''
         Custom waterdata loading
         '''
+        site_lookup = {}
 
         def _clean_value(value):
             ''' Makes sure the value for the entry is uniform '''
@@ -445,13 +446,13 @@ class DataImporter:
             for index, row in enumerate(reader):
                 attrs ={}
                 #add to site hashtable to be used for abundance loading
-                site_hash[otu_hash(row['site'].upper())] = index
+                site_lookup[site_hash(row['site'].upper())] = index
                 # add an id for the PK column based on metafile row number
                 attrs['id'] = index
                 for field, value in row.items():
                     cleaned_field = _clean_field(field)
                     attrs[cleaned_field] = _clean_value(value)
-                logger.warning(attrs)
+                # logger.warning(attrs)
                 yield SampleContext(**attrs)
 
         logger.warning("loading in waterdata contextual instead")
@@ -488,7 +489,7 @@ class DataImporter:
         self._session.bulk_save_objects(_make_context())
         self._session.commit()
 
-    def load_waterdata_otu_abundance(self, otu_lookup):
+    def load_waterdata_otu_abundance(self, otu_lookup, site_lookup):
         logger.warning("Running custom waterdata abundance loader")
         # w:todo: returns a list of all the site ids.
         # w:todo: Make it reference otu id instead of the name. Will mean I need to use the "otu_lookup" hashtable/dictionary.
@@ -551,7 +552,7 @@ class DataImporter:
                 otu_id = otu_lookup[otu_hash(row[0])]
                 # for t in self._session.query(OTU.id).filter(OTU.code == otu_code):
                 #     otu_id = t[0] # [0][0]
-                for column in row:
+                for column in row[1:]:
                     # w: skipping over otu name field
                     if column != '':
                         # FIXME: Some are returning empty sets probably due to case sensitive.
@@ -578,13 +579,10 @@ class DataImporter:
                 logger.critical("unable to import")
                 traceback.print_exc()
 
-    # w: Creates the abundance data, aka the combined data of the otu and it's abundance
-    def load_otu_abundance(self, otu_lookup):
-        
-        # w:TEMP: redirect to customer waterdata method. I do this instead of just changing the otu_ingest method directly incase I forget that I edited that file (for now)
-        logger.warning("loading_otu_abundance redirecting to waterdata_abundance loader")
-        self.load_waterdata_otu_abundance(otu_lookup)
-        return
+    def load_otu_abundance(self, otu_lookup, site_lookup):
+        ''' 
+        Loads in the abundance data and populates the sample_otu table. Added custom site_lookup hashtable because our data refers to the sites as codes rather than ids
+        '''
         
         def otu_rows(fd):
             reader = csv.reader(fd, dialect='excel-tab')
