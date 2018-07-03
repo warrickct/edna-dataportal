@@ -491,7 +491,7 @@ class DataImporter:
         self._session.bulk_save_objects(_make_context())
         self._session.commit()
 
-    def load_waterdata_otu_abundance(self):
+    def load_waterdata_otu_abundance(self, otu_lookup):
         logger.warning("Running custom waterdata abundance loader")
         # w:todo: returns a list of all the site ids.
         # w:todo: Make it reference otu id instead of the name. Will mean I need to use the "otu_lookup" hashtable/dictionary.
@@ -544,8 +544,9 @@ class DataImporter:
             # TEST:END:
             for index, row in enumerate(reader):
                 otu_code = row['']
-                for t in self._session.query(OTU.id).filter(OTU.code == otu_code):
-                    otu_id = t[0] # [0][0]
+                otu_id = otu_lookup[otu_hash(row[0])]
+                # for t in self._session.query(OTU.id).filter(OTU.code == otu_code):
+                #     otu_id = t[0] # [0][0]
                 for column in row:
                     # w: skipping over otu name field
                     if column != '':
