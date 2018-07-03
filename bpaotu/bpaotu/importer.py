@@ -534,6 +534,12 @@ class DataImporter:
                     logger.info('not found in query: %s', site_name)
             logger.info('missing %d', missing)
 
+        def otu_rows(fd):
+            reader = csv.reader(fd, delimiter='\t')
+            header = next(reader)
+            site_codes = header[1:]
+            g = 10/0
+
         def _make_sample_otus():    
             path = glob(self._import_base + '/waterdata/data/*fungi_data.tsv')[0]
             file = open(path, 'r')
@@ -541,6 +547,7 @@ class DataImporter:
             # TEST:START:
             # _taxonomy_db_file_compare()
             # _samplecontext_db_file_compare()
+            otu_rows(file)
             # TEST:END:
             for index, row in enumerate(reader):
                 otu_code = row['']
@@ -550,7 +557,6 @@ class DataImporter:
                 for column in row:
                     # w: skipping over otu name field
                     if column != '':
-                        # ? : Is it quicker/better to query the database or keep the id:name dictionary in working memory? What's more scalable.
                         # FIXME: Some are returning empty sets probably due to case sensitive.
                         sample_id = [t[0] for t in self._session.query(SampleContext.id).filter(SampleContext._site == column)][0]
                         count = row[column]
@@ -580,7 +586,7 @@ class DataImporter:
         
         # w:TEMP: redirect to customer waterdata method. I do this instead of just changing the otu_ingest method directly incase I forget that I edited that file (for now)
         logger.warning("loading_otu_abundance redirecting to waterdata_abundance loader")
-        self.load_waterdata_otu_abundance()
+        self.load_waterdata_otu_abundance(otu_lookup)
         return
         
         def otu_rows(fd):
