@@ -545,18 +545,21 @@ class DataImporter:
             # TEST:START:
             # _taxonomy_db_file_compare()
             # _samplecontext_db_file_compare()
-            otu_rows(file)
             # TEST:END:
+            # TEMP: JULY 5ths otu_rows(file)
             for index, row in enumerate(reader):
                 otu_code = row['']
-                otu_id = otu_lookup[otu_hash(row[0])]
+                # logger.info(otu_lookup)
+                otu_id = otu_lookup[otu_hash(otu_code)]
                 # for t in self._session.query(OTU.id).filter(OTU.code == otu_code):
                 #     otu_id = t[0] # [0][0]
-                for column in row[1:]:
-                    # w: skipping over otu name field
+                # skips otu name column
+                for column in row:
+                    # sample_id = [t[0] for t in self._session.query(SampleContext.id).filter(SampleContext._site == column)][0]
                     if column != '':
-                        # FIXME: Some are returning empty sets probably due to case sensitive.
-                        sample_id = [t[0] for t in self._session.query(SampleContext.id).filter(SampleContext._site == column)][0]
+                        sample_id = site_lookup[site_hash(column.upper())]
+                        logger.info('sample id')
+                        logger.info(sample_id)
                         count = row[column]
                         try:
                             count = float(count)
