@@ -238,6 +238,8 @@ class DataImporter:
             # TEST: Trying to see what the max partsin the waterdata is.
             max_part_len = 0
             for index, row in enumerate(reader):
+                # w: Uses the name as the lookup to find the PK of the taxon.
+                otu_lookup[otu_hash(row[''])] = index
                 otu_name = row['']
                 ontology_parts = otu_name.split(';')
                 ontology_parts = _normalize_taxonomy(ontology_parts)
@@ -500,7 +502,7 @@ class DataImporter:
 
         def _taxonomy_db_file_compare():
             '''
-            Simple test to if there are file rows that aren't yet in the database - Logs missing taxons.
+            Warrick testing method: Simple test to if there are file rows that aren't yet in the database - Logs missing taxons.
             '''
             abundance_q = set([t[0] for t in self._session.query(OTU.code)])
             logger.info('number of otus in full query: %s', len(abundance_q))
@@ -517,7 +519,7 @@ class DataImporter:
 
         def _samplecontext_db_file_compare():
             '''
-            Logs site codes that are in the file but not in the database
+            Warrick testing method: Logs site codes that are in the file but not in the database
             '''
             query = set([t[0] for t in self._session.query(SampleContext._site)])
             logger.info('number of sites in full SampleContext query: %s', len(query))
@@ -542,7 +544,6 @@ class DataImporter:
             # TEST:END:
             for index, row in enumerate(reader):
                 otu_code = row['']
-                referenced_otus = []
                 for t in self._session.query(OTU.id).filter(OTU.code == otu_code):
                     otu_id = t[0] # [0][0]
                 for column in row:
