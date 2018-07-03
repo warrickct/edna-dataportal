@@ -76,6 +76,8 @@ def grouper(iterable, n, fillvalue=None):
 def otu_hash(code):
     return md5(code.encode('ascii')).digest()
 
+def site_hash(code):
+    return md5(code.encode('ascii')).digest()
 
 class DataImporter:
     soil_ontologies = OrderedDict([
@@ -417,10 +419,17 @@ class DataImporter:
     # w: Made simple method for import water data .tsv file.
     def load_waterdata_contextual_metadata(self):
         '''
-        w: Custom waterdata loading
+        Custom waterdata loading
         '''
 
+        def _clean_value(value):
+            ''' Makes sure the value for the entry is uniform '''
+            if isinstance(value, str):
+                value.upper()
+            return value
+
         def _clean_field(field):
+            ''' Makes sure the field matches the database column name '''
             replacements = [
                 ('\s', '_'),
                 ('&', '_and_'),
@@ -429,7 +438,6 @@ class DataImporter:
                 ('\(|\)', '_bracket_'),
                 ('_{2,}', '_'),
             ]
-
             for old, new in replacements:
                 field = re.sub(old, new, field)
             field = field.lower()
@@ -439,25 +447,26 @@ class DataImporter:
             return field
 
         def _make_context():
-            # w: iterate the metadata. Take name, x, y and then yield it.
+            '''Iterates the metadata, Makes an object mirror a sample_context tuple and returns it '''
             file = open(rows, "r")
             reader = csv.DictReader(file, delimiter='\t')
-            for line, row in enumerate(reader):
-                # TODO: Add the additional metadata columns. Probably best to iterate through it.
-                # w: Had to make the site_id uppercase to match abundance data.
+            for index, row in enumerate(reader):
                 attrs ={}
-                attrs['id'] = line
+                #add to site hashtable to be used for abundance loading
+                site_hash[otu_hash(row['site'].upper())] = index
+                # add an id for the PK column based on metafile row number
+                attrs['id'] = index
                 for field, value in row.items():
                     cleaned_field = _clean_field(field)
-                    attrs[cleaned_field] = value
-                # logger.warning(attrs)
+                    attrs[cleaned_field] = _clean_value(value)
+                logger.warning(attrs)
                 yield SampleContext(**attrs)
 
         logger.warning("loading in waterdata contextual instead")
         rows = glob(self._import_base + '/waterdata/metadata/*fungi_metadata.tsv')[0]
-        # TEMP: testing automated field generation
         self._session.bulk_save_objects(_make_context())
         self._session.commit()
+        return site_lookup
         
     def load_marine_contextual_metadata(self):
         """Loads the marine.xlsx into rows variable. Then maps the marine ontologies to the rows"""
