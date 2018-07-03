@@ -233,7 +233,7 @@ class DataImporter:
         def _taxon_rows_iter():
             # TODO: do the iterations and cleaning of the rows here.
             # w: iterate the metadata. Take name, x, y and then yield it.
-            rows = glob(self._import_base + '/waterdata/data/*fungi_data.tsv')[0]
+            rows = glob(self._import_base + '/waterdata/data/*duplicates.tsv')[0]
             file = open(rows, "r")
             reader = csv.DictReader(file, delimiter='\t')
             imported = 0
@@ -539,27 +539,20 @@ class DataImporter:
             g = 10/0
 
         def _make_sample_otus():    
-            path = glob(self._import_base + '/waterdata/data/*fungi_data.tsv')[0]
+            path = glob(self._import_base + '/waterdata/data/*duplicates.tsv')[0]
             file = open(path, 'r')
             reader = csv.DictReader(file, delimiter='\t')
             # TEST:START:
             # _taxonomy_db_file_compare()
             # _samplecontext_db_file_compare()
             # TEST:END:
-            # TEMP: JULY 5ths otu_rows(file)
             for index, row in enumerate(reader):
                 otu_code = row['']
-                # logger.info(otu_lookup)
                 otu_id = otu_lookup[otu_hash(otu_code)]
-                # for t in self._session.query(OTU.id).filter(OTU.code == otu_code):
-                #     otu_id = t[0] # [0][0]
-                # skips otu name column
                 for column in row:
-                    # sample_id = [t[0] for t in self._session.query(SampleContext.id).filter(SampleContext._site == column)][0]
+                    # skip otu name field
                     if column != '':
                         sample_id = site_lookup[site_hash(column.upper())]
-                        logger.info('sample id')
-                        logger.info(sample_id)
                         count = row[column]
                         try:
                             count = float(count)
