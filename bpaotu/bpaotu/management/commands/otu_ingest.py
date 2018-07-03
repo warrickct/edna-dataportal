@@ -14,4 +14,5 @@ class Command(BaseCommand):
         site_lookup = importer.load_waterdata_contextual_metadata()
         # otu_lookup = importer.load_taxonomies()
         otu_lookup = importer.load_waterdata_taxonomies()
-        importer.load_otu_abundance(otu_lookup)
+        # importer.load_otu_abundance(otu_lookup)
+        importer.load_waterdata_otu_abundance(otu_lookup, site_lookup)

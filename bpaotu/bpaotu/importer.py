@@ -314,11 +314,6 @@ class DataImporter:
         w: It does this by taking .taxonomy and the codes as input, making a csv then executing a postgres COPY command to transfer the temp.csv data into the OTU table.
         '''
         # md5(otu code) -> otu ID, returned
-
-        # w:TEMP: simple redirect to custom waterdata method
-        self.load_waterdata_taxonomies()
-        return
-
         otu_lookup = {}
         ontologies = OrderedDict([
             ('kingdom', OTUKingdom),
@@ -390,9 +385,6 @@ class DataImporter:
 
         logger.warning("loading Soil contextual metadata")
 
-        # w: Skipping this for testing.
-        return
-
         def _make_context():
             for row in rows:
                 bpa_id = row['bpa_id']
@@ -416,7 +408,7 @@ class DataImporter:
         self._session.bulk_save_objects(_make_context())
         self._session.commit()
 
-    # w: Made simple method for import water data .tsv file.
+
     def load_waterdata_contextual_metadata(self):
         '''
         Custom waterdata loading
@@ -470,10 +462,6 @@ class DataImporter:
         
     def load_marine_contextual_metadata(self):
         """Loads the marine.xlsx into rows variable. Then maps the marine ontologies to the rows"""
-
-        # w:TEMP: simple redirect/short circuit
-        self.load_waterdata_contextual_metadata()
-        return
 
         logger.warning("loading Marine contextual metadata")
 
