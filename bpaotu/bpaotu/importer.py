@@ -456,7 +456,7 @@ class DataImporter:
                 yield SampleContext(**attrs)
 
         logger.warning("loading in waterdata contextual instead")
-        rows = glob(self._import_base + '/waterdata/metadata/*fungi_metadata.tsv')[0]
+        rows = glob(self._import_base + '/waterdata/metadata/*cleaned_metadata.tsv')[0]
         self._session.bulk_save_objects(_make_context())
         self._session.commit()
         return site_lookup
