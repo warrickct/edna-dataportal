@@ -412,6 +412,20 @@ class EdnaMetadataQuery:
         return results
 
 
+class EdnaTestQuery:
+    def __init__(self):
+        self._session = Session()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exec_type, exc_value, traceback):
+        self._session.close()
+
+    def get_test_query(self, term):
+        results = {}
+        return results
+
 class ContextualFilter:
     mode_operators = {
         'or': sqlalchemy.or_,
