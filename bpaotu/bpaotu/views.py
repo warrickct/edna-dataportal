@@ -322,6 +322,12 @@ def get_edna_metadata(request):
     # response['Access-Control-Allow-Origin'] = '*'
     return response
 
+# Another custom API path
+@csrf_exempt
+@require_GET
+def get_exact_data(request):
+    return HttpResponse('hi')
+
 
 # w:NOTE: This one has something to do with abundance querying
 @csrf_exempt
