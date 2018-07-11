@@ -30,6 +30,7 @@ from .query import (
     # TEST:TEMP:START:
     EdnaAbundanceQuery,
     EdnaMetadataQuery,
+    EdnaTestQuery,
     # TEST:TEMP:END:
     ContextualFilter,
     ContextualFilterTermDate,
@@ -326,6 +327,8 @@ def get_edna_metadata(request):
 @csrf_exempt
 @require_GET
 def get_exact_data(request):
+    with EdnaTestQuery as query:
+        logger.info('hi')
     return HttpResponse('hi')
 
 
