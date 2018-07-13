@@ -422,9 +422,31 @@ class EdnaTestQuery:
     def __exit__(self, exec_type, exc_value, traceback):
         self._session.close()
 
-    def get_test_query(self, term):
-        results = {}
-        return results
+    # TEST: going to try make an inner join query and group them by the otu somehow.
+    def get_test_query(self):
+        # assume otu.code and sample_context ordered by id
+        otus = [r[0] for r in (
+            self._session.query(OTU.code)
+                .order_by(OTU.id)
+                .all()
+        )]
+        sites = [r[0] for r in (
+            self._session.query(SampleContext._site)
+                .order_by(SampleContext.id)
+                .all()
+        )]
+        abundances = [r[0] for r in (
+                self._session.query(SampleOTU.count)
+                .order_by(SampleOTU.otu_id)
+                .order_by(SampleOTU.sample_id)
+                .all()
+            )]
+        response = {
+            'otus': otus,
+            'sites': sites,
+            'abundances': abundances,
+        }
+        return response
 
 class ContextualFilter:
     mode_operators = {

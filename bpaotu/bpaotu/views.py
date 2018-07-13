@@ -327,9 +327,13 @@ def get_edna_metadata(request):
 @csrf_exempt
 @require_GET
 def get_exact_data(request):
-    with EdnaTestQuery as query:
-        logger.info('hi')
-    return HttpResponse('hi')
+    with EdnaTestQuery() as query:
+        result = query.get_test_query()
+    response =  JsonResponse({
+        'data': result,
+    })
+    response['Access-Control-Allow-Origin'] = '*'
+    return response
 
 
 # w:NOTE: This one has something to do with abundance querying
