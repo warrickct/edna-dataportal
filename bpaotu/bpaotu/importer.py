@@ -545,6 +545,8 @@ class DataImporter:
             # TEST:START:
             # _taxonomy_db_file_compare()
             # _samplecontext_db_file_compare()
+            # logger.info(otu_lookup)
+            # logger.info(site_lookup)
             # TEST:END:
             for index, row in enumerate(reader):
                 otu_code = row['']
@@ -560,6 +562,7 @@ class DataImporter:
                             logger.warning('count invalid, defaulting to 0')
                             count = 0
                         yield [sample_id, otu_id, count]
+
         with tempfile.NamedTemporaryFile(mode='w', dir='/data', prefix='bpaotu-', delete=False) as temp_fd:
             fname = temp_fd.name
             os.chmod(fname, 0o644)
