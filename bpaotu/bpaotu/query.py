@@ -437,8 +437,7 @@ class EdnaTestQuery:
         )]
         abundances = [r[0] for r in (
                 self._session.query(SampleOTU.count)
-                .order_by(SampleOTU.otu_id)
-                .order_by(SampleOTU.sample_id)
+                .order_by(SampleOTU.otu_id.asc(), SampleOTU.sample_id.asc())
                 .all()
             )]
         response = {
