@@ -412,7 +412,7 @@ class EdnaMetadataQuery:
         return results
 
 
-class EdnaTestQuery:
+class EdnaOrderedSampleOTU:
     def __init__(self):
         self._session = Session()
 

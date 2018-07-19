@@ -30,7 +30,7 @@ from .query import (
     # TEST:TEMP:START:
     EdnaAbundanceQuery,
     EdnaMetadataQuery,
-    EdnaTestQuery,
+    EdnaOrderedSampleOTU,
     # TEST:TEMP:END:
     ContextualFilter,
     ContextualFilterTermDate,
@@ -326,8 +326,8 @@ def get_edna_metadata(request):
 # Another custom API path
 @csrf_exempt
 @require_GET
-def get_exact_data(request):
-    with EdnaTestQuery() as query:
+def sample_otu_ordered(request):
+    with EdnaOrderedSampleOTU() as query:
         result = query.get_test_query()
     response =  JsonResponse({
         'data': result,

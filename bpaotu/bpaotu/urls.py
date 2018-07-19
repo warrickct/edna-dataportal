@@ -19,11 +19,11 @@ urlpatterns = [
     url(r'^ingest/$', views.otu_log, name="otu_log"),                                                                               # Display ingest names that do not match list.
     # w: edna urls
     # For getting filtered abundance data
-    url(r'^edna/abundance$', views.get_edna_abundance, name="abundance_data"),
+    url(r'^edna/api/abundance$', views.get_edna_abundance, name="abundance_data"),
     # For getting site meta data.
-    url(r'^edna/metadata$', views.get_edna_metadata, name="site_metadata"),
+    url(r'^edna/api/metadata$', views.get_edna_metadata, name="site_metadata"),
     # New test api:
-    url(r'^edna/test$', views.get_exact_data, name="get_exact"),
+    url(r'^edna/api/sample_otu_ordered$', views.sample_otu_ordered, name="ordered_abundance_metadata"),
     # w:
     url(r'^tables/$', views.tables, name="tables"),                                                                                 # Custom datatables columns.
     url(r'^private/api/v1/required_table_headers/$', views.required_table_headers, name="required_table_headers"),                  # Custom datatables columns.
