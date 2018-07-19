@@ -570,13 +570,13 @@ class DataImporter:
             w = csv.writer(temp_fd)
             w.writerow(['sample_id', 'otu_id', 'count'])
             w.writerows(_make_sample_otus())
-            try:
-                self._engine.execute(
-                        text('''COPY otu.sample_otu from :csv CSV header''').execution_options(autocommit=True),
-                        csv=fname)
-            except:
-                logger.critical("unable to import")
-                traceback.print_exc()
+        try:
+            self._engine.execute(
+                    text('''COPY otu.sample_otu from :csv CSV header''').execution_options(autocommit=True),
+                    csv=fname)
+        except:
+            logger.critical("unable to import")
+            traceback.print_exc()
 
     def load_otu_abundance(self, otu_lookup, site_lookup):
         ''' 
