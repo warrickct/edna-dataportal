@@ -46,6 +46,8 @@ from .models import (
     ImportSamplesMissingMetadataLog)
 from .util import temporary_file
 
+# TEST: For performance testing
+import time
 
 logger = logging.getLogger("rainbow")
 
@@ -327,11 +329,13 @@ def get_edna_metadata(request):
 @csrf_exempt
 @require_GET
 def sample_otu_ordered(request):
+    start_time = time.time()
     with EdnaOrderedSampleOTU() as query:
         result = query.get_test_query()
     response =  JsonResponse({
         'data': result,
     })
+    logger.info("--- %s seconds ---" % (time.time() - start_time))
     # CORS already configured to allow all on apache instance on server.
     # response['Access-Control-Allow-Origin'] = '*'
     return response

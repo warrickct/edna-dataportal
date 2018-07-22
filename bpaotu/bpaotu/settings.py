@@ -362,6 +362,8 @@ CELERY_TIMEZONE = TIME_ZONE
 # End Celery
 
 CACHES['search_results'] = CACHES['default']
+# w: custom cache for quick full abundance set.
+CACHES['edna_sample_otu_results'] = CACHES['default']
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 
 CHMOD_USER = env.get("repo_user", "apache")
