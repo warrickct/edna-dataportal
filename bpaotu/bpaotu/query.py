@@ -429,6 +429,7 @@ class EdnaOrderedSampleOTU:
         key = sha256(hash_str.encode('utf8')).hexdigest()
         result = cache.get(key)
         if not result:
+            logger.info("sample_otu_cache not found, making new cache")
             result = self._get_test_query()
             cache.set(key, result)
         else:

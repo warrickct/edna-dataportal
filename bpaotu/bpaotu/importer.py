@@ -52,7 +52,9 @@ from .otu import (
     SCHEMA,
     make_engine)
 
-# w: Another custom import
+# w: for clearing sample_otu cache upon import.
+from django.core.cache import caches
+from hashlib import sha256
 import re
 
 
@@ -563,6 +565,13 @@ class DataImporter:
                             count = 0
                         yield [sample_id, otu_id, count]
 
+        def _clear_sample_otu_cache():
+            logger.info('deleting old edna_sample_otu_results cache.')
+            cache = caches['edna_sample_otu_results']
+            hash_str = 'eDNA_Sample_OTUs:cached'
+            key = sha256(hash_str.encode('utf8')).hexdigest()
+            cache.delete(key)
+
         with tempfile.NamedTemporaryFile(mode='w', dir='/data', prefix='bpaotu-', delete=False) as temp_fd:
             fname = temp_fd.name
             os.chmod(fname, 0o644)
@@ -574,6 +583,7 @@ class DataImporter:
             self._engine.execute(
                     text('''COPY otu.sample_otu from :csv CSV header''').execution_options(autocommit=True),
                     csv=fname)
+            _clear_sample_otu_cache()
         except:
             logger.critical("unable to import")
             traceback.print_exc()
