@@ -250,18 +250,6 @@ class DataImporter:
                         yield obj
                 ImportFileLog.make_file_log(fname, file_type='Taxonomy', rows_imported=imported, rows_skipped=0)
 
-        # TEMP: This is not the same way that Grahame implemented the taxon ingesting. He wrote it all to a csv then did the COPY command as a bulk sort of order. Try to fix it so it works the same.
-        # def _make_taxon():
-        #     for index, row in enumerate(_taxon_rows_iter()):
-        #         attrs = {
-        #             'id': index,
-        #             'code': row['otu'],
-        #         }
-        #         for field in ontologies:
-        #             attrs[field + '_id'] = mappings[field][row[field]]
-        #         # logger.info(attrs)
-        #         yield OTU(**attrs)
-
         logger.warning("loading water data taxonomies - pass 1, defining ontologies")
         mappings = self._load_ontology(ontologies, _taxon_rows_iter())
 
