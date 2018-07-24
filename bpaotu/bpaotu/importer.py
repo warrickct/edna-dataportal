@@ -268,7 +268,6 @@ class DataImporter:
                         if field not in row:
                             out_row.append('')
                         else:
-                            logger.info('field in row')
                             out_row.append(mappings[field][row[field]])
                     w.writerow(out_row)
             logger.warning("loading taxonomy data from temporary CSV file")
@@ -383,9 +382,9 @@ class DataImporter:
 
     def load_waterdata_contextual_metadata(self):
         '''
-        Custom waterdata loading
+        - Had to clean the fields with regex expressions that match the ones used to clean the sample_context columns in otu.py
+        - Also Had to make a sitelookup to pass in as our site data doesn't contain site data.
         '''
-        site_lookup = {}
 
         def _clean_value(value):
             ''' Makes sure the value for the entry is uniform '''
@@ -412,22 +411,25 @@ class DataImporter:
 
         def _make_context():
             '''Iterates the metadata, Makes an object mirror a sample_context tuple and returns it '''
-            file = open(rows, "r")
-            reader = csv.DictReader(file, delimiter='\t')
-            for index, row in enumerate(reader):
-                attrs ={}
-                #add to site hashtable to be used for abundance loading
-                site_lookup[site_hash(row['site'].upper())] = index
-                # add an id for the PK column based on metafile row number
-                attrs['id'] = index
-                for field, value in row.items():
-                    cleaned_field = _clean_field(field)
-                    attrs[cleaned_field] = _clean_value(value)
-                # logger.warning(attrs)
-                yield SampleContext(**attrs)
+            site_id = 0
+            for fname in glob(self._import_base + 'waterdata/separated-data/metadata/*.tsv'):
+                logger.warning('reading taxonomy file: %s' % fname)
+                with open(fname, "r") as file:
+                    reader = csv.DictReader(file, delimiter='\t')
+                    for row in reader:
+                        attrs ={}
+                        #add to site hashtable to be used for abundance loading
+                        site_lookup[site_hash(row['site'].upper())] = site_id
+                        # add an id for the PK column based on metafile row number
+                        attrs['id'] = site_id
+                        for field, value in row.items():
+                            cleaned_field = _clean_field(field)
+                            attrs[cleaned_field] = _clean_value(value)
+                        site_id+=1
+                        yield SampleContext(**attrs)
 
+        site_lookup = {}
         logger.warning("loading in waterdata contextual instead")
-        rows = glob(self._import_base + '/waterdata/metadata/active-meta-data.tsv')[0]
         self._session.bulk_save_objects(_make_context())
         self._session.commit()
         return site_lookup
@@ -461,64 +463,11 @@ class DataImporter:
         self._session.commit()
 
     def load_waterdata_otu_abundance(self, otu_lookup, site_lookup):
-        logger.warning("Running custom waterdata abundance loader")
-        # w:todo: returns a list of all the site ids.
-        # w:todo: Make it reference otu id instead of the name. Will mean I need to use the "otu_lookup" hashtable/dictionary.
-        # w:todo: Handle errors (missing sites/otus/invalid values).
-        sample_ids = set([t[0] for t in self._session.query( SampleContext.id)])
-        # logger.warning(sample_ids) #{'KKP', 'LG', 'OT', ...}
-        logger.info('amount of sites iterating %s', len(sample_ids))
-
-        def _taxonomy_db_file_compare():
-            '''
-            Warrick testing method: Simple test to if there are file rows that aren't yet in the database - Logs missing taxons.
-            '''
-            abundance_q = set([t[0] for t in self._session.query(OTU.code)])
-            logger.info('number of otus in full query: %s', len(abundance_q))
-            missing = 0
-            path = glob(self._import_base + '/waterdata/data/active-abundance-data.tsv')[0]
-            file = open(path, 'r')
-            reader = csv.DictReader(file, delimiter='\t')
-            for row in reader:
-                otu_name = row[''] 
-                if otu_name not in abundance_q:
-                    missing +=1
-                    logger.info('not found in abundance_q: %s', otu_name)
-            logger.info('missing %d', missing)
-
-        def _samplecontext_db_file_compare():
-            '''
-            Warrick testing method: Logs site codes that are in the file but not in the database
-            '''
-            query = set([t[0] for t in self._session.query(SampleContext._site)])
-            logger.info('number of sites in full SampleContext query: %s', len(query))
-            missing = 0
-            path = glob(self._import_base + '/waterdata/metadata/active-meta-data.tsv')[0]
-            file = open(path, 'r')
-            reader = csv.DictReader(file, delimiter='\t')
-            for row in reader:
-                site_name = row['site'] 
-                if site_name not in query:
-                    missing +=1
-                    logger.info('not found in query: %s', site_name)
-            logger.info('missing %d', missing)
-
-        def otu_rows(fd):
-            reader = csv.reader(fd, delimiter='\t')
-            header = next(reader)
-            site_codes = header[1:]
-            g = 10/0
 
         def _make_sample_otus():    
             path = glob(self._import_base + '/waterdata/data/active-abundance-data.tsv')[0]
             file = open(path, 'r')
             reader = csv.DictReader(file, delimiter='\t')
-            # TEST:START:
-            # _taxonomy_db_file_compare()
-            # _samplecontext_db_file_compare()
-            # logger.info(otu_lookup)
-            # logger.info(site_lookup)
-            # TEST:END:
             for index, row in enumerate(reader):
                 otu_code = row['']
                 otu_id = otu_lookup[otu_hash(otu_code)]
@@ -541,6 +490,7 @@ class DataImporter:
             key = sha256(hash_str.encode('utf8')).hexdigest()
             cache.delete(key)
 
+        logger.warning("Starting edna abundance loader.")
         with tempfile.NamedTemporaryFile(mode='w', dir='/data', prefix='bpaotu-', delete=False) as temp_fd:
             fname = temp_fd.name
             os.chmod(fname, 0o644)
