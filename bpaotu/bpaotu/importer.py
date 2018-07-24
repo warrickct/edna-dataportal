@@ -411,6 +411,8 @@ class DataImporter:
 
         def _make_context():
             '''Iterates the metadata, Makes an object mirror a sample_context tuple and returns it '''
+
+            logger.info('loading edna contextual metadata from TSV files')
             site_id = 0
             for fname in glob(self._import_base + 'waterdata/separated-data/metadata/*.tsv'):
                 logger.warning('reading taxonomy file: %s' % fname)
