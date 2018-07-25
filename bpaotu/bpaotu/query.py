@@ -450,10 +450,12 @@ class EdnaOrderedSampleOTU:
         )]
         abundances = [r[0] for r in (
                 self._session.query(SampleOTU.count)
+                .filter(SampltOTU.count > 0)
                 .order_by(SampleOTU.otu_id.asc(), SampleOTU.sample_id.asc())
                 .all()
             )]
         response = {
+            'len': len(abundances),
             'otus': otus,
             'sites': sites,
             'abundances': abundances,

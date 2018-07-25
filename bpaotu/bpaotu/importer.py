@@ -194,9 +194,7 @@ class DataImporter:
         r.update((t, pl['Marine']) for t in marine_only)
         return r
 
-    # w: custom taxonomy loader
     def load_waterdata_taxonomies(self):
-        logger.warning("Loading custom eDNA taxonomies")
 
         otu_lookup = {}
         ontologies = OrderedDict([
@@ -233,7 +231,7 @@ class DataImporter:
             return ontology_parts
 
         def _taxon_rows_iter():
-            for fname in glob(self._import_base + 'waterdata/separated-data/data/*.tsv'):
+            for fname in sorted(glob(self._import_base + 'waterdata/separated-data/data/*.tsv')):
                 logger.info("Reading taxonomy file: %s" % fname)
                 with open(fname) as file:
                     reader = csv.DictReader(file, delimiter='\t')
@@ -414,7 +412,7 @@ class DataImporter:
 
             logger.info('loading edna contextual metadata from TSV files')
             site_id = 0
-            for fname in glob(self._import_base + 'waterdata/separated-data/metadata/*.tsv'):
+            for fname in sorted(glob(self._import_base + 'waterdata/separated-data/metadata/*.tsv')):
                 logger.warning('reading taxonomy file: %s' % fname)
                 with open(fname, "r") as file:
                     reader = csv.DictReader(file, delimiter='\t')
@@ -467,15 +465,17 @@ class DataImporter:
     def load_waterdata_otu_abundance(self, otu_lookup, site_lookup):
 
         def _make_sample_otus():    
-            path = glob(self._import_base + '/waterdata/data/active-abundance-data.tsv')[0]
-            file = open(path, 'r')
-            reader = csv.DictReader(file, delimiter='\t')
-            for index, row in enumerate(reader):
-                otu_code = row['']
-                otu_id = otu_lookup[otu_hash(otu_code)]
-                for column in row:
-                    # skip otu name field
-                    if column != '':
+            for fname in sorted(glob(self._import_base + 'waterdata/separated-data/data/*.tsv')):
+                logger.info('writing abundance rows from %s' % fname)
+                file = open(fname, 'r')
+                reader = csv.DictReader(file, delimiter='\t')
+                for row in reader:
+                    otu_code = row['']
+                    otu_id = otu_lookup[otu_hash(otu_code)]
+                    print(len(row))
+                    for column in row:
+                        if column == '':
+                            continue
                         sample_id = site_lookup[site_hash(column.upper())]
                         count = row[column]
                         try:
@@ -483,7 +483,9 @@ class DataImporter:
                         except:
                             logger.warning('count invalid, defaulting to 0')
                             count = 0
-                        yield [sample_id, otu_id, count]
+                        if count > 0:
+                            yield [sample_id, otu_id, count]
+
 
         def _clear_sample_otu_cache():
             logger.info('deleting old edna_sample_otu_results cache.')
