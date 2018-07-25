@@ -472,7 +472,6 @@ class DataImporter:
                 for row in reader:
                     otu_code = row['']
                     otu_id = otu_lookup[otu_hash(otu_code)]
-                    print(len(row))
                     for column in row:
                         if column == '':
                             continue

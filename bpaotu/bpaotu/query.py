@@ -431,7 +431,7 @@ class EdnaOrderedSampleOTU:
         if not result:
             logger.info("sample_otu_cache not found, making new cache")
             result = self._get_test_query()
-            # cache.set(key, result)
+            #cache.set(key, result)
         else:
             logger.info("Using cached sample_otu results")
         return result
@@ -448,10 +448,10 @@ class EdnaOrderedSampleOTU:
                 .order_by(SampleContext.id)
                 .all()
         )]
-        abundances = 
-                self._session.query(SampleOTU)
-                .order_by(SampleOTU.otu_id.asc(), SampleOTU.sample_id.asc())
+        abundances = (
+                self._session.query(SampleOTU.otu_id, SampleOTU.sample_id, SampleOTU.count)
                 .all()
+        )
         response = {
             'otus': otus,
             'sites': sites,
