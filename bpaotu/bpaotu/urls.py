@@ -20,10 +20,10 @@ urlpatterns = [
     # w: edna urls
     # For getting filtered abundance data
     url(r'^edna/api/abundance$', views.get_edna_abundance, name="abundance_data"),
-    # For getting site meta data.
     url(r'^edna/api/metadata$', views.get_edna_metadata, name="site_metadata"),
-    # New test api:
+    # Returns 1D array of OTU codes, SampleContextual._sites, and SampleOTU.counts to be reconstructed later.
     url(r'^edna/api/sample_otu_ordered$', views.sample_otu_ordered, name="ordered_abundance_metadata"),
+    url(r'^edna/api/upload$', views.AbundanceUpload.as_view()),
     # w:
     url(r'^tables/$', views.tables, name="tables"),                                                                                 # Custom datatables columns.
     url(r'^private/api/v1/required_table_headers/$', views.required_table_headers, name="required_table_headers"),                  # Custom datatables columns.

@@ -276,7 +276,6 @@ class DataImporter:
         #     os.unlink(fname)
             return otu_lookup
 
-
     def load_taxonomies(self):
         '''
         Loads up the taxonomies.
@@ -348,7 +347,6 @@ class DataImporter:
             os.unlink(fname)
         return otu_lookup
 
-    
     def load_soil_contextual_metadata(self):
         """Loads the soil.xlsx into rows variable. Then maps the soil ontologies to the rows"""
 
@@ -376,7 +374,6 @@ class DataImporter:
         mappings = self._load_ontology(DataImporter.soil_ontologies, rows)
         self._session.bulk_save_objects(_make_context())
         self._session.commit()
-
 
     def load_waterdata_contextual_metadata(self):
         '''
@@ -484,7 +481,6 @@ class DataImporter:
                             count = 0
                         if count > 0:
                             yield [sample_id, otu_id, count]
-
 
         def _clear_sample_otu_cache():
             logger.info('deleting old edna_sample_otu_results cache.')

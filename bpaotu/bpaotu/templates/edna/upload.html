@@ -1,0 +1,42 @@
+{% extends 'bpaotu/base.html' %}
+{% load leaflet_tags %}
+{% load staticfiles %}
+{% load static from staticfiles %}
+
+{% block extra_head %}
+
+<script src="{% static 'edna/edna.js' %}"></script>
+{% endblock extra_head %}
+
+{% block content %}
+<div class="container-fluid">
+    <div id="token_error_message" class="lead"></div>
+    <h4>Select a .tsv file to be uploaded to the database.</h4>
+    <div class="row">
+        <div class="col-md-6">
+            
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <span class="glyphicon glyphicon-info-sign" aria-hidden="true" title="Select a .tsv file to be ingested by the database."></span>
+                    Select file to upload.
+                </div>
+                <div class="panel-body">
+                    <input type="file" name="abundance-file" id="fileToUpload">
+                </div>
+                <div class="panel-footer">
+                    <div class="row">
+                        <div class="col-md-5"></div>
+                        <div class="col-md-2"><input class="btn btn-success" type="button" id="clear_taxonomic_filters" value="Upload" /></div>
+                        <div class="col-md-5"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12" id="error-box">
+        </div>
+    </div>
+    </div>
+{% endblock content %}

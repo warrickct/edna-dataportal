@@ -287,7 +287,6 @@ def param_to_filters_without_checks(query_str):
         taxonomy_filter=taxonomy_filter), errors)
 
 # TEST: Adding custom API for the visualisation
-# W: I think it's worth creating a custom API for the visualisation as the exisiting apis the page state + POSTing forms? Unless I created an identical search form.
 @csrf_exempt
 @require_GET
 def get_edna_abundance(request):
@@ -340,8 +339,18 @@ def sample_otu_ordered(request):
     response['Access-Control-Allow-Origin'] = '*'
     return response
 
+class AbundanceUpload(TemplateView):
+    # make an html template for the upload page.
+    template_name = 'edna/upload.html'
 
-# w:NOTE: This one has something to do with abundance querying
+    def get_context_data(self, **kwargs):
+        context = super(AbundanceUpload, self).get_context_data(**kwargs)
+        logger.info(context)
+        context['ckan_base_url'] = settings.CKAN_SERVERS[0]['base_url']
+        context['ckan_auth_integration'] = settings.CKAN_AUTH_INTEGRATION
+
+        return context
+
 @csrf_exempt
 @require_POST
 def required_table_headers(request):
