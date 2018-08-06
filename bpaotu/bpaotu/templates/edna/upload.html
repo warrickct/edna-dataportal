@@ -16,20 +16,22 @@
         <div class="col-md-6">
             
             <div class="panel panel-default">
-                <div class="panel-heading">
-                    <span class="glyphicon glyphicon-info-sign" aria-hidden="true" title="Select a .tsv file to be ingested by the database."></span>
-                    Select file to upload.
-                </div>
-                <div class="panel-body">
-                    <input type="file" name="abundance-file" id="fileToUpload">
-                </div>
-                <div class="panel-footer">
-                    <div class="row">
-                        <div class="col-md-5"></div>
-                        <div class="col-md-2"><input class="btn btn-success" type="button" id="clear_taxonomic_filters" value="Upload" /></div>
-                        <div class="col-md-5"></div>
+                <form method="POST"="post">
+                    <div class="panel-heading">
+                        <span class="glyphicon glyphicon-info-sign" aria-hidden="true" title="Select a .tsv file to be ingested by the database."></span>
+                        Select file to upload.
                     </div>
-                </div>
+                    <div class="panel-body">
+                                <input type="file" name="abundance-file" id="fileToUpload">
+                    </div>
+                    <div class="panel-footer">
+                        <div class="row">
+                            <div class="col-md-5"></div>
+                            <div class="col-md-2"><input class="btn btn-success" type="submit" id="file_submit_btn" value="Upload"/></div>
+                            <div class="col-md-5"></div>
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
