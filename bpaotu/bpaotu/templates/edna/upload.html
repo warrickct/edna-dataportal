@@ -16,13 +16,14 @@
         <div class="col-md-6">
             
             <div class="panel panel-default">
-                <form method="POST"="post">
+                <form action="/edna-upload/" method="POST"="post"  >
+                    {% csrf_token %}
                     <div class="panel-heading">
                         <span class="glyphicon glyphicon-info-sign" aria-hidden="true" title="Select a .tsv file to be ingested by the database."></span>
                         Select file to upload.
                     </div>
                     <div class="panel-body">
-                                <input type="file" name="abundance-file" id="fileToUpload">
+                                <input type="file" name="fileToUpload" id="fileToUpload">
                     </div>
                     <div class="panel-footer">
                         <div class="row">

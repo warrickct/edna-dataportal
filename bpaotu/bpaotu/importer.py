@@ -585,3 +585,9 @@ class DataImporter:
                     traceback.print_exc()
             finally:
                 os.unlink(fname)
+
+    def load_edna_sample_otu_post(self, file):
+        with open(file, "r") as _file:
+            reader = csv.reader(_file, delimiter="\t")
+            for line in reader:
+                logger.info(line)

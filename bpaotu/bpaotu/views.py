@@ -49,6 +49,9 @@ from .util import temporary_file
 # TEST: For performance testing
 import time
 
+# TEST: for easy uploader
+from django import forms
+
 logger = logging.getLogger("rainbow")
 
 
@@ -339,6 +342,10 @@ def sample_otu_ordered(request):
     # response['Access-Control-Allow-Origin'] = '*'
     return response
 
+
+# TEMP: test class
+class UploadFileForm(forms.Form):
+    file = forms.FileField()
 class AbundanceUpload(TemplateView):
     # make an html template for the upload page.
     template_name = 'edna/upload.html'
@@ -348,8 +355,18 @@ class AbundanceUpload(TemplateView):
         logger.info(context)
         context['ckan_base_url'] = settings.CKAN_SERVERS[0]['base_url']
         context['ckan_auth_integration'] = settings.CKAN_AUTH_INTEGRATION
-
         return context
+
+    def handle_uploaded_file(self, f):
+        logger.info("running handle uploaded file")
+        reader = csv.reader(f, delimiter="\t")
+        for line in reader:
+            logger.info(line)
+
+
+    def post(self, request):
+        
+        return HttpResponse("post method")
 
 @csrf_exempt
 @require_POST
