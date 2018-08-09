@@ -176,7 +176,6 @@ class SampleTillage(OntologyMixin, Base):
 class SampleColor(OntologyMixin, Base):
     pass
 
-
 class SampleContext(SchemaMixin, Base):
     '''
     Site table 
@@ -343,8 +342,11 @@ class SampleContext(SchemaMixin, Base):
     _urban_parkland_or_open_space = Column(Float)
     _richness = Column(Float)
     _rapaport_node = Column(Float)
-    
 
+    # TEST: Made a sample type class which I'm guessing will become a field.
+    _sample_type = ontology_fkey(SampleType)
+
+    
     # w: Not using ontologies for now.
     #
     # ontologies

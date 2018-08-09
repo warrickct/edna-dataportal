@@ -104,6 +104,10 @@ class DataImporter:
         ('sample_type', SampleType),
     ])
 
+    edna_sample_ontologies = OrderedDict([
+        ('sample_type', SampleType)
+    ])
+
     def __init__(self, import_base):
         self._clear_import_log()
         self._engine = make_engine()
@@ -152,13 +156,21 @@ class DataImporter:
         by_class = defaultdict(list)
         for field, db_class in ontology_defn.items():
             by_class[db_class].append(field)
+        # logger.info(by_class)
+        # w: the class and then corresponding key that links to the class.
 
+        # each unique category for an a classification level.
+        # w: goes through the list of categories under an item
+        # w: if the row contains one of them add the value to the set.
         vals = defaultdict(set)
         for row in row_iter:
+            logger.info(row)
             for db_class, fields in by_class.items():
+                # logger.info(fields)
                 for field in fields:
                     if field in row:
                         vals[db_class].add(row[field])
+        # logger.info(vals)
 
         mappings = {}
         for db_class, fields in by_class.items():
@@ -171,9 +183,6 @@ class DataImporter:
     def classify_fields(cls, environment_lookup):
         # flip around to name -> id
         pl = dict((t[1], t[0]) for t in environment_lookup.items())
-
-        # TODO: Work out why it's throwing key error
-
         soil_fields = set()
         marine_fields = set()
         for field_info in soil_field_spec:
@@ -378,7 +387,7 @@ class DataImporter:
     def load_waterdata_contextual_metadata(self):
         '''
         - Had to clean the fields with regex expressions that match the ones used to clean the sample_context columns in otu.py
-        - Also Had to make a sitelookup to pass in as our site data doesn't contain site data.
+        - Also made a sitelookup to pass in as our site data doesn't contain site data.
         '''
 
         def _clean_value(value):
@@ -406,27 +415,46 @@ class DataImporter:
 
         def _make_context():
             '''Iterates the metadata, Makes an object mirror a sample_context tuple and returns it '''
-
-            logger.info('loading edna contextual metadata from TSV files')
+            logger.info('loading edna contextual metadata from .tsv files')
+            # site_id delcared here so we can go over multiple files at once.
             site_id = 0
             for fname in sorted(glob(self._import_base + 'waterdata/separated-data/metadata/*.tsv')):
-                logger.warning('reading taxonomy file: %s' % fname)
+                logger.warning('loading metadata file: %s' % fname)
                 with open(fname, "r") as file:
                     reader = csv.DictReader(file, delimiter='\t')
                     for row in reader:
                         attrs ={}
-                        #add to site hashtable to be used for abundance loading
                         site_lookup[site_hash(row['site'].upper())] = site_id
-                        # add an id for the PK column based on metafile row number
                         attrs['id'] = site_id
                         for field, value in row.items():
                             cleaned_field = _clean_field(field)
                             attrs[cleaned_field] = _clean_value(value)
-                        site_id+=1
+                        # NOTE: Need to generate mappings before entering into ontolgy fkey table.
+                        site_id += 1
                         yield SampleContext(**attrs)
 
+        def _combined_rows():
+            '''
+            Custom row iterable for iterating over multiple files
+            '''
+            for fname in sorted(glob(self._import_base + 'waterdata/separated-data/metadata/*.tsv')):
+                with open(fname, "r") as file:
+                    reader = csv.reader(file, delimiter='\t')
+                    headers = next(reader)
+                    for row in reader:
+                        dict_row = {}
+                        for index, field in enumerate(row):
+                            dict_row[headers[index]] = field
+                        yield dict_row
+
+        # custom site lookup dictionary edna ones use the code rather than PK in the data files. For faster abundance loading
         site_lookup = {}
-        logger.warning("loading in waterdata contextual instead")
+        # NOTE: I think this relies on a maintained file containing possible contextual field types for validitiy or something.
+        # TEMP:START:
+        mappings = self._load_ontology(DataImporter.edna_sample_ontologies, _combined_rows())
+        logger.info(mappings)
+        whatever = 10/0
+        # TEMP:END:
         self._session.bulk_save_objects(_make_context())
         self._session.commit()
         return site_lookup
@@ -585,9 +613,3 @@ class DataImporter:
                     traceback.print_exc()
             finally:
                 os.unlink(fname)
-
-    def load_edna_sample_otu_post(self, file):
-        with open(file, "r") as _file:
-            reader = csv.reader(_file, delimiter="\t")
-            for line in reader:
-                logger.info(line)
