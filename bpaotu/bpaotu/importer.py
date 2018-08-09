@@ -426,10 +426,15 @@ class DataImporter:
                         attrs ={}
                         site_lookup[site_hash(row['site'].upper())] = site_id
                         attrs['id'] = site_id
+                        for field in DataImporter.edna_sample_ontologies:
+                            if field not in row:
+                                continue
+                            attrs[_clean_field(field) + '_id'] = mappings[field][row[field]]
                         for field, value in row.items():
                             cleaned_field = _clean_field(field)
+                            if cleaned_field in attrs or (cleaned_field + '_id') in attrs:
+                                continue
                             attrs[cleaned_field] = _clean_value(value)
-                        # NOTE: Need to generate mappings before entering into ontolgy fkey table.
                         site_id += 1
                         yield SampleContext(**attrs)
 
@@ -442,6 +447,7 @@ class DataImporter:
                     reader = csv.reader(file, delimiter='\t')
                     headers = next(reader)
                     for row in reader:
+                        # adding compatibility for the ontology builder.
                         dict_row = {}
                         for index, field in enumerate(row):
                             dict_row[headers[index]] = field
@@ -453,7 +459,6 @@ class DataImporter:
         # TEMP:START:
         mappings = self._load_ontology(DataImporter.edna_sample_ontologies, _combined_rows())
         logger.info(mappings)
-        whatever = 10/0
         # TEMP:END:
         self._session.bulk_save_objects(_make_context())
         self._session.commit()

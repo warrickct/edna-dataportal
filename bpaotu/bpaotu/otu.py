@@ -344,7 +344,7 @@ class SampleContext(SchemaMixin, Base):
     _rapaport_node = Column(Float)
 
     # TEST: Made a sample type class which I'm guessing will become a field.
-    _sample_type = ontology_fkey(SampleType)
+    _sample_type_id = ontology_fkey(SampleType)
 
     
     # w: Not using ontologies for now.
