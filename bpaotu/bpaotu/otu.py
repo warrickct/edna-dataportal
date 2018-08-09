@@ -343,14 +343,9 @@ class SampleContext(SchemaMixin, Base):
     _richness = Column(Float)
     _rapaport_node = Column(Float)
 
-    # TEST: Made a sample type class which I'm guessing will become a field.
-    _sample_type_id = ontology_fkey(SampleType)
-
-    
-    # w: Not using ontologies for now.
-    #
     # ontologies
-    #
+    # w: custom ontology
+    _sample_type_id = ontology_fkey(SampleType)
     # australian_soil_classification_id = ontology_fkey(SampleAustralianSoilClassification)
     # broad_land_use_id = ontology_fkey(SampleLandUse)
 
