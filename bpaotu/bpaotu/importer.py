@@ -222,11 +222,12 @@ class DataImporter:
             Pads or trims the taxonomic list size to match the number of columns in the otu table.
             '''
             changes = 0
-            # TODO: Remove the '[a-z]__' prefix from the parts.
-            # for index, part in enumerate(ontology_parts):
-            #     part = re.sub('[A-z]__', '', part)
-            #     ontology_parts[index] = part
-            #     logger.info(part)    
+            # TEMP: Stripping the prefix from ontology segments.
+            logger.info(ontology_parts)
+            for index, part in enumerate(ontology_parts):
+                logger.info(part)
+                ontology_parts[index] = re.sub('[A-z]__', '', part)
+                logger.info(ontology_parts[index])
             while len(ontology_parts) < len(ontologies):
                 unclassified_padding = ''
                 ontology_parts.append(unclassified_padding)
@@ -253,6 +254,12 @@ class DataImporter:
                         ontology_parts = _normalize_taxonomy(ontology_parts)
                         obj = dict(zip(ontologies.keys(), ontology_parts))
                         obj['otu'] = otu
+                        # TEST:START: if theres a value after the '|' character, use it to overwrite the amplicon field's value.
+                        if '|' in obj['species']:
+                            split = obj['species'].split('|')
+                            obj['species'] = split[0]
+                            obj['amplicon'] = split[1]
+                        # TEST:END:
                         imported += 1
                         yield obj
                 ImportFileLog.make_file_log(fname, file_type='Taxonomy', rows_imported=imported, rows_skipped=0)
@@ -455,7 +462,6 @@ class DataImporter:
 
         # custom site lookup dictionary edna ones use the code rather than PK in the data files. For faster abundance loading
         site_lookup = {}
-        # NOTE: I think this relies on a maintained file containing possible contextual field types for validitiy or something.
         # TEMP:START:
         mappings = self._load_ontology(DataImporter.edna_sample_ontologies, _combined_rows())
         logger.info(mappings)
