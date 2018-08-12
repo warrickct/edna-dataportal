@@ -156,8 +156,6 @@ class DataImporter:
         by_class = defaultdict(list)
         for field, db_class in ontology_defn.items():
             by_class[db_class].append(field)
-        # logger.info(by_class)
-        # w: the class and then corresponding key that links to the class.
 
         # each unique category for an a classification level.
         # w: goes through the list of categories under an item
@@ -170,7 +168,6 @@ class DataImporter:
                 for field in fields:
                     if field in row:
                         vals[db_class].add(row[field])
-        # logger.info(vals)
 
         mappings = {}
         for db_class, fields in by_class.items():
@@ -223,11 +220,8 @@ class DataImporter:
             '''
             changes = 0
             # TEMP: Stripping the prefix from ontology segments.
-            logger.info(ontology_parts)
             for index, part in enumerate(ontology_parts):
-                logger.info(part)
                 ontology_parts[index] = re.sub('[A-z]__', '', part)
-                logger.info(ontology_parts[index])
             while len(ontology_parts) < len(ontologies):
                 unclassified_padding = ''
                 ontology_parts.append(unclassified_padding)
@@ -235,8 +229,6 @@ class DataImporter:
             while len(ontology_parts) > len(ontologies):
                 ontology_parts = ontology_parts[:-1]
                 changes -= 1
-            # logger.info('List is %s compared to original', changes)
-            # logger.info(ontology_parts)
             assert(len(ontology_parts) == len(ontologies))
             return ontology_parts
 
@@ -462,10 +454,7 @@ class DataImporter:
 
         # custom site lookup dictionary edna ones use the code rather than PK in the data files. For faster abundance loading
         site_lookup = {}
-        # TEMP:START:
         mappings = self._load_ontology(DataImporter.edna_sample_ontologies, _combined_rows())
-        logger.info(mappings)
-        # TEMP:END:
         self._session.bulk_save_objects(_make_context())
         self._session.commit()
         return site_lookup
