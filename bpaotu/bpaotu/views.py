@@ -342,8 +342,19 @@ def sample_otu_ordered(request):
     # response['Access-Control-Allow-Origin'] = '*'
     return response
 
+# Phase 3 edna API
+@csrf_exempt
+@require_GET
+def edna_metadata_options(request):
+    return null
 
-# TEMP: test class
+@csrf_exempt
+@require_GET
+def edna_taxonomy_options(request):
+    return null
+
+
+# TEMP:TEST: API class made for easier uploading.
 class UploadFileForm(forms.Form):
     file = forms.FileField()
 class AbundanceUpload(TemplateView):
@@ -362,7 +373,6 @@ class AbundanceUpload(TemplateView):
         reader = csv.reader(f, delimiter="\t")
         for line in reader:
             logger.info(line)
-
 
     def post(self, request):
         
