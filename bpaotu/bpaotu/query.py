@@ -422,21 +422,20 @@ class EdnaOrderedSampleOTU:
     def __exit__(self, exec_type, exc_value, traceback):
         self._session.close()
 
-    # TEST: going to try make an inner join query and group them by the otu somehow.
-    def get_test_query(self):
+    def get_sample_otu_ordered(self):
         cache = caches['edna_sample_otu_results']
         hash_str = 'eDNA_Sample_OTUs:cached'
         key = sha256(hash_str.encode('utf8')).hexdigest()
         result = cache.get(key)
         if not result:
             logger.info("sample_otu_cache not found, making new cache")
-            result = self._get_test_query()
+            result = self._query_sample_otu_ordered()
             #cache.set(key, result)
         else:
             logger.info("Using cached sample_otu results")
         return result
 
-    def _get_test_query(self):
+    def _query_sample_otu_ordered(self):
         # assume otu.code and sample_context ordered by id
         otus = [r[0] for r in (
             self._session.query(OTU.code)

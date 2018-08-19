@@ -333,7 +333,7 @@ def get_edna_metadata(request):
 def sample_otu_ordered(request):
     start_time = time.time()
     with EdnaOrderedSampleOTU() as query:
-        result = query.get_test_query()
+        result = query.get_sample_otu_ordered()
     response =  JsonResponse({
         'data': result,
     })
