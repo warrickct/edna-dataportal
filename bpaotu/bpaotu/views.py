@@ -27,11 +27,14 @@ from .query import (
     TaxonomyOptions,
     OntologyInfo,
     SampleQuery,
-    # TEST:TEMP:START:
+    # w: Phase 2 edna API
     EdnaAbundanceQuery,
     EdnaMetadataQuery,
     EdnaOrderedSampleOTU,
-    # TEST:TEMP:END:
+    # w: Phase 3 edna API
+    EdnaContextualOptions,
+    EdnaTaxonomyOptions,
+    # w: end
     ContextualFilter,
     ContextualFilterTermDate,
     ContextualFilterTermFloat,

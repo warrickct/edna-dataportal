@@ -458,6 +458,68 @@ class EdnaOrderedSampleOTU:
         }
         return response
 
+
+class EdnaContextualOptions:
+    def __init__(self):
+        self._session = Session()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exec_type, exc_value, traceback):
+        self._session.close()
+
+    # some default caching for quicker results.
+    def get_sample_contextual_fields(self):
+        cache = caches['edna_sample_contextual_fields']
+        hash_str = 'eDNA_Sample_OTUs:cached'
+        key = sha256(hash_str.encode('utf8')).hexdigest()
+        result = cache.get(key)
+        if not result:
+            logger.info("sample_otu_cache not found, making new cache")
+            result = self._query_sample_contextual_fields()
+            #cache.set(key, result)
+        else:
+            logger.info("Using cached sample_otu results")
+        return result
+    
+
+class EdnaTaxonomyOptions:
+    def __init__(self):
+        self._session = Session()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exec_type, exc_value, traceback):
+        self._session.close()
+
+    def get_taxonomy_options(self):
+        # TEMP:TODO: Until caching is set up
+        result = self._query_taxonomy_options()
+        # cache = caches['edna_sample_otu_results']
+        # hash_str = 'eDNA_Sample_OTUs:cached'
+        # key = sha256(hash_str.encode('utf8')).hexdigest()
+        # result = cache.get(key)
+        # if not result:
+        #     logger.info("sample_otu_cache not found, making new cache")
+        #     result = self._query_sample_otu_ordered()
+        #     #cache.set(key, result)
+        # else:
+        #     logger.info("Using cached sample_otu results")
+        # return result
+
+        def _query_taxonomy_options(self, term):
+            # return all the entries with whatever term from the select
+            # so use like + return the fields.
+            option_results = self._session.query(OTU.code)
+                .order_by(OTU.code)
+                # TODO: test if querying with LIKE vs manually filtering the results of all of the taxon results is quicker.
+                .filter(OTU.code.like("%" + term + "%"))
+                .all()
+            return option_results
+
+
 class ContextualFilter:
     mode_operators = {
         'or': sqlalchemy.or_,
