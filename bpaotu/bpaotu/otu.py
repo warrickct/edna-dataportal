@@ -99,9 +99,10 @@ class OTU(SchemaMixin, Base):
 
     # w: commenting out the id being the pk for now.
     id = Column(Integer, primary_key=True)
-    code = Column(String(length=1024))  # long GATTACAt-ype string
+    # in context of edna, code represents the combined full name of the otu
+    code = Column(String(length=1024))
 
-    # we query OTUs via heirarchy, so indexes on the first few
+    # we query OTUs via hierarchy, so indexes on the first few
     # layers are sufficient
     kingdom_id = ontology_fkey(OTUKingdom, index=True)
     phylum_id = ontology_fkey(OTUPhylum, index=True)
@@ -196,10 +197,6 @@ class SampleContext(SchemaMixin, Base):
 
     # w: example  columns
     # a16s_comment = Column(CIText)
-    # agrochemical_additions = Column(CIText)
-    # allo = with_units('mg/m3', Float)
-    # alpha_beta_car = with_units('mg/m3', Float)
-    # ammonium = with_units('μmol/L', Float)
     # ammonium_nitrogen = with_units('mg/Kg', Float)
 
 

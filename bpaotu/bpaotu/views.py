@@ -354,7 +354,14 @@ def edna_metadata_options(request):
 @csrf_exempt
 @require_GET
 def edna_taxonomy_options(request):
-    return null
+    filters = request.GET['q']
+    with EdnaTaxonomyOptions() as query:
+        result = query.get_taxonomy_options(filters)
+    response = JsonResponse({
+        'data': result
+    })
+    response['Access-Control-Allow-Origin'] = '*'
+    return response
 
 
 # TEMP:TEST: API class made for easier uploading.

@@ -394,7 +394,7 @@ class EdnaMetadataQuery:
                     )
                 .all()
             )
-        # TEMP:TODO: hardcoding dictionary response for now. Need to replace with automated keys based off table columns.
+        # TODO: hardcoding dictionary response for now. Need to replace with automated keys based off table columns.
         results =[]
         for tuple in query :
             results.append({
@@ -494,9 +494,10 @@ class EdnaTaxonomyOptions:
     def __exit__(self, exec_type, exc_value, traceback):
         self._session.close()
 
-    def get_taxonomy_options(self):
+    def get_taxonomy_options(self, filters):
         # TEMP:TODO: Until caching is set up
-        result = self._query_taxonomy_options()
+        result = self._query_taxonomy_options(filters)
+        return result
         # cache = caches['edna_sample_otu_results']
         # hash_str = 'eDNA_Sample_OTUs:cached'
         # key = sha256(hash_str.encode('utf8')).hexdigest()
@@ -509,15 +510,16 @@ class EdnaTaxonomyOptions:
         #     logger.info("Using cached sample_otu results")
         # return result
 
-        def _query_taxonomy_options(self, term):
-            # return all the entries with whatever term from the select
-            # so use like + return the fields.
-            option_results = self._session.query(OTU.code)
+    def _query_taxonomy_options(self, filters):
+        # return all the entries with whatever term from the select
+        # so use like + return the fields.
+        option_results = [r[0] for r in (
+            self._session.query(OTU.code)
                 .order_by(OTU.code)
-                # TODO: test if querying with LIKE vs manually filtering the results of all of the taxon results is quicker.
-                .filter(OTU.code.like("%" + term + "%"))
+                .filter((OTU.code).ilike("%" + filters + "%"))
                 .all()
-            return option_results
+        )]
+        return option_results
 
 
 class ContextualFilter:
