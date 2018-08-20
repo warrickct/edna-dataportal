@@ -382,9 +382,9 @@ def edna_filter_options(request):
     with EdnaContextualOptions() as query:
         context_options = query.get_sample_contextual_fields(filters)
     combined_options = taxonomy_options + context_options
-    response = {
+    response = JsonResponse({
         'data': combined_options
-    }
+    })
     response['Access-Control-Allow-Origin'] = '*'
     return response
 
