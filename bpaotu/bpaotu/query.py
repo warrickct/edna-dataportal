@@ -470,18 +470,23 @@ class EdnaContextualOptions:
         self._session.close()
 
     # some default caching for quicker results.
-    def get_sample_contextual_fields(self):
-        cache = caches['edna_sample_contextual_fields']
-        hash_str = 'eDNA_Sample_OTUs:cached'
-        key = sha256(hash_str.encode('utf8')).hexdigest()
-        result = cache.get(key)
-        if not result:
-            logger.info("sample_otu_cache not found, making new cache")
-            result = self._query_sample_contextual_fields()
-            #cache.set(key, result)
-        else:
-            logger.info("Using cached sample_otu results")
+    def get_sample_contextual_fields(self, filters):
+        result = self._query_contextual_fields(filters)
+        # cache = caches['edna_sample_contextual_fields']
+        # hash_str = 'eDNA_Sample_OTUs:cached'
+        # key = sha256(hash_str.encode('utf8')).hexdigest()
+        # result = cache.get(key)
+        # if not result:
+        #     logger.info("sample_otu_cache not found, making new cache")
+        #     result = self._query_sample_contextual_fields()
+        #     #cache.set(key, result)
+        # else:
+        #     logger.info("Using cached sample_otu results")
         return result
+
+    def _query_contextual_fields(self, filters):
+        field_results=  [column.key for column in SampleContext.__table__.columns if filters in column.key]
+        return field_results
     
 
 class EdnaTaxonomyOptions:
@@ -511,8 +516,6 @@ class EdnaTaxonomyOptions:
         # return result
 
     def _query_taxonomy_options(self, filters):
-        # return all the entries with whatever term from the select
-        # so use like + return the fields.
         option_results = [r[0] for r in (
             self._session.query(OTU.code)
                 .order_by(OTU.code)

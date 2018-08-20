@@ -349,7 +349,14 @@ def sample_otu_ordered(request):
 @csrf_exempt
 @require_GET
 def edna_metadata_options(request):
-    return null
+    filters = request.GET['q']
+    with EdnaContextualOptions() as query:
+        result = query.get_sample_contextual_fields(filters)
+    response = JsonResponse({
+        'data': result
+    })
+    response['Access-Control-Allow-Origin'] = '*'
+    return response
 
 @csrf_exempt
 @require_GET
@@ -363,6 +370,23 @@ def edna_taxonomy_options(request):
     response['Access-Control-Allow-Origin'] = '*'
     return response
 
+@csrf_exempt
+@require_GET
+def edna_dropdown_options(request):
+    '''
+    Combined array of taxonomic options + contextual options to be placed into the list.
+    '''
+    filters = request.GET['q']
+    with EdnaTaxonomyOptions() as query:
+        taxonomy_options = query.get_taxonomy_options(filters)
+    with EdnaContextualOptions() as query:
+        context_options = query.get_sample_contextual_fields(filters)
+    combined_options = taxonomy_options + context_options
+    response = {
+        'data': combined_options
+    }
+    response['Access-Control-Allow-Origin'] = '*'
+    return response
 
 # TEMP:TEST: API class made for easier uploading.
 class UploadFileForm(forms.Form):
