@@ -27,6 +27,7 @@ urlpatterns = [
     # w: phase 3 - edna urls
     url(r'^edna/api/taxonomy-options$', views.edna_taxonomy_options, name="edna_taxonomy_options"),
     url(r'^edna/api/metadata-options$', views.edna_metadata_options, name="edna_metadata_options"),
+    url(r'^edna/api/filter-options$', views.edna_filter_options, name="edna_filter_options"),
     # w: 
     url(r'^tables/$', views.tables, name="tables"),                                                                                 # Custom datatables columns.
     url(r'^private/api/v1/required_table_headers/$', views.required_table_headers, name="required_table_headers"),                  # Custom datatables columns.

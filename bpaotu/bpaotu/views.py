@@ -372,7 +372,7 @@ def edna_taxonomy_options(request):
 
 @csrf_exempt
 @require_GET
-def edna_dropdown_options(request):
+def edna_filter_options(request):
     '''
     Combined array of taxonomic options + contextual options to be placed into the list.
     '''
