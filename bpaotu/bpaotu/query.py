@@ -525,6 +525,27 @@ class EdnaTaxonomyOptions:
         return option_results
 
 
+class EdnaSampleOTUQuery:
+    def __init__(self):
+        self._session = Session()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exec_type, exc_value, traceback):
+        self._session.close()
+
+    # TODO: will need to make this more dynamic (queryable by sample id, count range)
+    # TODO: make it a list of queryable ids then compile and return
+    def _query_sample_otu(self, value):
+        sample_otu_results = [r for r in (
+            self._session.query(SampleOTU.otu_id, SampleOTU.sample_id, SampleOTU.count)
+            .order_by(SampleOTU.otu_id)
+            .filter(SampleOTU.otu_id = value)
+            .all()
+        )]
+        return sample_otu_results
+
 class ContextualFilter:
     mode_operators = {
         'or': sqlalchemy.or_,
