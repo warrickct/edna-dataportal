@@ -516,8 +516,8 @@ class EdnaTaxonomyOptions:
         # return result
 
     def _query_taxonomy_options(self, filters):
-        option_results = [r[0] for r in (
-            self._session.query(OTU.code)
+        option_results = [r for r in (
+            self._session.query(OTU.id, OTU.code)
                 .order_by(OTU.code)
                 .filter((OTU.code).ilike("%" + filters + "%"))
                 .all()

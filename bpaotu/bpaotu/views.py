@@ -308,7 +308,7 @@ def get_edna_abundance(request):
     })
     # TODO: response['Access-Control-Allow-Origin'] = 'http://localhost:5500/'
     # response header is set by apache to '*' on the nectar edna virtual machine so this is no longer needed
-    # response['Access-Control-Allow-Origin'] = '*'
+    response['Access-Control-Allow-Origin'] = '*'
     return response
 
 
@@ -383,7 +383,10 @@ def edna_filter_options(request):
         context_options = query.get_sample_contextual_fields(filters)
     combined_options = taxonomy_options + context_options
     response = JsonResponse({
-        'data': combined_options
+        'data': {
+            'taxonomy_options': taxonomy_options,
+            'context_options': context_options,
+        }
     })
     response['Access-Control-Allow-Origin'] = '*'
     return response
