@@ -297,24 +297,27 @@ def param_to_filters_without_checks(query_str):
 @csrf_exempt
 @require_GET
 def get_edna_abundance(request):
-    
     if request.GET['id'] is not None:
-        
+        pk = request.GET['id']
+        with EdnaSampleOTUQuery() as query:
+            if pk:
+                result = query._query_sample_otu(pk)
+        response = 
     else:
         logger.info('Abundance api requested')
         term = request.GET['term']
         with EdnaAbundanceQuery() as query:
             if term:
-                query_result = query.get_abundance_nested(term)
+                result = query.get_abundance_nested(term)
             else:
-                query_result = query.get_abundance_nested('')
-        response = JsonResponse({
-            'data': query_result,
-        })
-        # TODO: response['Access-Control-Allow-Origin'] =   'http://localhost:5500/'
-        # response header is set by apache to '*' on the nectar     edna virtual machine so this is no longer needed
-        response['Access-Control-Allow-Origin'] = '*'
-        return response
+                result = query.get_abundance_nested('')
+    response = JsonResponse({
+        'data': result,
+    })
+    # TODO: response['Access-Control-Allow-Origin'] =   'http://localhost:5500/'
+    # response header is set by apache to '*' on the nectar edna virtual machine so this is no longer needed
+    response['Access-Control-Allow-Origin'] = '*'
+    return response
 
 
 @csrf_exempt
