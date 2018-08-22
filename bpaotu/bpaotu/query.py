@@ -541,7 +541,7 @@ class EdnaSampleOTUQuery:
         sample_otu_results = [r for r in (
             self._session.query(SampleOTU.otu_id, SampleOTU.sample_id, SampleOTU.count)
             .order_by(SampleOTU.otu_id)
-            .filter(SampleOTU.otu_id = value)
+            .filter(SampleOTU.otu_id == value)
             .all()
         )]
         return sample_otu_results

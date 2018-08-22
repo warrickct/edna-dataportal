@@ -302,15 +302,14 @@ def get_edna_abundance(request):
         with EdnaSampleOTUQuery() as query:
             if pk:
                 result = query._query_sample_otu(pk)
-        response = 
-    else:
-        logger.info('Abundance api requested')
-        term = request.GET['term']
-        with EdnaAbundanceQuery() as query:
-            if term:
-                result = query.get_abundance_nested(term)
-            else:
-                result = query.get_abundance_nested('')
+    # else:
+    #     logger.info('Abundance api requested')
+    #     term = request.GET['term']
+    #     with EdnaAbundanceQuery() as query:
+    #         if term:
+    #             result = query.get_abundance_nested(term)
+    #         else:
+    #             result = query.get_abundance_nested('')
     response = JsonResponse({
         'data': result,
     })
