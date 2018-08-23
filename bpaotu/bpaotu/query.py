@@ -540,13 +540,20 @@ class EdnaSampleOTUQuery:
 
     # TODO: will need to make this more dynamic (queryable by sample id, count range)
     # TODO: make it a list of queryable ids then compile and return
-    def _query_sample_otu(self, value):
-        sample_otu_results = [r for r in (
-            self._session.query(SampleOTU.otu_id, SampleOTU.sample_id, SampleOTU.count)
-            .order_by(SampleOTU.otu_id)
-            .filter(SampleOTU.otu_id == value)
-            .all()
-        )]
+    def _query_sample_otu(self, value=None):
+        if value != None:
+            sample_otu_results = [r for r in (
+                self._session.query(SampleOTU.otu_id, SampleOTU.sample_id, SampleOTU.count)
+                .order_by(SampleOTU.otu_id)
+                .filter(SampleOTU.otu_id == value)
+                .all()
+            )]
+        else:
+            sample_otu_results = [r for r in (
+                self._session.query(SampleOTU.otu_id, SampleOTU.sample_id, SampleOTU.count)
+                .order_by(SampleOTU.otu_id)
+                .all()
+            )]
         return sample_otu_results
 
 

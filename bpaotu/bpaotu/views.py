@@ -302,6 +302,8 @@ def get_edna_abundance(request):
         with EdnaSampleOTUQuery() as query:
             if pk:
                 result = query._query_sample_otu(pk)
+            else:
+                result = query._query_sample_otu()
     # else:
     #     logger.info('Abundance api requested')
     #     term = request.GET['term']
@@ -334,7 +336,7 @@ def get_edna_metadata(request):
     })
     # TODO: response['Access-Control-Allow-Origin'] = 'http://localhost:5500/'
     # response header is set by apache to '*' on the nectar edna virtual machine so this is no longer needed
-    # response['Access-Control-Allow-Origin'] = '*'
+    response['Access-Control-Allow-Origin'] = '*'
     return response
 
 # Another custom API path
