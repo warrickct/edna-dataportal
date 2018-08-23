@@ -347,7 +347,6 @@ def sample_otu_ordered(request):
     response =  JsonResponse({
         'data': result,
     })
-    logger.info("--- %s seconds ---" % (time.time() - start_time))
     # CORS already configured to allow all on apache instance on server.
     # response['Access-Control-Allow-Origin'] = '*'
     return response

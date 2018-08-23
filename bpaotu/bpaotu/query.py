@@ -364,6 +364,7 @@ class EdnaMetadataQuery:
         if term:
             query = (
                 self._session.query(
+                    SampleContext.id,
                     SampleContext._site, 
                     SampleContext._x, 
                     SampleContext._y, 
@@ -381,6 +382,7 @@ class EdnaMetadataQuery:
         else:
             query = (
                 self._session.query(
+                    SampleContext.id,
                     SampleContext._site, 
                     SampleContext._x, 
                     SampleContext._y, 
@@ -398,16 +400,17 @@ class EdnaMetadataQuery:
         results =[]
         for tuple in query :
             results.append({
-                'site': tuple[0],
-                'x': tuple[1],
-                'y': tuple[2],
-                'elev': tuple[3],
-                'mean_C_percent': tuple[4],
-                'mid_ph': tuple[5],
-                'ave_logNconcen': tuple[6],
-                'prec_mean': tuple[7],
-                'water2': tuple[8],
-                'freshwater': tuple[9],
+                'id': tuple[0],
+                'site': tuple[1],
+                'x': tuple[2],
+                'y': tuple[3],
+                'elev': tuple[4],
+                'mean_C_percent': tuple[5],
+                'mid_ph': tuple[6],
+                'ave_logNconcen': tuple[7],
+                'prec_mean': tuple[8],
+                'water2': tuple[9],
+                'freshwater': tuple[10]
             })
         return results
 
@@ -545,6 +548,7 @@ class EdnaSampleOTUQuery:
             .all()
         )]
         return sample_otu_results
+
 
 class ContextualFilter:
     mode_operators = {
