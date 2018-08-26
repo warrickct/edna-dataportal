@@ -25,7 +25,7 @@ urlpatterns = [
     url(r'^edna/api/sample_otu_ordered$', views.sample_otu_ordered, name="ordered_abundance_metadata"),
     url(r'^edna/api/upload$', views.AbundanceUpload.as_view()),
     # w: phase 3 - edna urls
-    url(r'^edna/api/taxonomy-options$', views.edna_taxonomy_options, name="edna_taxonomy_options"),
+    url(r'^edna/api/taxonomy-options$', views.edna_get_otu_suggestions, name="edna_taxonomy_options"),
     url(r'^edna/api/metadata-options$', views.edna_get_sample_contextual_suggestions, name="edna_metadata_options"),
     url(r'^edna/api/filter-options$', views.edna_filter_options, name="edna_filter_options"),
     # w: 

@@ -297,6 +297,9 @@ def param_to_filters_without_checks(query_str):
 @csrf_exempt
 @require_GET
 def edna_get_sample_otu(request):
+    '''
+    Returns sample_otu tuples that match the ids in the request url.
+    '''
     if request.GET['id'] is not None:
         # gets all the pks from teh query and casts to int.
         ids = [int(pk) for pk in request.GET.getlist('id') if pk is not '']
@@ -305,7 +308,6 @@ def edna_get_sample_otu(request):
                 result = query._query_sample_otu(ids)
             else:
                 result = query._query_sample_otu()
-
     # FOR GETTING WITH A STRING SEARCH
     # else:
     #     logger.info('Abundance api requested')
@@ -331,12 +333,12 @@ def edna_get_sample_contextual(request):
     Returns full metadata tuples of SampleContextuals according to params
     '''
     logger.info('Abundance api requested')
-    term = request.GET['term']
+    ids = [int(site) for site in request.GET.getlist('id') if id is not '']
     with EdnaMetadataQuery() as query:
-        if term:
-            query_result = query.get_all_metadata(term)
+        if ids:
+            query_result = query.get_all_metadata(ids)
         else:
-            query_result = query.get_all_metadata('')
+            query_result = query.get_all_metadata()
     response = JsonResponse({
         'data': query_result,
     })
@@ -349,6 +351,9 @@ def edna_get_sample_contextual(request):
 @csrf_exempt
 @require_GET
 def sample_otu_ordered(request):
+    '''
+    Experimental response that orders sample_context, sample_otu and otu table to be reconstructed client side. Made to reduce structure size.
+    '''
     start_time = time.time()
     with EdnaOrderedSampleOTU() as query:
         result = query.get_sample_otu_ordered()
@@ -374,7 +379,7 @@ def edna_get_sample_contextual_suggestions(request):
 
 @csrf_exempt
 @require_GET
-def edna_taxonomy_options(request):
+def edna_get_otu_suggestions(request):
     filters = request.GET['q']
     with EdnaTaxonomyOptions() as query:
         result = query.get_taxonomy_options(filters)

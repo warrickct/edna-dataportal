@@ -360,8 +360,8 @@ class EdnaMetadataQuery:
     def __exit__(self, exec_type, exc_value, traceback):
         self._session.close()
 
-    def get_all_metadata(self, term):
-        if term:
+    def get_all_metadata(self, ids=None):
+        if ids:
             query = (
                 self._session.query(
                     SampleContext.id,
@@ -376,7 +376,7 @@ class EdnaMetadataQuery:
                     SampleContext._water2,
                     SampleContext._freshwater
                     )
-                .filter(SampleContext._site.like("%" + term + "%"))
+                .filter(SampleContext.id.in_(ids))
                 .all()
             )
         else:
