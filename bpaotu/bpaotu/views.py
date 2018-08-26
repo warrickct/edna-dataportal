@@ -362,7 +362,7 @@ def sample_otu_ordered(request):
     })
     # CORS already configured to allow all on apache instance on server.
     # NOTE: Need to enable the header when 
-    # response['Access-Control-Allow-Origin'] = '*'
+    response['Access-Control-Allow-Origin'] = '*'
     return response
 
 # Phase 3 edna API
