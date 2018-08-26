@@ -361,6 +361,7 @@ def sample_otu_ordered(request):
         'data': result,
     })
     # CORS already configured to allow all on apache instance on server.
+    # NOTE: Need to enable the header when 
     # response['Access-Control-Allow-Origin'] = '*'
     return response
 
