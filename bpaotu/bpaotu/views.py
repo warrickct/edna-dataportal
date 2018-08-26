@@ -298,12 +298,15 @@ def param_to_filters_without_checks(query_str):
 @require_GET
 def get_edna_abundance(request):
     if request.GET['id'] is not None:
-        pk = request.GET['id']
+        # gets all the pks from teh query and casts to int.
+        pks = [int(pk) for pk in request.GET.getlist('id')]
         with EdnaSampleOTUQuery() as query:
-            if pk:
-                result = query._query_sample_otu(pk)
+            if pks:
+                result = query._query_sample_otu(pks)
             else:
                 result = query._query_sample_otu()
+
+    # FOR GETTING WITH A STRING SEARCH
     # else:
     #     logger.info('Abundance api requested')
     #     term = request.GET['term']
