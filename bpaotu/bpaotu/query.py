@@ -539,7 +539,6 @@ class EdnaSampleOTUQuery:
         self._session.close()
 
     # TODO: will need to make this more dynamic (queryable by sample id, count range)
-    # TODO: make it a list of queryable ids then compile and return
     def _query_sample_otu(self, ids=None):
         if ids is not None:
             sample_otu_results = [r for r in (
