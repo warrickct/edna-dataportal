@@ -299,10 +299,10 @@ def param_to_filters_without_checks(query_str):
 def get_edna_abundance(request):
     if request.GET['id'] is not None:
         # gets all the pks from teh query and casts to int.
-        pks = [int(pk) for pk in request.GET.getlist('id')]
+        ids = [int(pk) for pk in request.GET.getlist('id')]
         with EdnaSampleOTUQuery() as query:
-            if pks:
-                result = query._query_sample_otu(pks)
+            if ids:
+                result = query._query_sample_otu(ids)
             else:
                 result = query._query_sample_otu()
 
