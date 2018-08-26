@@ -296,7 +296,7 @@ def param_to_filters_without_checks(query_str):
 # TEST: Adding custom API for the visualisation
 @csrf_exempt
 @require_GET
-def get_edna_abundance(request):
+def edna_get_sample_otu(request):
     if request.GET['id'] is not None:
         # gets all the pks from teh query and casts to int.
         ids = [int(pk) for pk in request.GET.getlist('id') if pk is not '']
@@ -326,7 +326,10 @@ def get_edna_abundance(request):
 
 @csrf_exempt
 @require_GET
-def get_edna_metadata(request):
+def edna_get_sample_contextual(request):
+    '''
+    Returns full metadata tuples of SampleContextuals according to params
+    '''
     logger.info('Abundance api requested')
     term = request.GET['term']
     with EdnaMetadataQuery() as query:
@@ -359,7 +362,7 @@ def sample_otu_ordered(request):
 # Phase 3 edna API
 @csrf_exempt
 @require_GET
-def edna_metadata_options(request):
+def edna_get_sample_contextual_suggestions(request):
     filters = request.GET['q']
     with EdnaContextualOptions() as query:
         result = query.get_sample_contextual_fields(filters)

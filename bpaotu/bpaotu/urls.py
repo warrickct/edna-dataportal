@@ -19,14 +19,14 @@ urlpatterns = [
     url(r'^ingest/$', views.otu_log, name="otu_log"),                                                                               # Display ingest names that do not match list.
     # w: phase 2 - edna urls
     # For getting filtered abundance data
-    url(r'^edna/api/abundance$', views.get_edna_abundance, name="abundance_data"),
-    url(r'^edna/api/metadata$', views.get_edna_metadata, name="site_metadata"),
+    url(r'^edna/api/abundance$', views.edna_get_sample_otu, name="abundance_data"),
+    url(r'^edna/api/metadata$', views.edna_get_sample_contextual, name="site_metadata"),
     # Returns 1D array of OTU codes, SampleContextual._sites, and SampleOTU.counts to be reconstructed later.
     url(r'^edna/api/sample_otu_ordered$', views.sample_otu_ordered, name="ordered_abundance_metadata"),
     url(r'^edna/api/upload$', views.AbundanceUpload.as_view()),
     # w: phase 3 - edna urls
     url(r'^edna/api/taxonomy-options$', views.edna_taxonomy_options, name="edna_taxonomy_options"),
-    url(r'^edna/api/metadata-options$', views.edna_metadata_options, name="edna_metadata_options"),
+    url(r'^edna/api/metadata-options$', views.edna_get_sample_contextual_suggestions, name="edna_metadata_options"),
     url(r'^edna/api/filter-options$', views.edna_filter_options, name="edna_filter_options"),
     # w: 
     url(r'^tables/$', views.tables, name="tables"),                                                                                 # Custom datatables columns.
