@@ -377,6 +377,7 @@ class EdnaMetadataQuery:
                     SampleContext._freshwater
                     )
                 .filter(SampleContext.id.in_(ids))
+                .order_by(SampleContext.id)
                 .all()
             )
         else:
@@ -394,6 +395,7 @@ class EdnaMetadataQuery:
                     SampleContext._water2,
                     SampleContext._freshwater,
                     )
+                .order_by(SampleContext.id)
                 .all()
             )
         # TODO: hardcoding dictionary response for now. Need to replace with automated keys based off table columns.
