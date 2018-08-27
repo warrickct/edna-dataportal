@@ -302,10 +302,10 @@ def edna_get_sample_otu(request):
     '''
     if request.GET['id'] is not None:
         # gets all the pks from teh query and casts to int.
-        ids = [int(pk) for pk in request.GET.getlist('id') if pk is not '']
+        pks = [int(id) for id in request.GET.getlist('id') if id is not '']
         with EdnaSampleOTUQuery() as query:
-            if ids:
-                result = query._query_sample_otu(ids)
+            if pks:
+                result = query._query_sample_otu(pks)
             else:
                 result = query._query_sample_otu()
     # FOR GETTING WITH A STRING SEARCH
@@ -333,10 +333,10 @@ def edna_get_sample_contextual(request):
     Returns full metadata tuples of SampleContextuals according to params
     '''
     logger.info('Abundance api requested')
-    ids = [int(site) for site in request.GET.getlist('id') if id is not '']
+    pks = [int(id) for id in request.GET.getlist('id') if id is not '']
     with EdnaMetadataQuery() as query:
-        if ids:
-            query_result = query.get_all_metadata(ids)
+        if pks:
+            query_result = query.get_all_metadata(pks)
         else:
             query_result = query.get_all_metadata()
     response = JsonResponse({
