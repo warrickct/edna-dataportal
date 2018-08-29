@@ -494,7 +494,7 @@ class EdnaContextualOptions:
         return field_results
     
 
-class EdnaTaxonomyOptions:
+class EdnaOTUQuery:
     def __init__(self):
         self._session = Session()
 
@@ -503,6 +503,34 @@ class EdnaTaxonomyOptions:
 
     def __exit__(self, exec_type, exc_value, traceback):
         self._session.close()
+
+    def _query_primary_keys(self, otus=None):
+        # TODO: Add amplicon to the ontologies to be searched at some point.
+        # get all the columns in the otu database or hardcode them
+        # NOTE: Relies on otus segments being lesser than or equal to the amount fo ontological tables and otu fk columns.
+        ontology_tables = [OTUKingdom, OTUPhylum, OTUClass, OTUOrder, OTUFamily, OTUGenus, OTUSpecies]
+        otu_columns = [OTU.kingdom_id, OTU.phylum_id, OTU.class_id, OTU.order_id, OTU.family_id, OTU.genus_id, OTU.species_id]
+        base_query = self._session.query(OTU.id)
+        if otus is not None:
+            for otu in otus:
+                for index, frag in enumerate(otu.split()):
+                    # convert the string of the ontology into the id
+                    ontology_table = ontology_tables[index]
+                    otu_column = otu_columns[index]
+                    ontology_id = [r for r in (
+                        self._session.query(ontology_table.id)
+                            .filter(ontology_table.value == frag)
+                            .first()
+                    )][0]
+                    logger.info(ontology_id)
+                    logger.info(frag)
+                    # use the ontology id to get cumulatively filter the otu table
+                    base_query = base_query.filter(otu_column == ontology_id)
+                # At the end of each otu run the otu filter.
+                logger.info(base_query)
+                logger.info([r[0] for r in base_query.all()])
+            # break up the otus
+        
 
     def get_taxonomy_options(self, filters):
         # TEMP:TODO: Until caching is set up

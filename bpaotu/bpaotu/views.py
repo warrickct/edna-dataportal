@@ -33,7 +33,7 @@ from .query import (
     EdnaOrderedSampleOTU,
     # w: Phase 3 edna API
     EdnaContextualOptions,
-    EdnaTaxonomyOptions,
+    EdnaOTUQuery,
     EdnaSampleOTUQuery,
     # w: end
     ContextualFilter,
@@ -303,11 +303,17 @@ def edna_get_sample_otu(request):
     if request.GET['otu'] is not None:
         # gets all the pks from teh query and casts to int.
         otus = [otu for otu in request.GET.getlist('otu') if otu is not '']
-        with EdnaSampleOTUQuery() as query:
+        otuPks = []
+        # basically going to function as a look up
+        with EdnaOTUQuery() as otu_query:
             if otus:
-                result = query._query_sample_otu(otus)
+                logger.info(otus)
+                otuPks = otu_query._query_primary_keys(otus)
+        with EdnaSampleOTUQuery() as sample_otu_query:
+            if len(otuPks) > 0:
+                result = sample_otu_query._query_sample_otu(otus)
             else:
-                result = query._query_sample_otu()
+                result = sample_otu_query._query_sample_otu()
     # FOR GETTING WITH A STRING SEARCH
     # else:
     #     logger.info('Abundance api requested')
@@ -382,7 +388,7 @@ def edna_get_sample_contextual_suggestions(request):
 @require_GET
 def edna_get_otu_suggestions(request):
     filters = request.GET['q']
-    with EdnaTaxonomyOptions() as query:
+    with EdnaOTUQuery() as query:
         result = query.get_taxonomy_options(filters)
     response = JsonResponse({
         'data': result
