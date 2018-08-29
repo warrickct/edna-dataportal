@@ -302,7 +302,7 @@ def edna_get_sample_otu(request):
     '''
     if request.GET['otu'] is not None:
         # gets all the pks from teh query and casts to int.
-        otus = [int(otu) for otu in request.GET.getlist('otu') if otu is not '']
+        otus = [otu for otu in request.GET.getlist('otu') if otu is not '']
         with EdnaSampleOTUQuery() as query:
             if otus:
                 result = query._query_sample_otu(otus)
