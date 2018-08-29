@@ -309,11 +309,15 @@ def edna_get_sample_otu(request):
             if otus:
                 logger.info(otus)
                 otuPks = otu_query._query_primary_keys(otus)
-        with EdnaSampleOTUQuery() as sample_otu_query:
-            if len(otuPks) > 0:
-                result = sample_otu_query._query_sample_otu(otus)
-            else:
-                result = sample_otu_query._query_sample_otu()
+                logger.info(otuPks)
+        # TEMP: commenting out abundance query for a second.
+        # with EdnaSampleOTUQuery() as sample_otu_query:
+        #     if len(otuPks) > 0:
+        #         result = sample_otu_query._query_sample_otu(otus)
+        #     else:
+        #         result = sample_otu_query._query_sample_otu()
+        # TEMP:END:
+
     # FOR GETTING WITH A STRING SEARCH
     # else:
     #     logger.info('Abundance api requested')
@@ -324,7 +328,10 @@ def edna_get_sample_otu(request):
     #         else:
     #             result = query.get_abundance_nested('')
     response = JsonResponse({
-        'data': result,
+        # 'data': result,
+        # TEMP:START:
+        'dev': otuPks,
+        # TEMP:END:
     })
     # TODO: response['Access-Control-Allow-Origin'] =   'http://localhost:5500/'
     # response header is set by apache to '*' on the nectar edna virtual machine so this is no longer needed

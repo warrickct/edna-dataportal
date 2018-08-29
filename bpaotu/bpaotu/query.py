@@ -510,6 +510,7 @@ class EdnaOTUQuery:
         # NOTE: Relies on otus segments being lesser than or equal to the amount fo ontological tables and otu fk columns.
         ontology_tables = [OTUKingdom, OTUPhylum, OTUClass, OTUOrder, OTUFamily, OTUGenus, OTUSpecies]
         otu_columns = [OTU.kingdom_id, OTU.phylum_id, OTU.class_id, OTU.order_id, OTU.family_id, OTU.genus_id, OTU.species_id]
+        otu_pks = []
         base_query = self._session.query(OTU.id)
         if otus is not None:
             for otu in otus:
@@ -529,8 +530,12 @@ class EdnaOTUQuery:
                 # At the end of each otu run the otu filter.
                 logger.info(base_query)
                 logger.info([r[0] for r in base_query.all()])
+                otu_pks = otu_pks + base_query.all()
             # break up the otus
-        
+        return {
+            'pks': otu_pks,
+            # 'query': base_query,
+        }
 
     def get_taxonomy_options(self, filters):
         # TEMP:TODO: Until caching is set up
