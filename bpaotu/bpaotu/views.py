@@ -300,12 +300,12 @@ def edna_get_sample_otu(request):
     '''
     Returns sample_otu tuples that match the ids in the request url.
     '''
-    if request.GET['id'] is not None:
+    if request.GET['otu'] is not None:
         # gets all the pks from teh query and casts to int.
-        pks = [int(id) for id in request.GET.getlist('id') if id is not '']
+        otus = [int(otu) for otu in request.GET.getlist('otu') if otu is not '']
         with EdnaSampleOTUQuery() as query:
-            if pks:
-                result = query._query_sample_otu(pks)
+            if otus:
+                result = query._query_sample_otu(otus)
             else:
                 result = query._query_sample_otu()
     # FOR GETTING WITH A STRING SEARCH
