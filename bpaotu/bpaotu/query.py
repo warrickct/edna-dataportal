@@ -505,37 +505,22 @@ class EdnaOTUQuery:
         self._session.close()
 
     def _query_primary_keys(self, otus=None):
-        # TODO: Add amplicon to the ontologies to be searched at some point.
-        # get all the columns in the otu database or hardcode them
-        # NOTE: Relies on otus segments being lesser than or equal to the amount fo ontological tables and otu fk columns.
+        # Iteratively builds upon the filters for an otu and retrieves the matching otu ids.
         ontology_tables = [OTUKingdom, OTUPhylum, OTUClass, OTUOrder, OTUFamily, OTUGenus, OTUSpecies]
         otu_columns = [OTU.kingdom_id, OTU.phylum_id, OTU.class_id, OTU.order_id, OTU.family_id, OTU.genus_id, OTU.species_id]
         otu_pks = []
-        base_query = self._session.query(OTU.id)
+        # base_query = self._session.query(OTU.id, OTU.code)
         if otus is not None:
             for otu in otus:
-                for index, frag in enumerate(otu.split()):
-                    # convert the string of the ontology into the id
+                # TEST:
+                base_query = self._session.query(OTU.id)
+                for index, field_id in enumerate(otu.split(' ')):
+                    logger.info(field_id)
                     ontology_table = ontology_tables[index]
                     otu_column = otu_columns[index]
-                    ontology_id = [r for r in (
-                        self._session.query(ontology_table.id)
-                            .filter(ontology_table.value == frag)
-                            .first()
-                    )][0]
-                    logger.info(ontology_id)
-                    logger.info(frag)
-                    # use the ontology id to get cumulatively filter the otu table
-                    base_query = base_query.filter(otu_column == ontology_id)
-                # At the end of each otu run the otu filter.
-                logger.info(base_query)
-                logger.info([r[0] for r in base_query.all()])
-                otu_pks = otu_pks + base_query.all()
-            # break up the otus
-        return {
-            'pks': otu_pks,
-            # 'query': base_query,
-        }
+                    base_query = base_query.filter(otu_column == field_id)
+                otu_pks = [r[0] for r in base_query.all()]
+        return otu_pks
 
     def get_taxonomy_options(self, filters):
         # TEMP:TODO: Until caching is set up
@@ -553,7 +538,8 @@ class EdnaOTUQuery:
         #     logger.info("Using cached sample_otu results")
         # return result
 
-    def _query_taxonomy_options(self, filters):
+    # TEMP: inactive taxonomic option query.
+    def _query_taxonomy_options_OLD(self, filters):
         option_results = [r for r in (
             self._session.query(OTU.id, OTU.code)
                 .order_by(OTU.code)
@@ -561,6 +547,58 @@ class EdnaOTUQuery:
                 .all()
         )]
         return option_results
+
+    def _query_taxonomy_options(self, filters):
+        ontology_tables = [OTUKingdom, OTUPhylum, OTUClass, OTUOrder, OTUFamily, OTUGenus, OTUSpecies]
+        otu_columns = [OTU.kingdom_id, OTU.phylum_id, OTU.class_id, OTU.order_id, OTU.family_id, OTU.genus_id, OTU.species_id]
+
+        ordered_otus = [r for r in (
+            self._session.query(OTU.kingdom_id, OTU.phylum_id, OTU.class_id, OTU.order_id, OTU.family_id, OTU.genus_id, OTU.species_id)
+            .order_by(OTU.kingdom_id, OTU.phylum_id, OTU.class_id, OTU.order_id, OTU.family_id, OTU.genus_id, OTU.species_id)
+            .all()
+            )]
+
+        # create lookup for performance
+        otu_ontology_lookups = {}
+        for table_index, table in enumerate(ontology_tables):
+            if table_index not in otu_ontology_lookups:
+                otu_ontology_lookups[table_index] = {}
+            rows = [r for r in (self._session.query(table.id, table.value).all())]
+            for tuple in rows:
+                pk = tuple[0]
+                text = tuple[1]
+                otu_ontology_lookups[table_index][pk] = text
+        
+        prefixes = [
+            "k__",
+            "p__",
+            "c__",
+            "o__",
+            "f__",
+            "g__",
+            "s__",
+            ]
+
+        # generate the options with the pk field for faster searching.
+        # possibly making it paginated.
+        options = []
+        for otu in ordered_otus:
+            otu_text = ""
+            combination_key = []
+            for index, col in enumerate(otu):
+                if otu_ontology_lookups[index][col] == "" or otu_ontology_lookups[index][col] == " ":
+                    continue
+                if otu_text == "":
+                    otu_text = otu_text + prefixes[index] + otu_ontology_lookups[index][col]
+                    combination_key.append(col)
+                else:
+                    otu_text = otu_text + ";" + prefixes[index] + otu_ontology_lookups[index][col] 
+                    combination_key.append(col)
+            if otu_text in options:
+                continue
+            else:
+                options.append([otu_text, combination_key])
+        return options
 
 
 class EdnaSampleOTUQuery:
@@ -575,6 +613,7 @@ class EdnaSampleOTUQuery:
 
     # TODO: will need to make this more dynamic (queryable by sample id, count range)
     def _query_sample_otu(self, ids=None):
+        logger.info(ids)
         if ids is not None:
             sample_otu_results = [r for r in (
                 self._session.query(SampleOTU.otu_id, SampleOTU.sample_id, SampleOTU.count)

@@ -303,13 +303,13 @@ def edna_get_sample_otu(request):
     if request.GET['otu'] is not None:
         # gets all the pks from teh query and casts to int.
         otus = [otu for otu in request.GET.getlist('otu') if otu is not '']
-        otuPks = []
-        # basically going to function as a look up
+        otu_ids = []
         with EdnaOTUQuery() as otu_query:
             if otus:
                 logger.info(otus)
-                otuPks = otu_query._query_primary_keys(otus)
-                logger.info(otuPks)
+                otu_ids = otu_query._query_primary_keys(otus)
+        with EdnaSampleOTUQuery() as sample_otu_query:
+            sample_otu_results = sample_otu_query._query_sample_otu(otu_ids)
         # TEMP: commenting out abundance query for a second.
         # with EdnaSampleOTUQuery() as sample_otu_query:
         #     if len(otuPks) > 0:
@@ -330,7 +330,8 @@ def edna_get_sample_otu(request):
     response = JsonResponse({
         # 'data': result,
         # TEMP:START:
-        'dev': otuPks,
+        # 'dev': len(otu_ids),
+        'data': sample_otu_results
         # TEMP:END:
     })
     # TODO: response['Access-Control-Allow-Origin'] =   'http://localhost:5500/'
@@ -410,11 +411,11 @@ def edna_filter_options(request):
     Combined array of taxonomic options + contextual options to be placed into the list.
     '''
     filters = request.GET['q']
-    with EdnaTaxonomyOptions() as query:
+    with EdnaOTUQuery() as query:
         taxonomy_options = query.get_taxonomy_options(filters)
     with EdnaContextualOptions() as query:
         context_options = query.get_sample_contextual_fields(filters)
-    combined_options = taxonomy_options + context_options
+    # combined_options = taxonomy_options + context_options
     response = JsonResponse({
         'data': {
             'taxonomy_options': taxonomy_options,
