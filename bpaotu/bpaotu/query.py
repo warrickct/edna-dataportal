@@ -519,7 +519,7 @@ class EdnaOTUQuery:
                     ontology_table = ontology_tables[index]
                     otu_column = otu_columns[index]
                     base_query = base_query.filter(otu_column == field_id)
-                otu_pks = [r[0] for r in base_query.all()]
+                otu_pks = otu_pks + [r[0] for r in base_query.all()]
         return otu_pks
 
     def get_taxonomy_options(self, filters):
@@ -613,14 +613,14 @@ class EdnaSampleOTUQuery:
 
     # TODO: will need to make this more dynamic (queryable by sample id, count range)
     def _query_sample_otu(self, ids=None):
-        logger.info(ids)
+        sample_otu_results = []
         if ids is not None:
             sample_otu_results = [r for r in (
                 self._session.query(SampleOTU.otu_id, SampleOTU.sample_id, SampleOTU.count)
                 .order_by(SampleOTU.otu_id)
                 .filter(SampleOTU.otu_id.in_(ids))
                 .all()
-            )]
+                )]
         else:
             sample_otu_results = [r for r in (
                 self._session.query(SampleOTU.otu_id, SampleOTU.sample_id, SampleOTU.count)

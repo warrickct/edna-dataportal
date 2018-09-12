@@ -306,9 +306,9 @@ def edna_get_sample_otu(request):
         otu_ids = []
         with EdnaOTUQuery() as otu_query:
             if otus:
-                logger.info(otus)
                 otu_ids = otu_query._query_primary_keys(otus)
         with EdnaSampleOTUQuery() as sample_otu_query:
+            logger.info(otu_ids)
             sample_otu_results = sample_otu_query._query_sample_otu(otu_ids)
         # TEMP: commenting out abundance query for a second.
         # with EdnaSampleOTUQuery() as sample_otu_query:
