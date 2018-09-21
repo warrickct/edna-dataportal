@@ -551,13 +551,11 @@ class EdnaOTUQuery:
     def _query_taxonomy_options(self, filters):
         ontology_tables = [OTUKingdom, OTUPhylum, OTUClass, OTUOrder, OTUFamily, OTUGenus, OTUSpecies]
         otu_columns = [OTU.kingdom_id, OTU.phylum_id, OTU.class_id, OTU.order_id, OTU.family_id, OTU.genus_id, OTU.species_id]
-
         ordered_otus = [r for r in (
             self._session.query(OTU.kingdom_id, OTU.phylum_id, OTU.class_id, OTU.order_id, OTU.family_id, OTU.genus_id, OTU.species_id)
             .order_by(OTU.kingdom_id, OTU.phylum_id, OTU.class_id, OTU.order_id, OTU.family_id, OTU.genus_id, OTU.species_id)
             .all()
             )]
-
         # create lookup for performance
         otu_ontology_lookups = {}
         for table_index, table in enumerate(ontology_tables):
@@ -568,7 +566,6 @@ class EdnaOTUQuery:
                 pk = tuple[0]
                 text = tuple[1]
                 otu_ontology_lookups[table_index][pk] = text
-        
         prefixes = [
             "k__",
             "p__",
@@ -578,7 +575,6 @@ class EdnaOTUQuery:
             "g__",
             "s__",
             ]
-
         # generate the options with the pk field for faster searching.
         # possibly making it paginated.
         options = []
