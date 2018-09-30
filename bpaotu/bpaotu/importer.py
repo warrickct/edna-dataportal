@@ -162,7 +162,6 @@ class DataImporter:
         # w: if the row contains one of them add the value to the set.
         vals = defaultdict(set)
         for row in row_iter:
-            logger.info(row)
             for db_class, fields in by_class.items():
                 # logger.info(fields)
                 for field in fields:
@@ -200,7 +199,7 @@ class DataImporter:
         r.update((t, pl['Marine']) for t in marine_only)
         return r
 
-    def load_waterdata_taxonomies(self):
+    def load_edna_taxonomies(self):
 
         otu_lookup = {}
         ontologies = OrderedDict([
@@ -233,7 +232,7 @@ class DataImporter:
             return ontology_parts
 
         def _taxon_rows_iter():
-            for fname in sorted(glob(self._import_base + 'waterdata/separated-data/data/*.tsv')):
+            for fname in sorted(glob(self._import_base + 'edna/separated-data/data/*.tsv')):
                 logger.info("Reading taxonomy file: %s" % fname)
                 with open(fname) as file:
                     reader = csv.DictReader(file, delimiter='\t')
@@ -383,7 +382,7 @@ class DataImporter:
         self._session.bulk_save_objects(_make_context())
         self._session.commit()
 
-    def load_waterdata_contextual_metadata(self):
+    def load_edna_contextual_metadata(self):
         '''
         - Had to clean the fields with regex expressions that match the ones used to clean the sample_context columns in otu.py
         - Also made a sitelookup to pass in as our site data doesn't contain site data.
@@ -417,7 +416,7 @@ class DataImporter:
             logger.info('loading edna contextual metadata from .tsv files')
             # site_id delcared here so we can go over multiple files at once.
             site_id = 0
-            for fname in sorted(glob(self._import_base + 'waterdata/separated-data/metadata/*.tsv')):
+            for fname in sorted(glob(self._import_base + 'edna/separated-data/metadata/*.tsv')):
                 logger.warning('loading metadata file: %s' % fname)
                 with open(fname, "r") as file:
                     reader = csv.DictReader(file, delimiter='\t')
@@ -439,9 +438,9 @@ class DataImporter:
 
         def _combined_rows():
             '''
-            Custom row iterable for iterating over multiple files
+            Custom to eDNA project - aggregate row iterable for iterating over multiple files
             '''
-            for fname in sorted(glob(self._import_base + 'waterdata/separated-data/metadata/*.tsv')):
+            for fname in sorted(glob(self._import_base + 'enda/separated-data/metadata/*.tsv')):
                 with open(fname, "r") as file:
                     reader = csv.reader(file, delimiter='\t')
                     headers = next(reader)
@@ -487,10 +486,10 @@ class DataImporter:
         self._session.bulk_save_objects(_make_context())
         self._session.commit()
 
-    def load_waterdata_otu_abundance(self, otu_lookup, site_lookup):
+    def load_edna_otu_abundance(self, otu_lookup, site_lookup):
 
         def _make_sample_otus():    
-            for fname in sorted(glob(self._import_base + 'waterdata/separated-data/data/*.tsv')):
+            for fname in sorted(glob(self._import_base + 'edna/separated-data/data/*.tsv')):
                 logger.info('writing abundance rows from %s' % fname)
                 file = open(fname, 'r')
                 reader = csv.DictReader(file, delimiter='\t')
