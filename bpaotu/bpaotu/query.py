@@ -464,7 +464,7 @@ class EdnaOrderedSampleOTU:
         return response
 
 
-class EdnaContextualOptions:
+class EdnaSampleContextualQuery:
     def __init__(self):
         self._session = Session()
 
@@ -475,7 +475,7 @@ class EdnaContextualOptions:
         self._session.close()
 
     # some default caching for quicker results.
-    def get_sample_contextual_fields(self, filters):
+    def get_sample_contextual_options(self, filters):
         result = self._query_contextual_fields(filters)
         # cache = caches['edna_sample_contextual_fields']
         # hash_str = 'eDNA_Sample_OTUs:cached'
@@ -490,7 +490,8 @@ class EdnaContextualOptions:
         return result
 
     def _query_contextual_fields(self, filters):
-        field_results=  [column.key for column in SampleContext.__table__.columns if filters in column.key]
+        field_results=  [column.key for column in SampleContext.__table__.columns]
+        # field_results=  [column.key for column in SampleContext.__table__.columns if filters in column.key]
         return field_results
     
 
@@ -523,30 +524,20 @@ class EdnaOTUQuery:
         return otu_pks
 
     def get_taxonomy_options(self, filters):
-        # TEMP:TODO: Until caching is set up
-        result = self._query_taxonomy_options(filters)
+        cache = caches['edna_taxonomy_options_results']
+        hash_str = 'eDNA_Taxonomy_Options:cached'
+        key = sha256(hash_str.encode('utf8')).hexdigest()
+        result = cache.get(key)
+        if not result:
+            logger.info("Taxonomy option cache entry not found, making new cache")
+            result = self._query_taxonomy_options(filters)
+            cache.set(key, result)
+        else:
+            logger.info("Using cached taxonomic options")
+        # only only return results with the param(s)
+        filters = filters.lower()
+        result = [r for r in result if (filters in r[0].lower())]
         return result
-        # cache = caches['edna_sample_otu_results']
-        # hash_str = 'eDNA_Sample_OTUs:cached'
-        # key = sha256(hash_str.encode('utf8')).hexdigest()
-        # result = cache.get(key)
-        # if not result:
-        #     logger.info("sample_otu_cache not found, making new cache")
-        #     result = self._query_sample_otu_ordered()
-        #     #cache.set(key, result)
-        # else:
-        #     logger.info("Using cached sample_otu results")
-        # return result
-
-    # TEMP: inactive taxonomic option query.
-    def _query_taxonomy_options_OLD(self, filters):
-        option_results = [r for r in (
-            self._session.query(OTU.id, OTU.code)
-                .order_by(OTU.code)
-                .filter((OTU.code).ilike("%" + filters + "%"))
-                .all()
-        )]
-        return option_results
 
     def _query_taxonomy_options(self, filters):
         ontology_tables = [OTUKingdom, OTUPhylum, OTUClass, OTUOrder, OTUFamily, OTUGenus, OTUSpecies]
@@ -566,6 +557,7 @@ class EdnaOTUQuery:
                 pk = tuple[0]
                 text = tuple[1]
                 otu_ontology_lookups[table_index][pk] = text
+        # Reubild with the prefixes attached.
         prefixes = [
             "k__",
             "p__",

@@ -499,7 +499,10 @@ class DataImporter:
                     for column in row:
                         if column == '':
                             continue
-                        sample_id = site_lookup[site_hash(column.upper())]
+                        try:
+                            sample_id = site_lookup[site_hash(column.upper())]
+                        except:
+                            print(column)
                         count = row[column]
                         try:
                             count = float(count)
@@ -509,10 +512,18 @@ class DataImporter:
                         if count > 0:
                             yield [sample_id, otu_id, count]
 
-        def _clear_sample_otu_cache():
-            logger.info('deleting old edna_sample_otu_results cache.')
+        def _clear_edna_caches():
+            # TODO: Get rid of magic string cache references
+            # clearing sample_otu cache
+            logger.info('deleting edna sample otu cache.')
             cache = caches['edna_sample_otu_results']
             hash_str = 'eDNA_Sample_OTUs:cached'
+            key = sha256(hash_str.encode('utf8')).hexdigest()
+            cache.delete(key)
+            # clearing otu cache
+            logger.info('Clearing edna taxonomy options cache.')
+            cache = caches['edna_taxonomy_options']
+            hash_str = 'eDNA_Taxonomy_Options:cached'
             key = sha256(hash_str.encode('utf8')).hexdigest()
             cache.delete(key)
 
@@ -528,7 +539,7 @@ class DataImporter:
             self._engine.execute(
                     text('''COPY otu.sample_otu from :csv CSV header''').execution_options(autocommit=True),
                     csv=fname)
-            _clear_sample_otu_cache()
+            _clear_edna_caches()
         except:
             logger.critical("unable to import")
             traceback.print_exc()
