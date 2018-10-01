@@ -323,9 +323,11 @@ def edna_filter_options(request):
     '''
     filters = request.GET['q']
     # return JsonResponse({
-        # 'Access-Control-Allow-Origin': '*',
-        # 'filters': filters
+    #     'Access-Control-Allow-Origin': '*',
+    #     'filters': filters
     # })
+    # TEMP: select2 ajax automatically adds & to query for some reason.
+    logger.info(filters)
     with EdnaOTUQuery() as query:
         taxonomy_options = query.get_taxonomy_options(filters)
     with EdnaSampleContextualQuery() as query:
