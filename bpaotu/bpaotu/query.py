@@ -540,9 +540,7 @@ class EdnaOTUQuery:
         result = [r for r in result if (filters in r[0].lower())]
         start = ((page -1) * page_size)
         end = ((page -1) * page_size) + page_size
-        logger.info(start)
-        logger.info(end)
-        paginated_result = result[(page * page_size):(page * page_size) + page_size]
+        paginated_result = result[start:end]
         return {
             "result": paginated_result,
             "total_results": len(result)
@@ -597,7 +595,6 @@ class EdnaOTUQuery:
             ]
         # generate the options with the pk field for faster searching.
         # possibly making it paginated.
-        logger.info(otu_ontology_lookups)
         options = []
         for otu in ordered_otus:
             otu_text = ""
