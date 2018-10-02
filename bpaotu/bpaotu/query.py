@@ -20,6 +20,7 @@ from .otu import (
     OTUFamily,
     OTUGenus,
     OTUSpecies,
+    OTUAmplicon,
     SampleContext,
     SampleOTU,
     SampleAustralianSoilClassification,
@@ -523,28 +524,54 @@ class EdnaOTUQuery:
                 otu_pks = otu_pks + [r[0] for r in base_query.all()]
         return otu_pks
 
-    def get_taxonomy_options(self, filters):
+    def get_taxonomy_options(self, filters, page=1, page_size=50):
         cache = caches['edna_taxonomy_options_results']
         hash_str = 'eDNA_Taxonomy_Options:cached'
         key = sha256(hash_str.encode('utf8')).hexdigest()
         result = cache.get(key)
         if not result:
             logger.info("Taxonomy option cache entry not found, making new cache")
-            result = self._query_taxonomy_options(filters)
+            result = self._query_taxonomy_options()
             cache.set(key, result)
         else:
             logger.info("Using cached taxonomic options")
         # only only return results with the param(s)
         filters = filters.lower()
         result = [r for r in result if (filters in r[0].lower())]
-        return result
+        start = ((page -1) * page_size)
+        end = ((page -1) * page_size) + page_size
+        logger.info(start)
+        logger.info(end)
+        paginated_result = result[(page * page_size):(page * page_size) + page_size]
+        return {
+            "result": paginated_result,
+            "total_results": len(result)
+        }
 
-    def _query_taxonomy_options(self, filters):
-        ontology_tables = [OTUKingdom, OTUPhylum, OTUClass, OTUOrder, OTUFamily, OTUGenus, OTUSpecies]
-        otu_columns = [OTU.kingdom_id, OTU.phylum_id, OTU.class_id, OTU.order_id, OTU.family_id, OTU.genus_id, OTU.species_id]
+    def _query_taxonomy_options(self):
+        ontology_tables = [OTUKingdom, OTUPhylum, OTUClass, OTUOrder, OTUFamily, OTUGenus, OTUSpecies, OTUAmplicon]
+        # otu_columns = [OTU.kingdom_id, OTU.phylum_id, OTU.class_id, OTU.order_id, OTU.family_id, OTU.genus_id, OTU.species_id]
         ordered_otus = [r for r in (
-            self._session.query(OTU.kingdom_id, OTU.phylum_id, OTU.class_id, OTU.order_id, OTU.family_id, OTU.genus_id, OTU.species_id)
-            .order_by(OTU.kingdom_id, OTU.phylum_id, OTU.class_id, OTU.order_id, OTU.family_id, OTU.genus_id, OTU.species_id)
+            self._session.query(
+                OTU.kingdom_id, 
+                OTU.phylum_id, 
+                OTU.class_id, 
+                OTU.order_id, 
+                OTU.family_id, 
+                OTU.genus_id, 
+                OTU.species_id,
+                OTU.amplicon_id
+                )
+            .order_by(
+                OTU.kingdom_id, 
+                OTU.phylum_id, 
+                OTU.class_id, 
+                OTU.order_id, 
+                OTU.family_id, 
+                OTU.genus_id, 
+                OTU.species_id,
+                OTU.amplicon_id
+                )
             .all()
             )]
         # create lookup for performance
@@ -566,9 +593,11 @@ class EdnaOTUQuery:
             "f__",
             "g__",
             "s__",
+            "id__"
             ]
         # generate the options with the pk field for faster searching.
         # possibly making it paginated.
+        logger.info(otu_ontology_lookups)
         options = []
         for otu in ordered_otus:
             otu_text = ""

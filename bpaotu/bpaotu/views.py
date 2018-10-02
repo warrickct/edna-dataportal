@@ -322,20 +322,18 @@ def edna_filter_options(request):
     Calls both meta and otu filter option methods, combined and returns.
     '''
     filters = request.GET['q']
-    # return JsonResponse({
-    #     'Access-Control-Allow-Origin': '*',
-    #     'filters': filters
-    # })
+    page = int(request.GET['page'])
+    page_size = int(request.GET['page_size'])
     # TEMP: select2 ajax automatically adds & to query for some reason.
-    logger.info(filters)
     with EdnaOTUQuery() as query:
-        taxonomy_options = query.get_taxonomy_options(filters)
+        taxonomy_options = query.get_taxonomy_options(filters, page, page_size)
     with EdnaSampleContextualQuery() as query:
         context_options = query.get_sample_contextual_options(filters)
     # combined_options = taxonomy_options + context_options
     response = JsonResponse({
         'data': {
-            'taxonomy_options': taxonomy_options,
+            'total_results': taxonomy_options["total_results"],
+            'taxonomy_options': taxonomy_options["result"],
             'context_options': context_options,
         }
     })
