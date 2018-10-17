@@ -24,6 +24,7 @@ urlpatterns = [
     url(r'^edna/api/filter-options$', views.edna_filter_options, name="edna_filter_options"),
     # w: TODO: WIP: For posting new data sets.
     url(r'^edna/api/upload$', views.AbundanceUpload.as_view()),
+    url(r'^edna/api/dev/test/$', views.test, name="Test stub method"),
 
     url(r'^tables/$', views.tables, name="tables"),                                                                                 # Custom datatables columns.
     url(r'^private/api/v1/required_table_headers/$', views.required_table_headers, name="required_table_headers"),                  # Custom datatables columns.

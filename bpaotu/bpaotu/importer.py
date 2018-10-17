@@ -408,7 +408,6 @@ class DataImporter:
                 field = re.sub(old, new, field)
             field = field.lower()
             # Made all the fields have a underscore at the start to prevent python word conflicts. Probably need a better solution.
-            field = '_' + field
             return field
 
         def _make_context():
@@ -522,7 +521,7 @@ class DataImporter:
             cache.delete(key)
             # clearing otu cache
             logger.info('Clearing edna taxonomy options cache.')
-            cache = caches['edna_taxonomy_options']
+            cache = caches['edna_taxonomy_options_results']
             hash_str = 'eDNA_Taxonomy_Options:cached'
             key = sha256(hash_str.encode('utf8')).hexdigest()
             cache.delete(key)

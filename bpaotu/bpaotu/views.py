@@ -289,6 +289,14 @@ def param_to_filters_without_checks(query_str):
         contextual_filter=contextual_filter,
         taxonomy_filter=taxonomy_filter), errors)
 
+@csrf_exempt
+@require_GET
+def test(request):
+    return JsonResponse({
+        'response': request
+    })
+
+
 # TEST: Adding custom API for the visualisation
 @csrf_exempt
 @require_GET
@@ -296,7 +304,13 @@ def edna_get_sample_otu(request):
     '''
     Returns sample_otu entries from otu table combination-keys
     '''
-    if request.GET['otu'] is not None:
+    contextual_params = request.GET.getlist('q', None)
+    sample_contextual_ids = []
+    if len(contextual_params) > 0:
+        with EdnaSampleContextualQuery() as sample_contextual:
+            sample_contextual_ids = sample_contextual.query_sample_contextual_pks(contextual_params)
+
+    if request.GET.get('otu', None) is not None:
         # gets all the pks from the query and casts to int.
         otus = [otu for otu in request.GET.getlist('otu') if otu is not '']
         otu_ids = []
@@ -304,8 +318,7 @@ def edna_get_sample_otu(request):
             if otus:
                 otu_ids = otu_query._query_primary_keys(otus)
         with EdnaSampleOTUQuery() as sample_otu_query:
-            logger.info(otu_ids)
-            sample_otu_results = sample_otu_query._query_sample_otu(otu_ids)
+            sample_otu_results = sample_otu_query.query_sample_otus(otu_ids, sample_contextual_ids)
     response = JsonResponse({
         'data': sample_otu_results
     })
@@ -324,7 +337,7 @@ def edna_filter_options(request):
     filters = request.GET['q']
     page = int(request.GET['page'])
     page_size = int(request.GET['page_size'])
-    # TEMP: select2 ajax automatically adds & to query for some reason.
+
     with EdnaOTUQuery() as query:
         taxonomy_options = query.get_taxonomy_options(filters, page, page_size)
     with EdnaSampleContextualQuery() as query:
@@ -343,6 +356,8 @@ def edna_filter_options(request):
 # TEMP:TEST: API class made for easier uploading.
 class UploadFileForm(forms.Form):
     file = forms.FileField()
+
+
 class AbundanceUpload(TemplateView):
     # make an html template for the upload page.
     template_name = 'edna/upload.html'

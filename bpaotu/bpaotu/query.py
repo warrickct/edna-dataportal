@@ -477,7 +477,8 @@ class EdnaSampleContextualQuery:
 
     # some default caching for quicker results.
     def get_sample_contextual_options(self, filters):
-        result = self._query_contextual_fields(filters)
+        # TODO: Add caching (not super important for this one.)
+        result = self.query_contextual_fields(filters)
         # cache = caches['edna_sample_contextual_fields']
         # hash_str = 'eDNA_Sample_OTUs:cached'
         # key = sha256(hash_str.encode('utf8')).hexdigest()
@@ -490,10 +491,29 @@ class EdnaSampleContextualQuery:
         #     logger.info("Using cached sample_otu results")
         return result
 
-    def _query_contextual_fields(self, filters):
-        field_results=  [column.key for column in SampleContext.__table__.columns]
-        # field_results=  [column.key for column in SampleContext.__table__.columns if filters in column.key]
-        return field_results
+    def query_contextual_fields(self, filters):
+            field_results=  [column.key for column in SampleContext.__table__.columns]
+            return field_results
+
+    def query_sample_contextual_pks(self, filters):
+        base_query = self._session.query(SampleContext.id)
+        for filter in filters:
+            if '$' in filter:
+                filter_segments = filter.split('$')
+                field = filter_segments[0]
+                conditional =  filter_segments[1][:2]
+                value = filter_segments[1][2:]
+                if conditional == "eq":
+                    base_query = base_query.filter(getattr(SampleContext, field) == value)
+                    # do stuff
+                if conditional == "gt":
+                    base_query = base_query.filter(getattr(SampleContext, field) > value)
+                    # do stuff
+                if conditional == "lt":
+                    base_query = base_query.filter(getattr(SampleContext, field) < value)
+
+        id_result_set = [r[0] for r in base_query.all()]
+        return id_result_set
     
 
 class EdnaOTUQuery:
@@ -507,18 +527,13 @@ class EdnaOTUQuery:
         self._session.close()
 
     def _query_primary_keys(self, otus=None):
-        # Iteratively builds upon the filters for an otu and retrieves the matching otu ids.
-        ontology_tables = [OTUKingdom, OTUPhylum, OTUClass, OTUOrder, OTUFamily, OTUGenus, OTUSpecies]
-        otu_columns = [OTU.kingdom_id, OTU.phylum_id, OTU.class_id, OTU.order_id, OTU.family_id, OTU.genus_id, OTU.species_id]
+        otu_columns = [OTU.kingdom_id, OTU.phylum_id, OTU.class_id, OTU.order_id, OTU.family_id, OTU.genus_id, OTU.species_id, OTU.amplicon_id]
         otu_pks = []
-        # base_query = self._session.query(OTU.id, OTU.code)
         if otus is not None:
             for otu in otus:
-                # TEST:
                 base_query = self._session.query(OTU.id)
                 for index, field_id in enumerate(otu.split(' ')):
                     logger.info(field_id)
-                    ontology_table = ontology_tables[index]
                     otu_column = otu_columns[index]
                     base_query = base_query.filter(otu_column == field_id)
                 otu_pks = otu_pks + [r[0] for r in base_query.all()]
@@ -626,21 +641,21 @@ class EdnaSampleOTUQuery:
         self._session.close()
 
     # TODO: will need to make this more dynamic (queryable by sample id, count range)
-    def _query_sample_otu(self, ids=None):
+    def query_sample_otus(self, otu_ids=None, sample_contextual_ids=None):
+        logger.info(otu_ids)
+        logger.info(sample_contextual_ids)
         sample_otu_results = []
-        if ids is not None:
-            sample_otu_results = [r for r in (
-                self._session.query(SampleOTU.otu_id, SampleOTU.sample_id, SampleOTU.count)
-                .order_by(SampleOTU.otu_id)
-                .filter(SampleOTU.otu_id.in_(ids))
-                .all()
-                )]
-        else:
-            sample_otu_results = [r for r in (
-                self._session.query(SampleOTU.otu_id, SampleOTU.sample_id, SampleOTU.count)
-                .order_by(SampleOTU.otu_id)
-                .all()
-            )]
+        query = (
+            self._session.query(SampleOTU.otu_id, SampleOTU.sample_id, SampleOTU.count)
+            .order_by(SampleOTU.otu_id)
+            # .all()
+        )
+        
+        if otu_ids is not None:
+            query = query.filter(SampleOTU.otu_id.in_(otu_ids))
+        if sample_contextual_ids is not None:
+            query = query.filter(SampleOTU.sample_id.in_(sample_contextual_ids))
+        sample_otu_results = [r for r in query]
         return sample_otu_results
 
 
@@ -794,4 +809,4 @@ def apply_otu_filter(otu_attr, q, op_and_val):
 
 apply_amplicon_filter = partial(apply_otu_filter, 'amplicon_id')
 # w: applied quickfix to query
-apply_environment_filter = partial(apply_op_and_val_filter, SampleContext._x)
+apply_environment_filter = partial(apply_op_and_val_filter, SampleContext.x)
