@@ -209,7 +209,7 @@ class SampleContext(SchemaMixin, Base):
     \(|\) -> '_bracket_'
     '__' -> '_' (from 1+ to 1.)
     Made all lowercase for consistency
-    // this has been reverted: prepend underscore to var name to avoid keyword conflicts (OR) was causing issue.
+    // reverted: prepend underscore to var name to avoid keyword conflicts (OR) was causing issue.
     '''
 
     site = Column(CIText)

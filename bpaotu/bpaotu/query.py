@@ -492,11 +492,24 @@ class EdnaSampleContextualQuery:
         return result
 
     def query_contextual_fields(self, filters):
-            field_results=  [column.key for column in SampleContext.__table__.columns]
-            return field_results
+        '''
+        Returns an list of all the columns in the sample_contextual fields
+        '''
+        field_results=  [column.key for column in SampleContext.__table__.columns]
+        return field_results
 
-    def query_sample_contextual_pks(self, filters):
-        base_query = self._session.query(SampleContext.id)
+    def query_sample_contextuals(self, filters):
+        '''
+        Returns a list of primary keys of sites which fit the filter conditions.
+        '''
+
+        def _row_to_dict(row):
+            d = {}
+            for column in row.__table__.columns:
+                d[column.name] = (getattr(row, column.name))
+            return d
+
+        base_query = self._session.query(SampleContext)
         for filter in filters:
             if '$' in filter:
                 filter_segments = filter.split('$')
@@ -512,8 +525,11 @@ class EdnaSampleContextualQuery:
                 if conditional == "lt":
                     base_query = base_query.filter(getattr(SampleContext, field) < value)
 
-        id_result_set = [r[0] for r in base_query.all()]
-        return id_result_set
+        # sample_contextual_results = [r.__dict__ for r in base_query.all()]
+        sample_contextual_results = [_row_to_dict(r) for r in base_query.all()]
+        # logger.info(sample_contextual_results)
+        # return id_result_set
+        return sample_contextual_results
     
 
 class EdnaOTUQuery:
@@ -653,8 +669,12 @@ class EdnaSampleOTUQuery:
         
         if otu_ids is not None:
             query = query.filter(SampleOTU.otu_id.in_(otu_ids))
+        logger.info("query after the otu ids")
+        logger.info(query)
         if sample_contextual_ids is not None:
             query = query.filter(SampleOTU.sample_id.in_(sample_contextual_ids))
+        logger.info("query after the sample ids")
+        logger.info(query)
         sample_otu_results = [r for r in query]
         return sample_otu_results
 

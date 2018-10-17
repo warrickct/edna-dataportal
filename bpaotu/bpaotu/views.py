@@ -305,10 +305,14 @@ def edna_get_sample_otu(request):
     Returns sample_otu entries from otu table combination-keys
     '''
     contextual_params = request.GET.getlist('q', None)
+    # just the primary keys for querying
     sample_contextual_ids = []
+    # the sample data for plotting geographically etc.
+    sample_contextuals_data = []
     if len(contextual_params) > 0:
         with EdnaSampleContextualQuery() as sample_contextual:
-            sample_contextual_ids = sample_contextual.query_sample_contextual_pks(contextual_params)
+            sample_contextuals_data = sample_contextual.query_sample_contextuals(contextual_params)
+            sample_contextual_ids = [sample['id'] for sample in sample_contextuals_data]
 
     if request.GET.get('otu', None) is not None:
         # gets all the pks from the query and casts to int.
@@ -320,10 +324,15 @@ def edna_get_sample_otu(request):
         with EdnaSampleOTUQuery() as sample_otu_query:
             sample_otu_results = sample_otu_query.query_sample_otus(otu_ids, sample_contextual_ids)
     response = JsonResponse({
-        'data': sample_otu_results
+        'sample_otu_data': sample_otu_results,
+        'sample_contextual_data': sample_contextuals_data,
     })
+
+
     # TODO: response['Access-Control-Allow-Origin'] =   'http://localhost:5500/'
     # response header is set by apache to '*' on the nectar edna virtual machine so this is no longer needed
+    # TODO: make cors more restricted potentially
+    # TODO: configure docker to automatically control cors settings. (will require altering nginx configuration for docker)
     response['Access-Control-Allow-Origin'] = '*'
     return response
 
