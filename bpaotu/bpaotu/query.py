@@ -672,7 +672,8 @@ class EdnaSampleOTUQuery:
         logger.info("query after the otu ids")
         logger.info(query)
         if sample_contextual_ids is not None:
-            query = query.filter(SampleOTU.sample_id.in_(sample_contextual_ids))
+            if len(sample_contextual_ids) > 0:
+                query = query.filter(SampleOTU.sample_id.in_(sample_contextual_ids))
         logger.info("query after the sample ids")
         logger.info(query)
         sample_otu_results = [r for r in query]
