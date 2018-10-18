@@ -659,8 +659,6 @@ class EdnaSampleOTUQuery:
 
     # TODO: will need to make this more dynamic (queryable by sample id, count range)
     def query_sample_otus(self, otu_ids=None, sample_contextual_ids=None):
-        logger.info(otu_ids)
-        logger.info(sample_contextual_ids)
         sample_otu_results = []
         query = (
             self._session.query(SampleOTU.otu_id, SampleOTU.sample_id, SampleOTU.count)
@@ -668,15 +666,10 @@ class EdnaSampleOTUQuery:
             # .all()
         )
         
-        if otu_ids is not None:
-            query = query.filter(SampleOTU.otu_id.in_(otu_ids))
-        logger.info("query after the otu ids")
-        logger.info(query)
-        if sample_contextual_ids is not None:
-            if len(sample_contextual_ids) > 0:
-                query = query.filter(SampleOTU.sample_id.in_(sample_contextual_ids))
-        logger.info("query after the sample ids")
-        logger.info(query)
+        query = query.filter(sqlalchemy.or_(
+            SampleOTU.otu_id.in_(otu_ids),
+            SampleOTU.sample_id.in_(sample_contextual_ids)
+        ))
         sample_otu_results = [r for r in query]
         return sample_otu_results
 
