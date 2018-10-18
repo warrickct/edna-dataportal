@@ -491,14 +491,14 @@ class EdnaSampleContextualQuery:
         #     logger.info("Using cached sample_otu results")
         return result
 
-    def query_contextual_fields(self, filters):
+    def query_contextual_fields(self, filters=None):
         '''
         Returns an list of all the columns in the sample_contextual fields
         '''
         field_results=  [column.key for column in SampleContext.__table__.columns]
         return field_results
 
-    def query_sample_contextuals(self, filters):
+    def query_sample_contextuals(self, filters=None):
         '''
         Returns a list of primary keys of sites which fit the filter conditions.
         '''
@@ -510,25 +510,23 @@ class EdnaSampleContextualQuery:
             return d
 
         base_query = self._session.query(SampleContext)
-        for filter in filters:
-            if '$' in filter:
-                filter_segments = filter.split('$')
-                field = filter_segments[0]
-                conditional =  filter_segments[1][:2]
-                value = filter_segments[1][2:]
-                if conditional == "eq":
-                    base_query = base_query.filter(getattr(SampleContext, field) == value)
-                    # do stuff
-                if conditional == "gt":
-                    base_query = base_query.filter(getattr(SampleContext, field) > value)
-                    # do stuff
-                if conditional == "lt":
-                    base_query = base_query.filter(getattr(SampleContext, field) < value)
+        if filters is not None:
+            for filter in filters:
+                if '$' in filter:
+                    filter_segments = filter.split('$')
+                    field = filter_segments[0]
+                    conditional =  filter_segments[1][:2]
+                    value = filter_segments[1][2:]
+                    if conditional == "eq":
+                        base_query = base_query.filter(getattr(SampleContext, field) == value)
+                        # do stuff
+                    if conditional == "gt":
+                        base_query = base_query.filter(getattr(SampleContext, field) > value)
+                        # do stuff
+                    if conditional == "lt":
+                        base_query = base_query.filter(getattr(SampleContext, field) < value)
 
-        # sample_contextual_results = [r.__dict__ for r in base_query.all()]
         sample_contextual_results = [_row_to_dict(r) for r in base_query.all()]
-        # logger.info(sample_contextual_results)
-        # return id_result_set
         return sample_contextual_results
     
 

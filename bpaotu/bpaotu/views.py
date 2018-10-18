@@ -309,10 +309,12 @@ def edna_get_sample_otu(request):
     sample_contextual_ids = []
     # the sample data for plotting geographically etc.
     sample_contextuals_data = []
-    if len(contextual_params) > 0:
-        with EdnaSampleContextualQuery() as sample_contextual:
+    with EdnaSampleContextualQuery() as sample_contextual:
+        if len(contextual_params) > 0:
             sample_contextuals_data = sample_contextual.query_sample_contextuals(contextual_params)
-            sample_contextual_ids = [sample['id'] for sample in sample_contextuals_data]
+        else:
+            sample_contextuals_data = sample_contextual.query_sample_contextuals()
+        sample_contextual_ids = [sample['id'] for sample in sample_contextuals_data]
 
     if request.GET.get('otu', None) is not None:
         # gets all the pks from the query and casts to int.
