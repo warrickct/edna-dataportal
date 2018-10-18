@@ -498,9 +498,9 @@ class EdnaSampleContextualQuery:
         field_results=  [column.key for column in SampleContext.__table__.columns]
         return field_results
 
-    def query_sample_contextuals(self, filters=None):
+    def query_sample_contextuals(self, tags=None):
         '''
-        Returns a list of primary keys of sites which fit the filter conditions.
+        Returns a list of primary keys of sites which fit the filter conditions. When multiple tags are given the results are combined using OR operation.
         '''
 
         def _row_to_dict(row):
@@ -510,21 +510,29 @@ class EdnaSampleContextualQuery:
             return d
 
         base_query = self._session.query(SampleContext)
-        if filters is not None:
-            for filter in filters:
-                if '$' in filter:
-                    filter_segments = filter.split('$')
+        # iterative build the filter then join it all in one bang and filter at the end.
+
+        if tags is not None:
+            or_filters = list()
+            for tag in tags:
+                # TODO: Add support for parsing AND and OR operators in the tags.
+
+                # if filter contains a value to compare
+                if '$' in tag:
+                    filter_segments = tag.split('$')
                     field = filter_segments[0]
                     conditional =  filter_segments[1][:2]
                     value = filter_segments[1][2:]
                     if conditional == "eq":
-                        base_query = base_query.filter(getattr(SampleContext, field) == value)
-                        # do stuff
+                        or_filters.append(getattr(SampleContext, field) == value)
+                        # base_query = base_query.filter(getattr(SampleContext, field) == value)
                     if conditional == "gt":
-                        base_query = base_query.filter(getattr(SampleContext, field) > value)
-                        # do stuff
+                        or_filters.append(getattr(SampleContext, field) > value)
+                        # base_query = base_query.filter(getattr(SampleContext, field) > value)
                     if conditional == "lt":
-                        base_query = base_query.filter(getattr(SampleContext, field) < value)
+                        or_filters.append(getattr(SampleContext, field) < value)
+                        # base_query = base_query.filter(getattr(SampleContext, field) < value)
+        base_query = base_query.filter(sqlalchemy.or_(*or_filters))
 
         sample_contextual_results = [_row_to_dict(r) for r in base_query.all()]
         return sample_contextual_results
