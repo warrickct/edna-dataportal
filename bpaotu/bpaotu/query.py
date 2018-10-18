@@ -577,7 +577,6 @@ class EdnaOTUQuery:
 
     def _query_taxonomy_options(self):
         ontology_tables = [OTUKingdom, OTUPhylum, OTUClass, OTUOrder, OTUFamily, OTUGenus, OTUSpecies, OTUAmplicon]
-        # otu_columns = [OTU.kingdom_id, OTU.phylum_id, OTU.class_id, OTU.order_id, OTU.family_id, OTU.genus_id, OTU.species_id]
         ordered_otus = [r for r in (
             self._session.query(
                 OTU.kingdom_id, 
@@ -587,7 +586,9 @@ class EdnaOTUQuery:
                 OTU.family_id, 
                 OTU.genus_id, 
                 OTU.species_id,
-                OTU.amplicon_id
+                # NOTE: amplicon id is actually the species identifier (for small variations)
+                OTU.amplicon_id,
+                OTU.id
                 )
             .order_by(
                 OTU.kingdom_id, 
@@ -620,7 +621,7 @@ class EdnaOTUQuery:
             "f__",
             "g__",
             "s__",
-            "id__"
+            "sid__"
             ]
         # generate the options with the pk field for faster searching.
         # possibly making it paginated.
@@ -628,7 +629,8 @@ class EdnaOTUQuery:
         for otu in ordered_otus:
             otu_text = ""
             combination_key = []
-            for index, col in enumerate(otu):
+            # ignore the final element as it's the pk.
+            for index, col in enumerate(otu[:len(otu)-1]):
                 if otu_ontology_lookups[index][col] == "" or otu_ontology_lookups[index][col] == " ":
                     continue
                 if otu_text == "":
@@ -640,7 +642,8 @@ class EdnaOTUQuery:
             if otu_text in options:
                 continue
             else:
-                options.append([otu_text, combination_key])
+                otu_pk = otu[len(otu)-1]
+                options.append([otu_text, combination_key, otu_pk])
         return options
 
 
