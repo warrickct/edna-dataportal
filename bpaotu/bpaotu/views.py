@@ -323,6 +323,8 @@ def edna_get_sample_otu(request):
         with EdnaOTUQuery() as otu_query:
             if otus:
                 otu_ids = otu_query._query_primary_keys(otus)
+
+        # Getting the sample otu entries that contain either a searched otu or sample context id.
         with EdnaSampleOTUQuery() as sample_otu_query:
             sample_otu_results = sample_otu_query.query_sample_otus(otu_ids, sample_contextual_ids)
 
@@ -335,7 +337,6 @@ def edna_get_sample_otu(request):
         'sample_contextual_data': sample_contextuals_data,
     })
 
-
     # TODO: response['Access-Control-Allow-Origin'] =   'http://localhost:5500/'
     # response header is set by apache to '*' on the nectar edna virtual machine so this is no longer needed
     # TODO: make cors more restricted potentially
@@ -343,6 +344,28 @@ def edna_get_sample_otu(request):
     response['Access-Control-Allow-Origin'] = '*'
     return response
 
+@csrf_exempt
+@require_GET
+def edna_otu(request):
+    '''
+    returns otu table information.
+    '''
+    
+    # should improve the api structure. otu/{id}/kingdom/{kingdom id}/etc...
+    filters = request.GET.getlist('id', None)
+    if len(filters) > 0:
+        with EdnaOTUQuery() as query:
+            otu_names = query.get_otu_names(filters)
+        response = JsonResponse({
+            'otu_names': otu_names
+        })
+    else:
+        response = JsonResponse({
+            'Access-Control-Allow-Origin': '*',
+            'otu_names': []
+        })
+    response['Access-Control-Allow-Origin'] = '*'
+    return response
 
 @csrf_exempt
 @require_GET

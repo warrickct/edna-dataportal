@@ -418,6 +418,7 @@ class EdnaMetadataQuery:
         return results
 
 
+# depcrecated:
 class EdnaOrderedSampleOTU:
     def __init__(self):
         self._session = Session()
@@ -528,13 +529,17 @@ class EdnaSampleContextualQuery:
                         # base_query = base_query.filter(getattr(SampleContext, field) == value)
                     if conditional == "gt":
                         or_filters.append(getattr(SampleContext, field) > value)
+                        # logger.info(conditional)
+                        # logger.info(value)
                         # base_query = base_query.filter(getattr(SampleContext, field) > value)
                     if conditional == "lt":
                         or_filters.append(getattr(SampleContext, field) < value)
                         # base_query = base_query.filter(getattr(SampleContext, field) < value)
             base_query = base_query.filter(sqlalchemy.or_(*or_filters))
+            logger.info(base_query)
 
         sample_contextual_results = [_row_to_dict(r) for r in base_query.all()]
+        logger.info(len(sample_contextual_results))
         return sample_contextual_results
     
 
@@ -654,6 +659,15 @@ class EdnaOTUQuery:
                 options.append([otu_text, combination_key, otu_pk])
         return options
 
+    def get_otu_names(self, primary_keys=None):
+        # accepts a list of primary keys, returns the otu names/codes where possible.
+        if (primary_keys is None):
+            return None
+        
+        query = (self._session.query(OTU.id, OTU.code).filter(OTU.id.in_(primary_keys)).all())
+        otu_codes  = [r._asdict() for r in query]
+        return otu_codes
+
 
 class EdnaSampleOTUQuery:
     def __init__(self):
@@ -667,6 +681,9 @@ class EdnaSampleOTUQuery:
 
     # TODO: will need to make this more dynamic (queryable by sample id, count range)
     def query_sample_otus(self, otu_ids=None, sample_contextual_ids=None):
+        logger.info("pinging query sample otus")
+        logger.info(otu_ids)
+        logger.info(sample_contextual_ids)
         sample_otu_results = []
         query = (
             self._session.query(SampleOTU.otu_id, SampleOTU.sample_id, SampleOTU.count)
@@ -674,14 +691,11 @@ class EdnaSampleOTUQuery:
             # .all()
         )
 
-        # NOTE: combining contextual and otu result sets.
-        # query = query.filter(sqlalchemy.or_(
-        #     SampleOTU.otu_id.in_(otu_ids),
-        #     SampleOTU.sample_id.in_(sample_contextual_ids)
-        # ))
-        query = query.filter(SampleOTU.otu_id.in_(otu_ids))
-        query = query.filter(SampleOTU.sample_id.in_(sample_contextual_ids))
+        # query = query.filter(SampleOTU.otu_id.in_(otu_ids))
+        # query = query.filter(SampleOTU.sample_id.in_(sample_contextual_ids))
+        query = query.filter(sqlalchemy.or_(SampleOTU.otu_id.in_(otu_ids), SampleOTU.sample_id.in_(sample_contextual_ids)))
         sample_otu_results = [r for r in query]
+        logger.info(sample_otu_results)
         return sample_otu_results
 
 

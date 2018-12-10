@@ -378,4 +378,5 @@ class SampleOTU(SchemaMixin, Base):
 def make_engine():
     conf = settings.DATABASES['default']
     engine_string = 'postgres://%(USER)s:%(PASSWORD)s@%(HOST)s:%(PORT)s/%(NAME)s' % (conf)
+    logger.info("engine string is: " + engine_string)
     return create_engine(engine_string)

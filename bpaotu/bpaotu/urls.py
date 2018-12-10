@@ -22,6 +22,10 @@ urlpatterns = [
     url(r'^edna/api/abundance$', views.edna_get_sample_otu, name="edna_sample_otus"),
     # returns filter options list
     url(r'^edna/api/filter-options$', views.edna_filter_options, name="edna_filter_options"),
+
+    url(r'^edna/api/v1.0/otu/', views.edna_otu, name="edna_otu"),
+    # url(r'^edna/api/v1.0/otu/[0-9]', views.edna_otu, name="edna_otu"),
+
     # w: TODO: WIP: For posting new data sets.
     url(r'^edna/api/upload$', views.AbundanceUpload.as_view()),
     url(r'^edna/api/dev/test/$', views.test, name="Test stub method"),
