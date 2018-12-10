@@ -510,10 +510,12 @@ class EdnaSampleContextualQuery:
                 d[column.name] = (getattr(row, column.name))
             return d
 
-        base_query = self._session.query(SampleContext)
+        query = self._session.query(SampleContext)
         # iterative build the filter then join it all in one bang and filter at the end.
 
+        sample_contextual_results = []
         if tags is not None:
+            logger.info("contextual tags is not none.")
             or_filters = list()
             for tag in tags:
                 # TODO: Add support for parsing AND and OR operators in the tags.
@@ -535,11 +537,10 @@ class EdnaSampleContextualQuery:
                     if conditional == "lt":
                         or_filters.append(getattr(SampleContext, field) < value)
                         # base_query = base_query.filter(getattr(SampleContext, field) < value)
-            base_query = base_query.filter(sqlalchemy.or_(*or_filters))
-            logger.info(base_query)
-
-        sample_contextual_results = [_row_to_dict(r) for r in base_query.all()]
-        logger.info(len(sample_contextual_results))
+            query = query.filter(sqlalchemy.or_(*or_filters))
+        else:
+            logger.info("context tags is none.")
+            sample_contextual_results = [_row_to_dict(r) for r in query.all()]
         return sample_contextual_results
     
 
@@ -560,7 +561,6 @@ class EdnaOTUQuery:
             for otu in otus:
                 base_query = self._session.query(OTU.id)
                 for index, field_id in enumerate(otu.split(' ')):
-                    logger.info(field_id)
                     otu_column = otu_columns[index]
                     base_query = base_query.filter(otu_column == field_id)
                 otu_pks = otu_pks + [r[0] for r in base_query.all()]
@@ -681,9 +681,6 @@ class EdnaSampleOTUQuery:
 
     # TODO: will need to make this more dynamic (queryable by sample id, count range)
     def query_sample_otus(self, otu_ids=None, sample_contextual_ids=None):
-        logger.info("pinging query sample otus")
-        logger.info(otu_ids)
-        logger.info(sample_contextual_ids)
         sample_otu_results = []
         query = (
             self._session.query(SampleOTU.otu_id, SampleOTU.sample_id, SampleOTU.count)
@@ -693,9 +690,13 @@ class EdnaSampleOTUQuery:
 
         # query = query.filter(SampleOTU.otu_id.in_(otu_ids))
         # query = query.filter(SampleOTU.sample_id.in_(sample_contextual_ids))
+
+        logger.info(otu_ids)
+        # TODO: sample contextual ids not filtering properly.
+        logger.info(sample_contextual_ids)
         query = query.filter(sqlalchemy.or_(SampleOTU.otu_id.in_(otu_ids), SampleOTU.sample_id.in_(sample_contextual_ids)))
         sample_otu_results = [r for r in query]
-        logger.info(sample_otu_results)
+        # logger.info(sample_otu_results)
         return sample_otu_results
 
 
