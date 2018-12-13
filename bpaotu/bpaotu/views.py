@@ -325,8 +325,8 @@ def edna_get_sample_otu(request):
                 otu_ids = otu_query._query_primary_keys(otus)
 
         # Getting the sample otu entries that contain either a searched otu or sample context id.
-        with EdnaSampleOTUQuery() as sample_otu_query:
-            sample_otu_results = sample_otu_query.query_sample_otus(otu_ids, sample_contextual_ids)
+    with EdnaSampleOTUQuery() as sample_otu_query:
+        sample_otu_results = sample_otu_query.query_sample_otus(otu_ids, sample_contextual_ids)
 
     # Filter to only include sample contextual data that is included in sample otu result set.
     sample_ids_in_sample_otu = [so[1] for so in sample_otu_results]

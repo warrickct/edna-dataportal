@@ -538,9 +538,9 @@ class EdnaSampleContextualQuery:
                         or_filters.append(getattr(SampleContext, field) < value)
                         # base_query = base_query.filter(getattr(SampleContext, field) < value)
             query = query.filter(sqlalchemy.or_(*or_filters))
+            sample_contextual_results = [_row_to_dict(r) for r in query.all()]
         else:
             logger.info("context tags is none.")
-            sample_contextual_results = [_row_to_dict(r) for r in query.all()]
         return sample_contextual_results
     
 
@@ -687,16 +687,9 @@ class EdnaSampleOTUQuery:
             .order_by(SampleOTU.otu_id)
             # .all()
         )
-
-        # query = query.filter(SampleOTU.otu_id.in_(otu_ids))
         # query = query.filter(SampleOTU.sample_id.in_(sample_contextual_ids))
-
-        logger.info(otu_ids)
-        # TODO: sample contextual ids not filtering properly.
-        logger.info(sample_contextual_ids)
         query = query.filter(sqlalchemy.or_(SampleOTU.otu_id.in_(otu_ids), SampleOTU.sample_id.in_(sample_contextual_ids)))
         sample_otu_results = [r for r in query]
-        # logger.info(sample_otu_results)
         return sample_otu_results
 
 
