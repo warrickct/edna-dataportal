@@ -190,7 +190,7 @@ class SampleQuery:
             if mutate_result:
                 result = mutate_result(result)
                 # w: Warrick: comment out cache for testing
-            #cache.set(key, result)
+            # cache.set(key, result)
         return result
 
     # TODO: This doesn't work with the waterdata sample context table
@@ -366,9 +366,9 @@ class EdnaMetadataQuery:
             query = (
                 self._session.query(
                     SampleContext.id,
-                    SampleContext._site, 
-                    SampleContext._x, 
-                    SampleContext._y, 
+                    SampleContext._site,
+                    SampleContext._x,
+                    SampleContext._y,
                     SampleContext._elev,
                     SampleContext._mean_c_percent,
                     SampleContext._mid_ph,
@@ -385,10 +385,10 @@ class EdnaMetadataQuery:
             query = (
                 self._session.query(
                     SampleContext.id,
-                    SampleContext._site, 
-                    SampleContext._x, 
-                    SampleContext._y, 
-                    SampleContext._elev, 
+                    SampleContext._site,
+                    SampleContext._x,
+                    SampleContext._y,
+                    SampleContext._elev,
                     SampleContext._mean_c_percent,
                     SampleContext._mid_ph,
                     SampleContext._ave_lognconcen,
@@ -401,7 +401,7 @@ class EdnaMetadataQuery:
             )
         # TODO: hardcoding dictionary response for now. Need to replace with automated keys based off table columns.
         results =[]
-        for tuple in query :
+        for tuple in query:
             results.append({
                 'id': tuple[0],
                 'site': tuple[1],
@@ -437,7 +437,7 @@ class EdnaOrderedSampleOTU:
         if not result:
             logger.info("sample_otu_cache not found, making new cache")
             result = self._query_sample_otu_ordered()
-            #cache.set(key, result)
+            # cache.set(key, result)
         else:
             logger.info("Using cached sample_otu results")
         return result
@@ -496,7 +496,7 @@ class EdnaSampleContextualQuery:
         '''
         Returns an list of all the columns in the sample_contextual fields
         '''
-        field_results=  [column.key for column in SampleContext.__table__.columns]
+        field_results= [column.key for column in SampleContext.__table__.columns]
         return field_results
 
     def query_sample_contextuals(self, tags=None):
@@ -524,7 +524,7 @@ class EdnaSampleContextualQuery:
                 if '$' in tag:
                     filter_segments = tag.split('$')
                     field = filter_segments[0]
-                    conditional =  filter_segments[1][:2]
+                    conditional = filter_segments[1][:2]
                     value = filter_segments[1][2:]
                     if conditional == "eq":
                         or_filters.append(getattr(SampleContext, field) == value)
@@ -542,7 +542,7 @@ class EdnaSampleContextualQuery:
         else:
             logger.info("context tags is none.")
         return sample_contextual_results
-    
+
 
 class EdnaOTUQuery:
     def __init__(self):
@@ -592,24 +592,24 @@ class EdnaOTUQuery:
         ontology_tables = [OTUKingdom, OTUPhylum, OTUClass, OTUOrder, OTUFamily, OTUGenus, OTUSpecies, OTUAmplicon]
         ordered_otus = [r for r in (
             self._session.query(
-                OTU.kingdom_id, 
-                OTU.phylum_id, 
-                OTU.class_id, 
-                OTU.order_id, 
-                OTU.family_id, 
-                OTU.genus_id, 
+                OTU.kingdom_id,
+                OTU.phylum_id,
+                OTU.class_id,
+                OTU.order_id,
+                OTU.family_id,
+                OTU.genus_id,
                 OTU.species_id,
                 # NOTE: amplicon id is actually the species identifier (for small variations)
                 OTU.amplicon_id,
                 OTU.id
                 )
             .order_by(
-                OTU.kingdom_id, 
-                OTU.phylum_id, 
-                OTU.class_id, 
-                OTU.order_id, 
-                OTU.family_id, 
-                OTU.genus_id, 
+                OTU.kingdom_id,
+                OTU.phylum_id,
+                OTU.class_id,
+                OTU.order_id,
+                OTU.family_id,
+                OTU.genus_id,
                 OTU.species_id,
                 OTU.amplicon_id
                 )
@@ -643,19 +643,19 @@ class EdnaOTUQuery:
             otu_text = ""
             combination_key = []
             # ignore the final element as it's the pk.
-            for index, col in enumerate(otu[:len(otu)-1]):
+            for index, col in enumerate(otu[:len(otu) -1]):
                 if otu_ontology_lookups[index][col] == "" or otu_ontology_lookups[index][col] == " ":
                     continue
                 if otu_text == "":
                     otu_text = otu_text + prefixes[index] + otu_ontology_lookups[index][col]
                     combination_key.append(col)
                 else:
-                    otu_text = otu_text + ";" + prefixes[index] + otu_ontology_lookups[index][col] 
+                    otu_text = otu_text + ";" + prefixes[index] + otu_ontology_lookups[index][col]
                     combination_key.append(col)
             if otu_text in options:
                 continue
             else:
-                otu_pk = otu[len(otu)-1]
+                otu_pk = otu[len(otu) -1]
                 options.append([otu_text, combination_key, otu_pk])
         return options
 
@@ -663,9 +663,9 @@ class EdnaOTUQuery:
         # accepts a list of primary keys, returns the otu names/codes where possible.
         if (primary_keys is None):
             return None
-        
+
         query = (self._session.query(OTU.id, OTU.code).filter(OTU.id.in_(primary_keys)).all())
-        otu_codes  = [r._asdict() for r in query]
+        otu_codes = [r._asdict() for r in query]
         return otu_codes
 
 
@@ -681,6 +681,24 @@ class EdnaSampleOTUQuery:
 
     # TODO: will need to make this more dynamic (queryable by sample id, count range)
     def query_sample_otus(self, otu_ids=None, sample_contextual_ids=None):
+
+        # TEST:
+        # within the entire database. See which organisms appear in less than 1% of the samples.
+        # if endemic then endenmic column = yes, else no.
+        endemic_species = self._session.execute("SELECT otu_id FROM sample_otu GROUP BY otu_id HAVING (COUNT(*)/(SELECT COUNT(*) FROM sample_otu))*100 > 1;")
+        # endemic_species = self._engine.execute("SELECT otu_id, COUNT(*)/(SELECT COUNT(*) FROM sample_otu) * 100 as pcnt FROM sample_otu GROUP BY otu_id HAVING (COUNT(*)/(SELECT COUNT(*) FROM sample_otu))*100 > 1;")
+
+        '''
+        abundance table only shows non-null values. so if there's 3 samples for one occurence of an otu that means it occured in 3/total_sample count. if that => 0.01 then it's not endemic.
+        
+        for each otu:
+
+        '''
+
+        # SELECT otu_id, COUNT(*) FROM sample_otu GROUP BY sample_id;
+        for row in endemic_species:
+            logger.info(endemic_species)
+
         sample_otu_results = []
         query = (
             self._session.query(SampleOTU.otu_id, SampleOTU.sample_id, SampleOTU.count)

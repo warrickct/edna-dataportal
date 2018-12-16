@@ -622,3 +622,8 @@ class DataImporter:
                     traceback.print_exc()
             finally:
                 os.unlink(fname)
+
+    def post_load_database_calculations(self):
+
+        def _calculate_endemic():
+            logger.info("Hi")
