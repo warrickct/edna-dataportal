@@ -5,6 +5,10 @@ from itertools import chain
 import logging
 
 import sqlalchemy
+from sqlalchemy import (
+    or_,
+    func,
+)
 from sqlalchemy.orm import (
     sessionmaker,
 )
@@ -537,7 +541,7 @@ class EdnaSampleContextualQuery:
                     if conditional == "lt":
                         or_filters.append(getattr(SampleContext, field) < value)
                         # base_query = base_query.filter(getattr(SampleContext, field) < value)
-            query = query.filter(sqlalchemy.or_(*or_filters))
+            query = query.filter(or_(*or_filters))
             sample_contextual_results = [_row_to_dict(r) for r in query.all()]
         else:
             logger.info("context tags is none.")
@@ -681,24 +685,20 @@ class EdnaSampleOTUQuery:
 
     # TODO: will need to make this more dynamic (queryable by sample id, count range)
     def query_sample_otus(self, otu_ids=None, sample_contextual_ids=None):
-
         # TEST:
         # within the entire database. See which organisms appear in less than 1% of the samples.
         # if endemic then endenmic column = yes, else no.
+        '''
         endemic_species = self._session.execute("SELECT otu_id FROM sample_otu GROUP BY otu_id HAVING (COUNT(*)/(SELECT COUNT(*) FROM sample_otu))*100 > 1;")
-        # endemic_species = self._engine.execute("SELECT otu_id, COUNT(*)/(SELECT COUNT(*) FROM sample_otu) * 100 as pcnt FROM sample_otu GROUP BY otu_id HAVING (COUNT(*)/(SELECT COUNT(*) FROM sample_otu))*100 > 1;")
-
-        '''
-        abundance table only shows non-null values. so if there's 3 samples for one occurence of an otu that means it occured in 3/total_sample count. if that => 0.01 then it's not endemic.
-        
-        for each otu:
-
         '''
 
-        # SELECT otu_id, COUNT(*) FROM sample_otu GROUP BY sample_id;
-        for row in endemic_species:
-            logger.info(endemic_species)
-
+        distinct_sample_count = len([r for r in self._session.query(SampleOTU.sample_id.distinct().label("distinct samples"))]) 
+        endemic_ids = (
+            self._session.query(SampleOTU.otu_id, func.count(SampleOTU.sample_id))
+            .group_by(SampleOTU.otu_id)
+            .having(((func.count(SampleOTU.sample_id)) * 100) / distinct_sample_count < 1)
+        )
+         
         sample_otu_results = []
         query = (
             self._session.query(SampleOTU.otu_id, SampleOTU.sample_id, SampleOTU.count)
@@ -706,14 +706,14 @@ class EdnaSampleOTUQuery:
             # .all()
         )
         # query = query.filter(SampleOTU.sample_id.in_(sample_contextual_ids))
-        query = query.filter(sqlalchemy.or_(SampleOTU.otu_id.in_(otu_ids), SampleOTU.sample_id.in_(sample_contextual_ids)))
+        query = query.filter(or_(SampleOTU.otu_id.in_(otu_ids), SampleOTU.sample_id.in_(sample_contextual_ids)))
         sample_otu_results = [r for r in query]
         return sample_otu_results
 
 
 class ContextualFilter:
     mode_operators = {
-        'or': sqlalchemy.or_,
+        'or': or_,
         'and': sqlalchemy.and_,
     }
 
