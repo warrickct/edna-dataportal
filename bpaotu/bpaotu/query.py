@@ -683,22 +683,11 @@ class EdnaSampleOTUQuery:
     def __exit__(self, exec_type, exc_value, traceback):
         self._session.close()
 
+        with EdnaPostImport() as post_import:
+            post_import._calculate_endemic_otus()
+
     # TODO: will need to make this more dynamic (queryable by sample id, count range)
     def query_sample_otus(self, otu_ids=None, sample_contextual_ids=None):
-        # TEST:
-        # within the entire database. See which organisms appear in less than 1% of the samples.
-        # if endemic then endenmic column = yes, else no.
-        '''
-        endemic_species = self._session.execute("SELECT otu_id FROM sample_otu GROUP BY otu_id HAVING (COUNT(*)/(SELECT COUNT(*) FROM sample_otu))*100 > 1;")
-        '''
-
-        distinct_sample_count = len([r for r in self._session.query(SampleOTU.sample_id.distinct().label("distinct samples"))]) 
-        endemic_ids = (
-            self._session.query(SampleOTU.otu_id, func.count(SampleOTU.sample_id))
-            .group_by(SampleOTU.otu_id)
-            .having(((func.count(SampleOTU.sample_id)) * 100) / distinct_sample_count < 1)
-        )
-         
         sample_otu_results = []
         query = (
             self._session.query(SampleOTU.otu_id, SampleOTU.sample_id, SampleOTU.count)
@@ -710,6 +699,24 @@ class EdnaSampleOTUQuery:
         sample_otu_results = [r for r in query]
         return sample_otu_results
 
+class EdnaPostImport:
+    def __init__(self):
+        self._session = Session()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exec_type, exc_value, traceback):
+        self._session.close()
+
+    def _calculate_endemic_otus(self):
+        distinct_sample_count = len([r for r in self._session.query(SampleOTU.sample_id.distinct().label("distinct samples"))]) 
+        endemic_ids = (
+            self._session.query(SampleOTU.otu_id, func.count(SampleOTU.sample_id))
+            .group_by(SampleOTU.otu_id)
+            .having(((func.count(SampleOTU.sample_id)) * 100) / distinct_sample_count < 1)
+        )
+        logger.info(len([r for r in endemic_ids]))
 
 class ContextualFilter:
     mode_operators = {

@@ -57,6 +57,10 @@ from django.core.cache import caches
 from hashlib import sha256
 import re
 
+# post import calculations
+from .query import(
+    EdnaPostImport
+)
 
 logger = logging.getLogger("rainbow")
 
@@ -232,8 +236,11 @@ class DataImporter:
             return ontology_parts
 
         def _taxon_rows_iter():
+            '''
+            Iterates over abundance file. Returns segmented version of the name otu's name field using ';' as the delimiting character.
+            '''
             for fname in sorted(glob(self._import_base + 'edna/separated-data/data/*.tsv')):
-                logger.info("Reading taxonomy file: %s" % fname)
+                # logger.info("Reading taxonomy file: %s" % fname)
                 with open(fname) as file:
                     reader = csv.DictReader(file, delimiter='\t')
                     imported = 0
@@ -246,6 +253,7 @@ class DataImporter:
                         obj = dict(zip(ontologies.keys(), ontology_parts))
                         obj['otu'] = otu
                         # TEST:START: if theres a value after the '|' character, use it to overwrite the amplicon field's value.
+                        # TODO: value after '|' is the species identifier, not the amplicon used
                         if '|' in obj['species']:
                             split = obj['species'].split('|')
                             obj['species'] = split[0]
@@ -255,7 +263,7 @@ class DataImporter:
                         yield obj
                 ImportFileLog.make_file_log(fname, file_type='Taxonomy', rows_imported=imported, rows_skipped=0)
 
-        logger.warning("loading water data taxonomies - pass 1, defining ontologies")
+        logger.warning("Loading eDNA taxonomies - pass 1, defining OTU ontologies")
         mappings = self._load_ontology(ontologies, _taxon_rows_iter())
 
         logger.info("loading eDNA taxonomies - pass 2, defining OTUs")
@@ -263,10 +271,11 @@ class DataImporter:
             with tempfile.NamedTemporaryFile(mode='w', dir='/data', prefix='bpaotu-', delete=False) as temp_fd:
                 fname = temp_fd.name
                 os.chmod(fname, 0o644)
-                logger.warning("writing out taxonomy data to CSV tempfile: %s" % fname)
+                logger.warning("writing out OTU data to CSV tempfile: %s" % fname)
                 w = csv.writer(temp_fd)
-                w.writerow(['id', 'code', 'kingdom_id', 'phylum_id', 'class_id', 'order_id', 'family_id', 'genus_id', 'species_id', 'amplicon_id'])
+                w.writerow(['id', 'code', 'kingdom_id', 'phylum_id', 'class_id', 'order_id', 'family_id', 'genus_id', 'species_id', 'amplicon_id', 'endemic'])
                 for _id, row in enumerate(_taxon_rows_iter(), 1):
+                    # create lookup entry
                     otu_lookup[otu_hash(row['otu'])] = _id
                     out_row = [_id, row['otu']]
                     for field in ontologies:
@@ -274,6 +283,7 @@ class DataImporter:
                             out_row.append('')
                         else:
                             out_row.append(mappings[field][row[field]])
+                    out_row.append("False")
                     w.writerow(out_row)
             logger.warning("loading taxonomy data from temporary CSV file")
             self._engine.execute(
@@ -411,12 +421,16 @@ class DataImporter:
             return field
 
         def _make_context():
-            '''Iterates the metadata, Makes an object mirror a sample_context tuple and returns it '''
+            '''
+            Iterates the metadata, Makes an object mirror a sample_context tuple and returns it 
+            TODO: Allow for automated 0 values when a field is missing.
+            '''
+
             logger.info('loading edna contextual metadata from .tsv files')
             # site_id delcared here so we can go over multiple files at once.
             site_id = 0
             for fname in sorted(glob(self._import_base + 'edna/separated-data/metadata/*.tsv')):
-                logger.warning('loading metadata file: %s' % fname)
+                # logger.warning('loading metadata file: %s' % fname)
                 with open(fname, "r") as file:
                     reader = csv.DictReader(file, delimiter='\t')
                     for row in reader:
@@ -489,7 +503,7 @@ class DataImporter:
 
         def _make_sample_otus():    
             for fname in sorted(glob(self._import_base + 'edna/separated-data/data/*.tsv')):
-                logger.info('writing abundance rows from %s' % fname)
+                # logger.info('writing abundance rows from %s' % fname)
                 file = open(fname, 'r')
                 reader = csv.DictReader(file, delimiter='\t')
                 for row in reader:
@@ -530,7 +544,7 @@ class DataImporter:
         with tempfile.NamedTemporaryFile(mode='w', dir='/data', prefix='bpaotu-', delete=False) as temp_fd:
             fname = temp_fd.name
             os.chmod(fname, 0o644)
-            logger.warning("writing out waterdata otu abundance to csv tempfile: %s" % fname)
+            logger.warning("writing out OTU abundance to csv tempfile: %s" % fname)
             w = csv.writer(temp_fd)
             w.writerow(['sample_id', 'otu_id', 'count'])
             w.writerows(_make_sample_otus())
@@ -542,6 +556,9 @@ class DataImporter:
         except:
             logger.critical("unable to import")
             traceback.print_exc()
+        with EdnaPostImport() as post_import:
+            post_import._calculate_endemic_otus()
+            
 
     def load_otu_abundance(self, otu_lookup, site_lookup):
         ''' 
@@ -623,7 +640,3 @@ class DataImporter:
             finally:
                 os.unlink(fname)
 
-    def post_load_database_calculations(self):
-
-        def _calculate_endemic():
-            logger.info("Hi")

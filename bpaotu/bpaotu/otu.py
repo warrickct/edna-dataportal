@@ -1,6 +1,6 @@
 import logging
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
-from sqlalchemy import Column, Integer, ForeignKey, String, Date, Float
+from sqlalchemy import Column, Integer, ForeignKey, String, Date, Float, Boolean
 from django.conf import settings
 from sqlalchemy import create_engine
 from sqlalchemy.orm import relationship
@@ -112,6 +112,7 @@ class OTU(SchemaMixin, Base):
     genus_id = ontology_fkey(OTUGenus)
     species_id = ontology_fkey(OTUSpecies)
     amplicon_id = ontology_fkey(OTUAmplicon, index=True)
+    endemic = Column(Boolean, default=True)
 
     kingdom = relationship(OTUKingdom)
     phylum = relationship(OTUPhylum)
