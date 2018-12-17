@@ -8,6 +8,7 @@ import sqlalchemy
 from sqlalchemy import (
     or_,
     func,
+    update,
 )
 from sqlalchemy.orm import (
     sessionmaker,
@@ -710,13 +711,21 @@ class EdnaPostImport:
         self._session.close()
 
     def _calculate_endemic_otus(self):
-        distinct_sample_count = len([r for r in self._session.query(SampleOTU.sample_id.distinct().label("distinct samples"))]) 
-        endemic_ids = (
+        distinct_sample_count = len([r for r in self._session.query(SampleOTU.sample_id.distinct())]) 
+        endemic_ids = [r[0] for r in (
             self._session.query(SampleOTU.otu_id, func.count(SampleOTU.sample_id))
             .group_by(SampleOTU.otu_id)
             .having(((func.count(SampleOTU.sample_id)) * 100) / distinct_sample_count < 1)
-        )
-        logger.info(len([r for r in endemic_ids]))
+        )]
+        # logger.info(len([r for r in endemic_ids]))
+        logger.info(endemic_ids)
+        
+        # TODO: getting the write entires but not updating.
+        # update endemic species
+        # self._session.query(OTU).filter(OTU.id.in_(endemic_ids)).update({'endemic': True})
+        # self._session.query(OTU).filter(OTU.id.in_(endemic_ids)).update(OTU.endemic=True)
+        # OTU.update().where(OTU.id.in_(endemic_ids)).values(endemic=True)
+        # self._session.commit()
 
 class ContextualFilter:
     mode_operators = {
