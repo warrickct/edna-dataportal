@@ -711,6 +711,8 @@ class EdnaPostImport:
         self._session.close()
 
     def _calculate_endemic_otus(self):
+        # # gets all the otu_ids where they show in less than 1% of sites
+        # # Query to get the distinct otu_ids to avoid repeating ids.
         distinct_sample_count = len([r for r in self._session.query(SampleOTU.sample_id.distinct())]) 
         endemic_ids = [r[0] for r in (
             self._session.query(SampleOTU.otu_id, func.count(SampleOTU.sample_id))
@@ -718,14 +720,12 @@ class EdnaPostImport:
             .having(((func.count(SampleOTU.sample_id)) * 100) / distinct_sample_count < 1)
         )]
         # logger.info(len([r for r in endemic_ids]))
-        logger.info(endemic_ids)
-        
-        # TODO: getting the write entires but not updating.
-        # update endemic species
-        # self._session.query(OTU).filter(OTU.id.in_(endemic_ids)).update({'endemic': True})
-        # self._session.query(OTU).filter(OTU.id.in_(endemic_ids)).update(OTU.endemic=True)
-        # OTU.update().where(OTU.id.in_(endemic_ids)).values(endemic=True)
-        # self._session.commit()
+        # logger.info(endemic_ids)
+
+        for endemic_otu in self._session.query(OTU).filter(OTU.id.in_(endemic_ids)):
+            endemic_otu.endemic = True;
+        self._session.commit()
+
 
 class ContextualFilter:
     mode_operators = {
