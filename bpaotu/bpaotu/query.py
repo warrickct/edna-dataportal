@@ -559,7 +559,7 @@ class EdnaOTUQuery:
     def __exit__(self, exec_type, exc_value, traceback):
         self._session.close()
 
-    def _query_primary_keys(self, otus=None):
+    def _query_primary_keys(self, otus=None, use_endemism=False, endemic_value=False):
         otu_columns = [OTU.kingdom_id, OTU.phylum_id, OTU.class_id, OTU.order_id, OTU.family_id, OTU.genus_id, OTU.species_id, OTU.amplicon_id]
         otu_pks = []
         if otus is not None:
@@ -568,6 +568,8 @@ class EdnaOTUQuery:
                 for index, field_id in enumerate(otu.split(' ')):
                     otu_column = otu_columns[index]
                     base_query = base_query.filter(otu_column == field_id)
+                if use_endemism:
+                        base_query = base_query.filter(OTU.endemic == endemic_value)
                 otu_pks = otu_pks + [r[0] for r in base_query.all()]
         return otu_pks
 
@@ -711,8 +713,8 @@ class EdnaPostImport:
         self._session.close()
 
     def _calculate_endemic_otus(self):
-        # # gets all the otu_ids where they show in less than 1% of sites
-        # # Query to get the distinct otu_ids to avoid repeating ids.
+        # gets all the otu_ids where they show in less than 1% of sites
+        # Query to get the distinct otu_ids to avoid repeating ids.
         distinct_sample_count = len([r for r in self._session.query(SampleOTU.sample_id.distinct())]) 
         endemic_ids = [r[0] for r in (
             self._session.query(SampleOTU.otu_id, func.count(SampleOTU.sample_id))
@@ -722,6 +724,7 @@ class EdnaPostImport:
         # logger.info(len([r for r in endemic_ids]))
         # logger.info(endemic_ids)
 
+        # TODO: getting potentially false endemism results due to otu some otu entries being more general than others.
         for endemic_otu in self._session.query(OTU).filter(OTU.id.in_(endemic_ids)):
             endemic_otu.endemic = True;
         self._session.commit()
