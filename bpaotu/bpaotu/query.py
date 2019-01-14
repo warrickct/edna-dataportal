@@ -6,6 +6,7 @@ import logging
 
 import sqlalchemy
 from sqlalchemy import (
+    and_,
     or_,
     func,
     update,
@@ -517,14 +518,12 @@ class EdnaSampleContextualQuery:
 
         query = self._session.query(SampleContext)
         # iterative build the filter then join it all in one bang and filter at the end.
-
         sample_contextual_results = []
         if tags is not None:
             logger.info("contextual tags is not none.")
             or_filters = list()
             for tag in tags:
                 # TODO: Add support for parsing AND and OR operators in the tags.
-
                 # if filter contains a value to compare
                 if '$' in tag:
                     filter_segments = tag.split('$')
@@ -690,7 +689,7 @@ class EdnaSampleOTUQuery:
             post_import._calculate_endemic_otus()
 
     # TODO: will need to make this more dynamic (queryable by sample id, count range)
-    def query_sample_otus(self, otu_ids=None, sample_contextual_ids=None):
+    def query_sample_otus(self, otu_ids=None, sample_contextual_ids=None, use_union=None):
         sample_otu_results = []
         query = (
             self._session.query(SampleOTU.otu_id, SampleOTU.sample_id, SampleOTU.count)
@@ -698,7 +697,10 @@ class EdnaSampleOTUQuery:
             # .all()
         )
         # query = query.filter(SampleOTU.sample_id.in_(sample_contextual_ids))
-        query = query.filter(or_(SampleOTU.otu_id.in_(otu_ids), SampleOTU.sample_id.in_(sample_contextual_ids)))
+        if use_union:
+            query = query.filter(or_(SampleOTU.otu_id.in_(otu_ids), SampleOTU.sample_id.in_(sample_contextual_ids)))
+        else:
+            query = query.filter(and_(SampleOTU.otu_id.in_(otu_ids), SampleOTU.sample_id.in_(sample_contextual_ids)))
         sample_otu_results = [r for r in query]
         return sample_otu_results
 

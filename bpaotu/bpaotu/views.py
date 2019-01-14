@@ -321,7 +321,7 @@ def edna_get_sample_otu(request):
         otus = [otu for otu in request.GET.getlist('otu') if otu is not '']
 
         # if endemism value exists in request then query will include it.
-        endemic_value = request.GET.get('endemic', None) == "True" 
+        endemic_value = request.GET.get('endemic', None) == "true" 
         use_endemism = False
         if endemic_value is not None:
             use_endemism = True
@@ -331,19 +331,19 @@ def edna_get_sample_otu(request):
             if otus:
                 otu_ids = otu_query._query_primary_keys(otus, use_endemism, endemic_value)
 
+    use_union = request.GET.get('operator', None) == "union" 
+
     with EdnaSampleOTUQuery() as sample_otu_query:
         # Getting the sample otu entries that are within either otu_id set or sample_contextual_id set.
-        sample_otu_results = sample_otu_query.query_sample_otus(otu_ids, sample_contextual_ids)
-
+        sample_otu_results = sample_otu_query.query_sample_otus(otu_ids, sample_contextual_ids, use_union)
     # Filter to only include sample contextual data that is included in sample otu result set.
-    sample_ids_in_sample_otu = [so[1] for so in sample_otu_results]
-    sample_contextuals_data = [sc for sc in sample_contextuals_data if (sc['id'] in sample_ids_in_sample_otu)]
-
+    contextual_ids_in_sampleotu_results = [so[1] for so in sample_otu_results]
+    # grabbing contextual data for sites we need.
+    sample_contextuals_data = [sc for sc in sample_contextuals_data if (sc['id'] in contextual_ids_in_sampleotu_results)]
     response = JsonResponse({
         'sample_otu_data': sample_otu_results,
         'sample_contextual_data': sample_contextuals_data,
     })
-
     # TODO: response['Access-Control-Allow-Origin'] =   'http://localhost:5500/'
     # response header is set by apache to '*' on the nectar edna virtual machine so this is no longer needed
     # TODO: make cors more restricted potentially
