@@ -19,16 +19,16 @@ urlpatterns = [
 
     # w: eDNA endpoints.
     # returns sample_otu entries
-    url(r'^edna/api/abundance$', views.edna_get_sample_otu, name="edna_sample_otus"),
+    url(r'^edna/api/v1.0/abundance$', views.edna_get_sample_otu, name="edna_sample_otus"),
     # returns filter options list
-    url(r'^edna/api/filter-options$', views.edna_filter_options, name="edna_filter_options"),
+    url(r'^edna/api/v1.0/filter-options$', views.edna_filter_options, name="edna_filter_options"),
 
     url(r'^edna/api/v1.0/otu/', views.edna_otu, name="edna_otu"),
     # url(r'^edna/api/v1.0/otu/[0-9]', views.edna_otu, name="edna_otu"),
 
     # w: TODO: WIP: For posting new data sets.
-    url(r'^edna/api/upload$', views.AbundanceUpload.as_view()),
-    url(r'^edna/api/dev/test/$', views.test, name="Test stub method"),
+    # url(r'^edna/api/upload$', views.AbundanceUpload.as_view()),
+    # url(r'^edna/api/dev/test/$', views.test, name="Test stub method"),
 
     url(r'^tables/$', views.tables, name="tables"),                                                                                 # Custom datatables columns.
     url(r'^private/api/v1/required_table_headers/$', views.required_table_headers, name="required_table_headers"),                  # Custom datatables columns.

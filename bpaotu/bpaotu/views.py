@@ -304,9 +304,11 @@ def edna_get_sample_otu(request):
     '''
     Returns sample_otu entries from otu table combination-keys
     '''
+
+    # contextuals
+    sample_contextual_ids = []
     contextual_params = request.GET.getlist('q', None)
     # just the primary keys for querying
-    sample_contextual_ids = []
     # the sample data for plotting geographically etc.
     sample_contextuals_data = []
     with EdnaSampleContextualQuery() as sample_contextual:
@@ -316,6 +318,9 @@ def edna_get_sample_otu(request):
             sample_contextuals_data = sample_contextual.query_sample_contextuals()
         sample_contextual_ids = [sample['id'] for sample in sample_contextuals_data]
 
+    logger.info(sample_contextual_ids)
+
+    # otus
     if request.GET.get('otu', None) is not None:
         # gets all the pks from the query and casts to int.
         otus = [otu for otu in request.GET.getlist('otu') if otu is not '']

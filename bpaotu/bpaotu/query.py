@@ -541,10 +541,8 @@ class EdnaSampleContextualQuery:
                     if conditional == "lt":
                         or_filters.append(getattr(SampleContext, field) < value)
                         # base_query = base_query.filter(getattr(SampleContext, field) < value)
-            query = query.filter(or_(*or_filters))
-            sample_contextual_results = [_row_to_dict(r) for r in query.all()]
-        else:
-            logger.info("context tags is none.")
+                query = query.filter(or_(*or_filters))
+        sample_contextual_results = [_row_to_dict(r) for r in query.all()]
         return sample_contextual_results
 
 
