@@ -322,17 +322,14 @@ def edna_get_sample_otu(request):
 
     # otus
     otu_ids = []
-    if request.GET.get('otu', None) is not None:
-        # gets all the pks from the query and casts to int.
-        otus = [otu for otu in request.GET.getlist('otu') if otu is not '']
-        # if endemism value exists in request then query will include it.
-        endemic_value = request.GET.get('endemic', None) == "true" 
-        use_endemism = False
-        if endemic_value is not None:
-            use_endemism = True
-        with EdnaOTUQuery() as otu_query:
-            if otus:
-                otu_ids = otu_query._query_primary_keys(otus, use_endemism, endemic_value)
+    otus = [otu for otu in request.GET.getlist('otu') if otu is not '']
+    # if endemism value exists in request then query will include it.
+    endemic_value = request.GET.get('endemic', None) == "true" 
+    use_endemism = False
+    if endemic_value is not None:
+        use_endemism = True
+    with EdnaOTUQuery() as otu_query:
+        otu_ids = otu_query._query_primary_keys(otus, use_endemism, endemic_value)
 
     use_union = request.GET.get('operator', None) == "union" 
 

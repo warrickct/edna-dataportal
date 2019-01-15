@@ -559,14 +559,14 @@ class EdnaOTUQuery:
     def _query_primary_keys(self, otus=None, use_endemism=False, endemic_value=False):
         otu_columns = [OTU.kingdom_id, OTU.phylum_id, OTU.class_id, OTU.order_id, OTU.family_id, OTU.genus_id, OTU.species_id, OTU.amplicon_id]
         otu_ids = []
+        query = self._session.query(OTU.id)
         if otus is not None:
             for otu in otus:
-                query = self._session.query(OTU.id)
                 for index, field_id in enumerate(otu.split(' ')):
                     otu_column = otu_columns[index]
                     query = query.filter(otu_column == field_id)
-                if use_endemism:
-                        query = query.filter(OTU.endemic == endemic_value)
+        if use_endemism:
+            query = query.filter(OTU.endemic == endemic_value)
         otu_ids = [r[0] for r in query.all()]
         logger.info(otu_ids)
         return otu_ids
