@@ -305,6 +305,7 @@ def edna_get_sample_otu(request):
     Returns sample_otu entries from otu table combination-keys
     '''
 
+    # FIXME: otu filters applied subtractively, contextual filters applied additively.
     # contextuals
     sample_contextual_ids = []
     contextual_params = request.GET.getlist('q', None)
@@ -317,21 +318,18 @@ def edna_get_sample_otu(request):
         else:
             sample_contextuals_data = sample_contextual.query_sample_contextuals()
         sample_contextual_ids = [sample['id'] for sample in sample_contextuals_data]
-
-    logger.info(sample_contextual_ids)
+    # logger.info(sample_contextual_ids)
 
     # otus
+    otu_ids = []
     if request.GET.get('otu', None) is not None:
         # gets all the pks from the query and casts to int.
         otus = [otu for otu in request.GET.getlist('otu') if otu is not '']
-
         # if endemism value exists in request then query will include it.
         endemic_value = request.GET.get('endemic', None) == "true" 
         use_endemism = False
         if endemic_value is not None:
             use_endemism = True
-            
-        otu_ids = []
         with EdnaOTUQuery() as otu_query:
             if otus:
                 otu_ids = otu_query._query_primary_keys(otus, use_endemism, endemic_value)

@@ -541,7 +541,7 @@ class EdnaSampleContextualQuery:
                     if conditional == "lt":
                         or_filters.append(getattr(SampleContext, field) < value)
                         # base_query = base_query.filter(getattr(SampleContext, field) < value)
-                query = query.filter(or_(*or_filters))
+            query = query.filter(or_(*or_filters))
         sample_contextual_results = [_row_to_dict(r) for r in query.all()]
         return sample_contextual_results
 
@@ -558,17 +558,18 @@ class EdnaOTUQuery:
 
     def _query_primary_keys(self, otus=None, use_endemism=False, endemic_value=False):
         otu_columns = [OTU.kingdom_id, OTU.phylum_id, OTU.class_id, OTU.order_id, OTU.family_id, OTU.genus_id, OTU.species_id, OTU.amplicon_id]
-        otu_pks = []
+        otu_ids = []
         if otus is not None:
             for otu in otus:
-                base_query = self._session.query(OTU.id)
+                query = self._session.query(OTU.id)
                 for index, field_id in enumerate(otu.split(' ')):
                     otu_column = otu_columns[index]
-                    base_query = base_query.filter(otu_column == field_id)
+                    query = query.filter(otu_column == field_id)
                 if use_endemism:
-                        base_query = base_query.filter(OTU.endemic == endemic_value)
-                otu_pks = otu_pks + [r[0] for r in base_query.all()]
-        return otu_pks
+                        query = query.filter(OTU.endemic == endemic_value)
+        otu_ids = [r[0] for r in query.all()]
+        logger.info(otu_ids)
+        return otu_ids
 
     def get_taxonomy_options(self, filters, page=1, page_size=50):
         cache = caches['edna_taxonomy_options_results']
