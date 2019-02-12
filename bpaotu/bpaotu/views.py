@@ -396,7 +396,8 @@ def edna_filter_options(request):
             'context_options': context_options,
         }
     })
-    response['Access-Control-Allow-Origin'] = '*'
+    # response['Access-Control-Allow-Origin'] = '*'
+    response['Access-Control-Allow-Headers'] = 'Content-Type'
     return response
 
 # TEMP:TEST: API class made for easier uploading.
