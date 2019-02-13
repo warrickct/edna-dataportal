@@ -16,19 +16,20 @@ urlpatterns = [
     url(r'^private/api/v1/search-sample-sites$', views.otu_search_sample_sites, name="otu_search_sample_sites"),
     url(r'^private/api/v1/submit_to_galaxy$', views.submit_to_galaxy, name="submit_to_galaxy"),
     url(r'^private/api/v1/export$', views.otu_export, name="otu_export"),
-    url(r'^ingest/$', views.otu_log, name="otu_log"),                                                                               # Display ingest names that do not match list.
-    # w: phase 2 - edna urls
-    # For getting filtered abundance data
-    url(r'^edna/api/abundance$', views.edna_get_sample_otu, name="abundance_data"),
-    url(r'^edna/api/metadata$', views.edna_get_sample_contextual, name="site_metadata"),
-    # Returns 1D array of OTU codes, SampleContextual._sites, and SampleOTU.counts to be reconstructed later.
-    url(r'^edna/api/sample_otu_ordered$', views.sample_otu_ordered, name="ordered_abundance_metadata"),
-    url(r'^edna/api/upload$', views.AbundanceUpload.as_view()),
-    # w: phase 3 - edna urls
-    url(r'^edna/api/taxonomy-options$', views.edna_get_otu_suggestions, name="edna_taxonomy_options"),
-    url(r'^edna/api/metadata-options$', views.edna_get_sample_contextual_suggestions, name="edna_metadata_options"),
-    url(r'^edna/api/filter-options$', views.edna_filter_options, name="edna_filter_options"),
-    # w: 
+
+    # w: eDNA endpoints.
+    # returns sample_otu entries
+    url(r'^edna/api/v1.0/abundance$', views.edna_get_sample_otu, name="edna_sample_otus"),
+    # returns filter options list
+    url(r'^edna/api/v1.0/filter-options$', views.edna_filter_options, name="edna_filter_options"),
+
+    url(r'^edna/api/v1.0/otu/', views.edna_otu, name="edna_otu"),
+    # url(r'^edna/api/v1.0/otu/[0-9]', views.edna_otu, name="edna_otu"),
+
+    # w: TODO: WIP: For posting new data sets.
+    # url(r'^edna/api/upload$', views.AbundanceUpload.as_view()),
+    # url(r'^edna/api/dev/test/$', views.test, name="Test stub method"),
+
     url(r'^tables/$', views.tables, name="tables"),                                                                                 # Custom datatables columns.
     url(r'^private/api/v1/required_table_headers/$', views.required_table_headers, name="required_table_headers"),                  # Custom datatables columns.
     url(r'^contextual_csv_download_endpoint/$', views.contextual_csv_download_endpoint, name="contextual_csv_download_endpoint"),   # Custom datatables columns.

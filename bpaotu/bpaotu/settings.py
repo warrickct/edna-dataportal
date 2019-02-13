@@ -364,6 +364,8 @@ CELERY_TIMEZONE = TIME_ZONE
 CACHES['search_results'] = CACHES['default']
 # w: custom cache for quick full abundance set.
 CACHES['edna_sample_otu_results'] = CACHES['default']
+# Custom cache for taxonomic options with ontology key combination.
+CACHES['edna_taxonomy_options_results'] = CACHES['default']
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 
 CHMOD_USER = env.get("repo_user", "apache")

@@ -5,6 +5,12 @@ from itertools import chain
 import logging
 
 import sqlalchemy
+from sqlalchemy import (
+    and_,
+    or_,
+    func,
+    update,
+)
 from sqlalchemy.orm import (
     sessionmaker,
 )
@@ -20,6 +26,7 @@ from .otu import (
     OTUFamily,
     OTUGenus,
     OTUSpecies,
+    OTUAmplicon,
     SampleContext,
     SampleOTU,
     SampleAustralianSoilClassification,
@@ -189,7 +196,7 @@ class SampleQuery:
             if mutate_result:
                 result = mutate_result(result)
                 # w: Warrick: comment out cache for testing
-            #cache.set(key, result)
+            # cache.set(key, result)
         return result
 
     # TODO: This doesn't work with the waterdata sample context table
@@ -365,9 +372,9 @@ class EdnaMetadataQuery:
             query = (
                 self._session.query(
                     SampleContext.id,
-                    SampleContext._site, 
-                    SampleContext._x, 
-                    SampleContext._y, 
+                    SampleContext._site,
+                    SampleContext._x,
+                    SampleContext._y,
                     SampleContext._elev,
                     SampleContext._mean_c_percent,
                     SampleContext._mid_ph,
@@ -384,10 +391,10 @@ class EdnaMetadataQuery:
             query = (
                 self._session.query(
                     SampleContext.id,
-                    SampleContext._site, 
-                    SampleContext._x, 
-                    SampleContext._y, 
-                    SampleContext._elev, 
+                    SampleContext._site,
+                    SampleContext._x,
+                    SampleContext._y,
+                    SampleContext._elev,
                     SampleContext._mean_c_percent,
                     SampleContext._mid_ph,
                     SampleContext._ave_lognconcen,
@@ -400,7 +407,7 @@ class EdnaMetadataQuery:
             )
         # TODO: hardcoding dictionary response for now. Need to replace with automated keys based off table columns.
         results =[]
-        for tuple in query :
+        for tuple in query:
             results.append({
                 'id': tuple[0],
                 'site': tuple[1],
@@ -417,6 +424,7 @@ class EdnaMetadataQuery:
         return results
 
 
+# depcrecated:
 class EdnaOrderedSampleOTU:
     def __init__(self):
         self._session = Session()
@@ -435,7 +443,7 @@ class EdnaOrderedSampleOTU:
         if not result:
             logger.info("sample_otu_cache not found, making new cache")
             result = self._query_sample_otu_ordered()
-            #cache.set(key, result)
+            # cache.set(key, result)
         else:
             logger.info("Using cached sample_otu results")
         return result
@@ -464,7 +472,7 @@ class EdnaOrderedSampleOTU:
         return response
 
 
-class EdnaContextualOptions:
+class EdnaSampleContextualQuery:
     def __init__(self):
         self._session = Session()
 
@@ -475,8 +483,9 @@ class EdnaContextualOptions:
         self._session.close()
 
     # some default caching for quicker results.
-    def get_sample_contextual_fields(self, filters):
-        result = self._query_contextual_fields(filters)
+    def get_sample_contextual_options(self, filters):
+        # TODO: Add caching (not super important for this one.)
+        result = self.query_contextual_fields(filters)
         # cache = caches['edna_sample_contextual_fields']
         # hash_str = 'eDNA_Sample_OTUs:cached'
         # key = sha256(hash_str.encode('utf8')).hexdigest()
@@ -489,10 +498,53 @@ class EdnaContextualOptions:
         #     logger.info("Using cached sample_otu results")
         return result
 
-    def _query_contextual_fields(self, filters):
-        field_results=  [column.key for column in SampleContext.__table__.columns if filters in column.key]
+    def query_contextual_fields(self, filters=None):
+        '''
+        Returns an list of all the columns in the sample_contextual fields
+        '''
+        field_results= [column.key for column in SampleContext.__table__.columns]
         return field_results
-    
+
+    def query_sample_contextuals(self, tags=None):
+        '''
+        Returns a list of primary keys of sites which fit the filter conditions. When multiple tags are given the results are combined using OR operation.
+        '''
+
+        def _row_to_dict(row):
+            d = {}
+            for column in row.__table__.columns:
+                d[column.name] = (getattr(row, column.name))
+            return d
+
+        query = self._session.query(SampleContext)
+        # iterative build the filter then join it all in one bang and filter at the end.
+        sample_contextual_results = []
+        if tags is not None:
+            logger.info("contextual tags is not none.")
+            or_filters = list()
+            for tag in tags:
+                # TODO: Add support for parsing AND and OR operators in the tags.
+                # if filter contains a value to compare
+                if '$' in tag:
+                    filter_segments = tag.split('$')
+                    field = filter_segments[0]
+                    conditional = filter_segments[1][:2]
+                    value = filter_segments[1][2:]
+                    if conditional == "eq":
+                        or_filters.append(getattr(SampleContext, field) == value)
+                        # base_query = base_query.filter(getattr(SampleContext, field) == value)
+                    if conditional == "gt":
+                        or_filters.append(getattr(SampleContext, field) > value)
+                        # logger.info(conditional)
+                        # logger.info(value)
+                        # base_query = base_query.filter(getattr(SampleContext, field) > value)
+                    if conditional == "lt":
+                        or_filters.append(getattr(SampleContext, field) < value)
+                        # base_query = base_query.filter(getattr(SampleContext, field) < value)
+            query = query.filter(or_(*or_filters))
+        sample_contextual_results = [_row_to_dict(r) for r in query.all()]
+        return sample_contextual_results
+
 
 class EdnaOTUQuery:
     def __init__(self):
@@ -504,56 +556,68 @@ class EdnaOTUQuery:
     def __exit__(self, exec_type, exc_value, traceback):
         self._session.close()
 
-    def _query_primary_keys(self, otus=None):
-        # Iteratively builds upon the filters for an otu and retrieves the matching otu ids.
-        ontology_tables = [OTUKingdom, OTUPhylum, OTUClass, OTUOrder, OTUFamily, OTUGenus, OTUSpecies]
-        otu_columns = [OTU.kingdom_id, OTU.phylum_id, OTU.class_id, OTU.order_id, OTU.family_id, OTU.genus_id, OTU.species_id]
-        otu_pks = []
-        # base_query = self._session.query(OTU.id, OTU.code)
+    def _query_primary_keys(self, otus=None, use_endemism=False, endemic_value=False):
+        otu_columns = [OTU.kingdom_id, OTU.phylum_id, OTU.class_id, OTU.order_id, OTU.family_id, OTU.genus_id, OTU.species_id, OTU.amplicon_id]
+        otu_ids = []
+        query = self._session.query(OTU.id)
         if otus is not None:
             for otu in otus:
-                # TEST:
-                base_query = self._session.query(OTU.id)
                 for index, field_id in enumerate(otu.split(' ')):
-                    logger.info(field_id)
-                    ontology_table = ontology_tables[index]
                     otu_column = otu_columns[index]
-                    base_query = base_query.filter(otu_column == field_id)
-                otu_pks = otu_pks + [r[0] for r in base_query.all()]
-        return otu_pks
+                    query = query.filter(otu_column == field_id)
+        if use_endemism:
+            query = query.filter(OTU.endemic == endemic_value)
+        otu_ids = [r[0] for r in query.all()]
+        logger.info(otu_ids)
+        return otu_ids
 
-    def get_taxonomy_options(self, filters):
-        # TEMP:TODO: Until caching is set up
-        result = self._query_taxonomy_options(filters)
-        return result
-        # cache = caches['edna_sample_otu_results']
-        # hash_str = 'eDNA_Sample_OTUs:cached'
-        # key = sha256(hash_str.encode('utf8')).hexdigest()
-        # result = cache.get(key)
-        # if not result:
-        #     logger.info("sample_otu_cache not found, making new cache")
-        #     result = self._query_sample_otu_ordered()
-        #     #cache.set(key, result)
-        # else:
-        #     logger.info("Using cached sample_otu results")
-        # return result
+    def get_taxonomy_options(self, filters, page=1, page_size=50):
+        cache = caches['edna_taxonomy_options_results']
+        hash_str = 'eDNA_Taxonomy_Options:cached'
+        key = sha256(hash_str.encode('utf8')).hexdigest()
+        result = cache.get(key)
+        if not result:
+            logger.info("Taxonomy option cache entry not found, making new cache")
+            result = self._query_taxonomy_options()
+            cache.set(key, result)
+        else:
+            logger.info("Using cached taxonomic options")
+        # only only return results with the param(s)
+        filters = filters.lower()
+        result = [r for r in result if (filters in r[0].lower())]
+        start = ((page -1) * page_size)
+        end = ((page -1) * page_size) + page_size
+        paginated_result = result[start:end]
+        return {
+            "result": paginated_result,
+            "total_results": len(result)
+        }
 
-    # TEMP: inactive taxonomic option query.
-    def _query_taxonomy_options_OLD(self, filters):
-        option_results = [r for r in (
-            self._session.query(OTU.id, OTU.code)
-                .order_by(OTU.code)
-                .filter((OTU.code).ilike("%" + filters + "%"))
-                .all()
-        )]
-        return option_results
-
-    def _query_taxonomy_options(self, filters):
-        ontology_tables = [OTUKingdom, OTUPhylum, OTUClass, OTUOrder, OTUFamily, OTUGenus, OTUSpecies]
-        otu_columns = [OTU.kingdom_id, OTU.phylum_id, OTU.class_id, OTU.order_id, OTU.family_id, OTU.genus_id, OTU.species_id]
+    def _query_taxonomy_options(self):
+        ontology_tables = [OTUKingdom, OTUPhylum, OTUClass, OTUOrder, OTUFamily, OTUGenus, OTUSpecies, OTUAmplicon]
         ordered_otus = [r for r in (
-            self._session.query(OTU.kingdom_id, OTU.phylum_id, OTU.class_id, OTU.order_id, OTU.family_id, OTU.genus_id, OTU.species_id)
-            .order_by(OTU.kingdom_id, OTU.phylum_id, OTU.class_id, OTU.order_id, OTU.family_id, OTU.genus_id, OTU.species_id)
+            self._session.query(
+                OTU.kingdom_id,
+                OTU.phylum_id,
+                OTU.class_id,
+                OTU.order_id,
+                OTU.family_id,
+                OTU.genus_id,
+                OTU.species_id,
+                # NOTE: amplicon id is actually the species identifier (for small variations)
+                OTU.amplicon_id,
+                OTU.id
+                )
+            .order_by(
+                OTU.kingdom_id,
+                OTU.phylum_id,
+                OTU.class_id,
+                OTU.order_id,
+                OTU.family_id,
+                OTU.genus_id,
+                OTU.species_id,
+                OTU.amplicon_id
+                )
             .all()
             )]
         # create lookup for performance
@@ -566,6 +630,7 @@ class EdnaOTUQuery:
                 pk = tuple[0]
                 text = tuple[1]
                 otu_ontology_lookups[table_index][pk] = text
+        # Reubild with the prefixes attached.
         prefixes = [
             "k__",
             "p__",
@@ -574,6 +639,7 @@ class EdnaOTUQuery:
             "f__",
             "g__",
             "s__",
+            "sid__"
             ]
         # generate the options with the pk field for faster searching.
         # possibly making it paginated.
@@ -581,20 +647,31 @@ class EdnaOTUQuery:
         for otu in ordered_otus:
             otu_text = ""
             combination_key = []
-            for index, col in enumerate(otu):
+            # ignore the final element as it's the pk.
+            for index, col in enumerate(otu[:len(otu) -1]):
                 if otu_ontology_lookups[index][col] == "" or otu_ontology_lookups[index][col] == " ":
                     continue
                 if otu_text == "":
                     otu_text = otu_text + prefixes[index] + otu_ontology_lookups[index][col]
                     combination_key.append(col)
                 else:
-                    otu_text = otu_text + ";" + prefixes[index] + otu_ontology_lookups[index][col] 
+                    otu_text = otu_text + ";" + prefixes[index] + otu_ontology_lookups[index][col]
                     combination_key.append(col)
             if otu_text in options:
                 continue
             else:
-                options.append([otu_text, combination_key])
+                otu_pk = otu[len(otu) -1]
+                options.append([otu_text, combination_key, otu_pk])
         return options
+
+    def get_otu_names(self, primary_keys=None):
+        # accepts a list of primary keys, returns the otu names/codes where possible.
+        if (primary_keys is None):
+            return None
+
+        query = (self._session.query(OTU.id, OTU.code).filter(OTU.id.in_(primary_keys)).all())
+        otu_codes = [r._asdict() for r in query]
+        return otu_codes
 
 
 class EdnaSampleOTUQuery:
@@ -607,28 +684,56 @@ class EdnaSampleOTUQuery:
     def __exit__(self, exec_type, exc_value, traceback):
         self._session.close()
 
+        with EdnaPostImport() as post_import:
+            post_import._calculate_endemic_otus()
+
     # TODO: will need to make this more dynamic (queryable by sample id, count range)
-    def _query_sample_otu(self, ids=None):
+    def query_sample_otus(self, otu_ids=None, sample_contextual_ids=None, use_union=None):
         sample_otu_results = []
-        if ids is not None:
-            sample_otu_results = [r for r in (
-                self._session.query(SampleOTU.otu_id, SampleOTU.sample_id, SampleOTU.count)
-                .order_by(SampleOTU.otu_id)
-                .filter(SampleOTU.otu_id.in_(ids))
-                .all()
-                )]
+        query = (
+            self._session.query(SampleOTU.otu_id, SampleOTU.sample_id, SampleOTU.count)
+            .order_by(SampleOTU.otu_id)
+            # .all()
+        )
+        # query = query.filter(SampleOTU.sample_id.in_(sample_contextual_ids))
+        if use_union:
+            query = query.filter(or_(SampleOTU.otu_id.in_(otu_ids), SampleOTU.sample_id.in_(sample_contextual_ids)))
         else:
-            sample_otu_results = [r for r in (
-                self._session.query(SampleOTU.otu_id, SampleOTU.sample_id, SampleOTU.count)
-                .order_by(SampleOTU.otu_id)
-                .all()
-            )]
+            query = query.filter(and_(SampleOTU.otu_id.in_(otu_ids), SampleOTU.sample_id.in_(sample_contextual_ids)))
+        sample_otu_results = [r for r in query]
         return sample_otu_results
+
+class EdnaPostImport:
+    def __init__(self):
+        self._session = Session()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exec_type, exc_value, traceback):
+        self._session.close()
+
+    def _calculate_endemic_otus(self):
+        # gets all the otu_ids where they show in less than 1% of sites
+        # Query to get the distinct otu_ids to avoid repeating ids.
+        distinct_sample_count = len([r for r in self._session.query(SampleOTU.sample_id.distinct())]) 
+        endemic_ids = [r[0] for r in (
+            self._session.query(SampleOTU.otu_id, func.count(SampleOTU.sample_id))
+            .group_by(SampleOTU.otu_id)
+            .having(((func.count(SampleOTU.sample_id)) * 100) / distinct_sample_count < 1)
+        )]
+        # logger.info(len([r for r in endemic_ids]))
+        # logger.info(endemic_ids)
+
+        # TODO: getting potentially false endemism results due to otu some otu entries being more general than others.
+        for endemic_otu in self._session.query(OTU).filter(OTU.id.in_(endemic_ids)):
+            endemic_otu.endemic = True;
+        self._session.commit()
 
 
 class ContextualFilter:
     mode_operators = {
-        'or': sqlalchemy.or_,
+        'or': or_,
         'and': sqlalchemy.and_,
     }
 
@@ -776,4 +881,4 @@ def apply_otu_filter(otu_attr, q, op_and_val):
 
 apply_amplicon_filter = partial(apply_otu_filter, 'amplicon_id')
 # w: applied quickfix to query
-apply_environment_filter = partial(apply_op_and_val_filter, SampleContext._x)
+apply_environment_filter = partial(apply_op_and_val_filter, SampleContext.x)

@@ -27,12 +27,8 @@ from .query import (
     TaxonomyOptions,
     OntologyInfo,
     SampleQuery,
-    # w: Phase 2 edna API
-    EdnaAbundanceQuery,
-    EdnaMetadataQuery,
-    EdnaOrderedSampleOTU,
     # w: Phase 3 edna API
-    EdnaContextualOptions,
+    EdnaSampleContextualQuery,
     EdnaOTUQuery,
     EdnaSampleOTUQuery,
     # w: end
@@ -293,141 +289,121 @@ def param_to_filters_without_checks(query_str):
         contextual_filter=contextual_filter,
         taxonomy_filter=taxonomy_filter), errors)
 
+@csrf_exempt
+@require_GET
+def test(request):
+    return JsonResponse({
+        'response': request
+    })
+
+
 # TEST: Adding custom API for the visualisation
 @csrf_exempt
 @require_GET
 def edna_get_sample_otu(request):
     '''
-    Returns sample_otu tuples that match the ids in the request url.
+    Returns sample_otu entries from otu table combination-keys
     '''
-    if request.GET['otu'] is not None:
-        # gets all the pks from teh query and casts to int.
-        otus = [otu for otu in request.GET.getlist('otu') if otu is not '']
-        otu_ids = []
-        with EdnaOTUQuery() as otu_query:
-            if otus:
-                otu_ids = otu_query._query_primary_keys(otus)
-        with EdnaSampleOTUQuery() as sample_otu_query:
-            logger.info(otu_ids)
-            sample_otu_results = sample_otu_query._query_sample_otu(otu_ids)
-        # TEMP: commenting out abundance query for a second.
-        # with EdnaSampleOTUQuery() as sample_otu_query:
-        #     if len(otuPks) > 0:
-        #         result = sample_otu_query._query_sample_otu(otus)
-        #     else:
-        #         result = sample_otu_query._query_sample_otu()
-        # TEMP:END:
 
-    # FOR GETTING WITH A STRING SEARCH
-    # else:
-    #     logger.info('Abundance api requested')
-    #     term = request.GET['term']
-    #     with EdnaAbundanceQuery() as query:
-    #         if term:
-    #             result = query.get_abundance_nested(term)
-    #         else:
-    #             result = query.get_abundance_nested('')
+    # FIXME: otu filters applied subtractively, contextual filters applied additively.
+    # contextuals
+    sample_contextual_ids = []
+    contextual_params = request.GET.getlist('q', None)
+    # just the primary keys for querying
+    # the sample data for plotting geographically etc.
+    sample_contextuals_data = []
+    with EdnaSampleContextualQuery() as sample_contextual:
+        if len(contextual_params) > 0:
+            sample_contextuals_data = sample_contextual.query_sample_contextuals(contextual_params)
+        else:
+            sample_contextuals_data = sample_contextual.query_sample_contextuals()
+        sample_contextual_ids = [sample['id'] for sample in sample_contextuals_data]
+    # logger.info(sample_contextual_ids)
+
+    # otus
+    otu_ids = []
+    otus = [otu for otu in request.GET.getlist('otu') if otu is not '']
+    # if endemism value exists in request then query will include it.
+    endemic_value = request.GET.get('endemic', None) == "true" 
+    use_endemism = False
+    if endemic_value is not None:
+        use_endemism = True
+    with EdnaOTUQuery() as otu_query:
+        otu_ids = otu_query._query_primary_keys(otus, use_endemism, endemic_value)
+
+    use_union = request.GET.get('operator', None) == "union" 
+
+    with EdnaSampleOTUQuery() as sample_otu_query:
+        # Getting the sample otu entries that are within either otu_id set or sample_contextual_id set.
+        sample_otu_results = sample_otu_query.query_sample_otus(otu_ids, sample_contextual_ids, use_union)
+    # Filter to only include sample contextual data that is included in sample otu result set.
+    contextual_ids_in_sampleotu_results = [so[1] for so in sample_otu_results]
+    # grabbing contextual data for sites we need.
+    sample_contextuals_data = [sc for sc in sample_contextuals_data if (sc['id'] in contextual_ids_in_sampleotu_results)]
     response = JsonResponse({
-        # 'data': result,
-        # TEMP:START:
-        # 'dev': len(otu_ids),
-        'data': sample_otu_results
-        # TEMP:END:
+        'sample_otu_data': sample_otu_results,
+        'sample_contextual_data': sample_contextuals_data,
     })
     # TODO: response['Access-Control-Allow-Origin'] =   'http://localhost:5500/'
     # response header is set by apache to '*' on the nectar edna virtual machine so this is no longer needed
-    response['Access-Control-Allow-Origin'] = '*'
-    return response
-
-
-@csrf_exempt
-@require_GET
-def edna_get_sample_contextual(request):
-    '''
-    Returns full metadata tuples of SampleContextuals according to params
-    '''
-    logger.info('Abundance api requested')
-    pks = [int(id) for id in request.GET.getlist('id') if id is not '']
-    with EdnaMetadataQuery() as query:
-        if pks:
-            query_result = query.get_all_metadata(pks)
-        else:
-            query_result = query.get_all_metadata()
-    response = JsonResponse({
-        'data': query_result,
-    })
-    # TODO: response['Access-Control-Allow-Origin'] = 'http://localhost:5500/'
-    # response header is set by apache to '*' on the nectar edna virtual machine so this is no longer needed
-    response['Access-Control-Allow-Origin'] = '*'
-    return response
-
-# Another custom API path
-@csrf_exempt
-@require_GET
-def sample_otu_ordered(request):
-    '''
-    Experimental response that orders sample_context, sample_otu and otu table to be reconstructed client side. Made to reduce structure size.
-    '''
-    start_time = time.time()
-    with EdnaOrderedSampleOTU() as query:
-        result = query.get_sample_otu_ordered()
-    response =  JsonResponse({
-        'data': result,
-    })
-    # CORS already configured to allow all on apache instance on server.
-    # NOTE: Need to enable the header when 
-    response['Access-Control-Allow-Origin'] = '*'
-    return response
-
-# Phase 3 edna API
-@csrf_exempt
-@require_GET
-def edna_get_sample_contextual_suggestions(request):
-    filters = request.GET['q']
-    with EdnaContextualOptions() as query:
-        result = query.get_sample_contextual_fields(filters)
-    response = JsonResponse({
-        'data': result
-    })
-    response['Access-Control-Allow-Origin'] = '*'
+    # TODO: make cors more restricted potentially
+    # TODO: configure docker to automatically control cors settings. (will require altering nginx configuration for docker)
+    # response['Access-Control-Allow-Origin'] = '*'
     return response
 
 @csrf_exempt
 @require_GET
-def edna_get_otu_suggestions(request):
-    filters = request.GET['q']
-    with EdnaOTUQuery() as query:
-        result = query.get_taxonomy_options(filters)
-    response = JsonResponse({
-        'data': result
-    })
-    response['Access-Control-Allow-Origin'] = '*'
+def edna_otu(request):
+    '''
+    returns otu table information.
+    '''
+    
+    # should improve the api structure. otu/{id}/kingdom/{kingdom id}/etc...
+    filters = request.GET.getlist('id', None)
+    if len(filters) > 0:
+        with EdnaOTUQuery() as query:
+            otu_names = query.get_otu_names(filters)
+        response = JsonResponse({
+            'otu_names': otu_names
+        })
+    else:
+        response = JsonResponse({
+            'otu_names': []
+        })
+    # response['Access-Control-Allow-Origin'] = '*'
     return response
 
 @csrf_exempt
 @require_GET
 def edna_filter_options(request):
     '''
-    Combined array of taxonomic options + contextual options to be placed into the list.
+    Calls both meta and otu filter option methods, combined and returns.
     '''
     filters = request.GET['q']
+    page = int(request.GET['page'])
+    page_size = int(request.GET['page_size'])
+
     with EdnaOTUQuery() as query:
-        taxonomy_options = query.get_taxonomy_options(filters)
-    with EdnaContextualOptions() as query:
-        context_options = query.get_sample_contextual_fields(filters)
+        taxonomy_options = query.get_taxonomy_options(filters, page, page_size)
+    with EdnaSampleContextualQuery() as query:
+        context_options = query.get_sample_contextual_options(filters)
     # combined_options = taxonomy_options + context_options
     response = JsonResponse({
         'data': {
-            'taxonomy_options': taxonomy_options,
+            'total_results': taxonomy_options["total_results"],
+            'taxonomy_options': taxonomy_options["result"],
             'context_options': context_options,
         }
     })
-    response['Access-Control-Allow-Origin'] = '*'
+    # response['Access-Control-Allow-Origin'] = '*'
+    response['Access-Control-Allow-Headers'] = 'Content-Type'
     return response
 
 # TEMP:TEST: API class made for easier uploading.
 class UploadFileForm(forms.Form):
     file = forms.FileField()
+
+
 class AbundanceUpload(TemplateView):
     # make an html template for the upload page.
     template_name = 'edna/upload.html'
