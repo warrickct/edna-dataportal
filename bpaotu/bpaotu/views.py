@@ -348,7 +348,7 @@ def edna_get_sample_otu(request):
     # response header is set by apache to '*' on the nectar edna virtual machine so this is no longer needed
     # TODO: make cors more restricted potentially
     # TODO: configure docker to automatically control cors settings. (will require altering nginx configuration for docker)
-    response['Access-Control-Allow-Origin'] = '*'
+    # response['Access-Control-Allow-Origin'] = '*'
     return response
 
 @csrf_exempt
@@ -368,10 +368,9 @@ def edna_otu(request):
         })
     else:
         response = JsonResponse({
-            'Access-Control-Allow-Origin': '*',
             'otu_names': []
         })
-    response['Access-Control-Allow-Origin'] = '*'
+    # response['Access-Control-Allow-Origin'] = '*'
     return response
 
 @csrf_exempt
