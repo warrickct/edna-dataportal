@@ -342,8 +342,25 @@ class SampleContext(SchemaMixin, Base):
     rapaport_node = Column(Float)
 
     # eDNA phase 3 fields
-    # adding max abundance here to easier calculate proportional abundances
-    total_abundance =  Column(Float, default=0)
+    # new meta fields
+    sample_identifier = Column(CIText, default="unknown")
+
+    biome1 = Column(CIText, default = "terrestrial")
+    biome2 = Column(CIText, default = "anthropogenic_terrestrial")
+    biome3 = Column(CIText, default = "cropland")
+    environmental_feature = Column(CIText, default = "organic")
+    environmental_material1 = Column(CIText, default = "anthropogenic_environmental_material")
+    environmental_material2 = Column(CIText, default = "agricultural_environmental_material")
+    date_collected = Column(CIText, default = "01/02/2016")
+    collector = Column(CIText, default = "S Thompson, P Vanga")
+    longitude = Column(Float)
+    latitude = Column(Float)
+    region = Column(CIText, default = "Malborough")
+    vineyard = Column(CIText, default = "1")
+    host_plant = Column(CIText, default = "grape")
+    forward_primer = Column(CIText, default = "FUN582A2R_MS")
+    reverse_primer = Column(CIText, default = "NSI1mod_MS")
+    amplicon = Column(CIText, default = "16S")
 
     # ontologies
     # w: custom ontology

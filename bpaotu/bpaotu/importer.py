@@ -252,9 +252,8 @@ class DataImporter:
                         ontology_parts = _normalize_taxonomy(ontology_parts)
                         obj = dict(zip(ontologies.keys(), ontology_parts))
                         obj['otu'] = otu
-                        # TEST:START: if theres a value after the '|' character, use it to overwrite the amplicon field's value.
-                        # TODO: value after '|' is the species identifier, not the amplicon used
                         if '|' in obj['species']:
+                            # TODO: Thought this was the amplicon but it's not however. Can add amplicon to the site information
                             split = obj['species'].split('|')
                             obj['species'] = split[0]
                             obj['amplicon'] = split[1]
