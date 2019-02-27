@@ -59,6 +59,7 @@ logger = logging.getLogger("rainbow")
 ORDERING_PATTERN = re.compile(r'^order\[(\d+)\]\[(dir|column)\]$')
 COLUMN_PATTERN = re.compile(r'^columns\[(\d+)\]\[(data|name|searchable|orderable)\]$')
 
+use_cors = True
 
 def make_environment_lookup():
     with OntologyInfo() as info:
@@ -344,11 +345,14 @@ def edna_get_sample_otu(request):
         'sample_otu_data': sample_otu_results,
         'sample_contextual_data': sample_contextuals_data,
     })
+
     # TODO: response['Access-Control-Allow-Origin'] =   'http://localhost:5500/'
     # response header is set by apache to '*' on the nectar edna virtual machine so this is no longer needed
     # TODO: make cors more restricted potentially
     # TODO: configure docker to automatically control cors settings. (will require altering nginx configuration for docker)
-    # response['Access-Control-Allow-Origin'] = '*'
+
+    if use_cors:
+        response['Access-Control-Allow-Origin'] = '*'
     return response
 
 @csrf_exempt
@@ -370,7 +374,8 @@ def edna_otu(request):
         response = JsonResponse({
             'otu_names': []
         })
-    # response['Access-Control-Allow-Origin'] = '*'
+    if use_cors:    
+        response['Access-Control-Allow-Origin'] = '*'
     return response
 
 @csrf_exempt
@@ -395,7 +400,8 @@ def edna_filter_options(request):
             'context_options': context_options,
         }
     })
-    # response['Access-Control-Allow-Origin'] = '*'
+    if use_cors:    
+        response['Access-Control-Allow-Origin'] = '*'
     response['Access-Control-Allow-Headers'] = 'Content-Type'
     return response
 

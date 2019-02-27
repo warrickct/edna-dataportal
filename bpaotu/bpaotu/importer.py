@@ -501,6 +501,23 @@ class DataImporter:
 
     def load_edna_otu_abundance(self, otu_lookup, site_lookup):
 
+        def _validate_count(count):
+            try:
+                return float(count)
+            except:
+                return 0
+
+        # def _increment_sample_abundance_sum(self, sample_id, count):
+        #     q = self._session.query(SampleContext).filter(SampleContext.id == sample_id)
+        #     sample_context = q.one()
+        #     logger.info(sample_context.total_abundance)
+
+        def _validate_sample_id(column):
+            try:
+                return site_lookup[site_hash(column.upper())]
+            except:
+                print(column)
+
         def _make_sample_otus():    
             for fname in sorted(glob(self._import_base + 'edna/separated-data/data/*.tsv')):
                 # logger.info('writing abundance rows from %s' % fname)
@@ -512,18 +529,15 @@ class DataImporter:
                     for column in row:
                         if column == '':
                             continue
-                        try:
-                            sample_id = site_lookup[site_hash(column.upper())]
-                        except:
-                            print(column)
-                        count = row[column]
-                        try:
-                            count = float(count)
-                        except:
-                            logger.warning('count invalid, defaulting to 0')
-                            count = 0
+                        sample_id = _validate_sample_id(column)
+                        count = _validate_count(row[column])
                         if count > 0:
-                            yield [sample_id, otu_id, count]
+                            # count is already proportional, can be copied into proportional count column
+                            if count < 1:
+                                yield [sample_id, otu_id, count, count]
+                            else:
+                                # add as a yet to be calculated field
+                                yield [sample_id, otu_id, count, 0]
 
         def _clear_edna_caches():
             # TODO: Get rid of magic string cache references
@@ -546,11 +560,12 @@ class DataImporter:
             os.chmod(fname, 0o644)
             logger.warning("writing out OTU abundance to csv tempfile: %s" % fname)
             w = csv.writer(temp_fd)
-            w.writerow(['sample_id', 'otu_id', 'count'])
+            w.writerow(['sample_id', 'otu_id', 'count', 'proportional_abundance'])
             w.writerows(_make_sample_otus())
         try:
             self._engine.execute(
                     text('''COPY otu.sample_otu from :csv CSV header''').execution_options(autocommit=True),
+                    # text('''COPY otu.sample_otu(sample_id, otu_id, count) from :csv CSV header''').execution_options(autocommit=True),
                     csv=fname)
             _clear_edna_caches()
         except:
@@ -558,6 +573,7 @@ class DataImporter:
             traceback.print_exc()
         with EdnaPostImport() as post_import:
             post_import._calculate_endemic_otus()
+            post_import._calculate_abundance_proportion()
             
 
     def load_otu_abundance(self, otu_lookup, site_lookup):

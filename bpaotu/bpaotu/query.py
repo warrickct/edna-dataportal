@@ -684,14 +684,14 @@ class EdnaSampleOTUQuery:
     def __exit__(self, exec_type, exc_value, traceback):
         self._session.close()
 
-        with EdnaPostImport() as post_import:
-            post_import._calculate_endemic_otus()
-
-    # TODO: will need to make this more dynamic (queryable by sample id, count range)
     def query_sample_otus(self, otu_ids=None, sample_contextual_ids=None, use_union=None):
+        '''
+        Returns the sample_otu entries with the sample standardised count (between 0-1)
+        '''
+        # TODO: will need to make this more dynamic (queryable by sample id, count range)
         sample_otu_results = []
         query = (
-            self._session.query(SampleOTU.otu_id, SampleOTU.sample_id, SampleOTU.count)
+            self._session.query(SampleOTU.otu_id, SampleOTU.sample_id, SampleOTU.proportional_abundance)
             .order_by(SampleOTU.otu_id)
             # .all()
         )
@@ -714,6 +714,7 @@ class EdnaPostImport:
         self._session.close()
 
     def _calculate_endemic_otus(self):
+        logger.info("calculating endemic species")
         # gets all the otu_ids where they show in less than 1% of sites
         # Query to get the distinct otu_ids to avoid repeating ids.
         distinct_sample_count = len([r for r in self._session.query(SampleOTU.sample_id.distinct())]) 
@@ -726,10 +727,26 @@ class EdnaPostImport:
         # logger.info(endemic_ids)
 
         # TODO: getting potentially false endemism results due to otu some otu entries being more general than others.
+        # TODO: i.e. highly specific classification more likely to be considered endemic due to being seen as different species without accounting for how closely related species are
         for endemic_otu in self._session.query(OTU).filter(OTU.id.in_(endemic_ids)):
             endemic_otu.endemic = True;
         self._session.commit()
 
+    def _calculate_abundance_proportion(self):
+        '''
+        Find un-standardised count data and standardises to be proportional to the sample total count.
+        '''
+        logger.info("calculating abundance proportions")
+        # TODO: group by site, entry_abundance/total abundance -> 
+        # sample_contextual_abundance_totals = [sample_totals[r[0] = r[1]] for r in (self._session.query(SampleOTU.sample_id, func.sum(SampleOTU.count)).group_by(SampleOTU.sample_id).filter(SampleOTU.count >= 1))];
+        # TODO: just caching the sample maxes for now. Maybe in the future add it to a column 
+        sample_totals_dict = { key: value for key, value in [r for r in (self._session.query(SampleOTU.sample_id, func.sum(SampleOTU.count)).group_by(SampleOTU.sample_id).filter(SampleOTU.count >= 1))]};
+        logger.info(sample_totals_dict)
+        for key, value in sample_totals_dict.items():
+            for sample_otu in self._session.query(SampleOTU).filter(SampleOTU.sample_id == key):
+                # logger.info(sample_otu)
+                sample_otu.proportional_abundance = sample_otu.count / value
+            self._session.commit()
 
 class ContextualFilter:
     mode_operators = {

@@ -341,6 +341,10 @@ class SampleContext(SchemaMixin, Base):
     richness = Column(Float)
     rapaport_node = Column(Float)
 
+    # eDNA phase 3 fields
+    # adding max abundance here to easier calculate proportional abundances
+    total_abundance =  Column(Float, default=0)
+
     # ontologies
     # w: custom ontology
     sample_type_id = ontology_fkey(SampleType)
@@ -360,6 +364,8 @@ class SampleOTU(SchemaMixin, Base):
     sample_id = Column(Integer, ForeignKey(SCHEMA + '.sample_context.id'), primary_key=True)
     otu_id = Column(Integer, ForeignKey(SCHEMA + '.otu.id'), primary_key=True)
     count = Column(Float, nullable=False)
+
+    proportional_abundance = Column(Float, nullable=False, default = 0)
 
     # TEMP: 
     def __repr__(self):
