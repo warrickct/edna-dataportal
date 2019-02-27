@@ -507,11 +507,6 @@ class DataImporter:
             except:
                 return 0
 
-        # def _increment_sample_abundance_sum(self, sample_id, count):
-        #     q = self._session.query(SampleContext).filter(SampleContext.id == sample_id)
-        #     sample_context = q.one()
-        #     logger.info(sample_context.total_abundance)
-
         def _validate_sample_id(column):
             try:
                 return site_lookup[site_hash(column.upper())]
