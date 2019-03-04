@@ -178,6 +178,18 @@ class SampleTillage(OntologyMixin, Base):
 class SampleColor(OntologyMixin, Base):
     pass
 
+class SampleEnvironmentalMaterial1(OntologyMixin, Base):
+    '''
+    Tier 1 of environmental material classification
+    '''
+    pass
+
+class SampleEnvironmentalMaterial2(OntologyMixin, Base):
+    '''
+    Tier 2 of environmental material classification
+    '''
+    pass
+
 class SampleContext(SchemaMixin, Base):
     '''
     Site table 
@@ -349,21 +361,26 @@ class SampleContext(SchemaMixin, Base):
     biome2 = Column(CIText, default = "anthropogenic_terrestrial")
     biome3 = Column(CIText, default = "cropland")
     environmental_feature = Column(CIText, default = "organic")
-    environmental_material1 = Column(CIText, default = "anthropogenic_environmental_material")
-    environmental_material2 = Column(CIText, default = "agricultural_environmental_material")
+    # environmental_material1 = Column(CIText, default = "anthropogenic_environmental_material")
+    # environmental_material2 = Column(CIText, default = "agricultural_environmental_material")
+    environmental_material1_id = ontology_fkey(SampleEnvironmentalMaterial1)
+    environmental_material2_id = ontology_fkey(SampleEnvironmentalMaterial2)
     date_collected = Column(CIText, default = "01/02/2016")
     collector = Column(CIText, default = "S Thompson, P Vanga")
     longitude = Column(Float)
     latitude = Column(Float)
-    region = Column(CIText, default = "Malborough")
+    region = Column(CIText, default = "unknown")
     vineyard = Column(CIText, default = "1")
-    host_plant = Column(CIText, default = "grape")
-    forward_primer = Column(CIText, default = "FUN582A2R_MS")
-    reverse_primer = Column(CIText, default = "NSI1mod_MS")
+    host_plant = Column(CIText, default = "unknown")
+    forward_primer = Column(CIText, default = "unknown")
+    reverse_primer = Column(CIText, default = "unknown")
     amplicon = Column(CIText, default = "16S")
+    
+    # ONTOLOGICAL
+    # TODO: implement same thing as sample_id except for tier 2 env feature
+    environmental_material1 = relationship(SampleEnvironmentalMaterial1)
+    environmental_material2 = relationship(SampleEnvironmentalMaterial2)
 
-    # ontologies
-    # w: custom ontology
     sample_type_id = ontology_fkey(SampleType)
     # australian_soil_classification_id = ontology_fkey(SampleAustralianSoilClassification)
     # broad_land_use_id = ontology_fkey(SampleLandUse)

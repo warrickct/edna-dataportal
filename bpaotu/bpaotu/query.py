@@ -740,7 +740,6 @@ class EdnaPostImport:
         # TODO: group by site, entry_abundance/total abundance -> 
         # TODO: just caching the sample maxes for now. Maybe in the future add it to a column 
         sample_totals_dict = { key: value for key, value in [r for r in (self._session.query(SampleOTU.sample_id, func.sum(SampleOTU.count)).group_by(SampleOTU.sample_id).filter(SampleOTU.count >= 1))]};
-        logger.info(sample_totals_dict)
         for key, value in sample_totals_dict.items():
             for sample_otu in self._session.query(SampleOTU).filter(SampleOTU.sample_id == key):
                 # logger.info(sample_otu)
