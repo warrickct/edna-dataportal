@@ -189,6 +189,12 @@ class SampleEnvironmentalMaterial2(OntologyMixin, Base):
     Tier 2 of environmental material classification
     '''
     pass
+    
+class SampleEnvironmentalMaterial3(OntologyMixin, Base):
+    '''
+    Tier 3 of environmental material classification
+    '''
+    pass
 
 class SampleContext(SchemaMixin, Base):
     '''
@@ -355,27 +361,46 @@ class SampleContext(SchemaMixin, Base):
 
     # eDNA phase 3 fields
     # new meta fields
+
+    region = Column(CIText, default = "unknown")
+    vineyard = Column(CIText, default = "1")
+    host_plant = Column(CIText, default = "unknown")
+
+    # THIRD ITERATION NEW STRUCTURE
+    project_number = Column(CIText, default="unknown")
     sample_identifier = Column(CIText, default="unknown")
+    data_provider = Column(CIText, default="unknown")
+    sequencing_platform = Column(CIText, default="unknown")
+    amplicon = Column(CIText, default = "unknown")
+    date_collected = Column(CIText, default = "01/02/2016")
+    sequence_accession = Column(CIText, default="unknown")
+    longitude = Column(Float)
+    latitude = Column(Float)
 
     biome1 = Column(CIText, default = "terrestrial")
     biome2 = Column(CIText, default = "anthropogenic_terrestrial")
     biome3 = Column(CIText, default = "cropland")
+
     environmental_feature = Column(CIText, default = "organic")
-    # environmental_material1 = Column(CIText, default = "anthropogenic_environmental_material")
-    # environmental_material2 = Column(CIText, default = "agricultural_environmental_material")
+    environmental_feature2 = Column(CIText, default = "organic")
+    environmental_feature3 = Column(CIText, default = "organic")
+
     environmental_material1_id = ontology_fkey(SampleEnvironmentalMaterial1)
     environmental_material2_id = ontology_fkey(SampleEnvironmentalMaterial2)
-    date_collected = Column(CIText, default = "01/02/2016")
-    collector = Column(CIText, default = "S Thompson, P Vanga")
-    longitude = Column(Float)
-    latitude = Column(Float)
-    region = Column(CIText, default = "unknown")
-    vineyard = Column(CIText, default = "1")
-    host_plant = Column(CIText, default = "unknown")
+    environmental_material3_id = ontology_fkey(SampleEnvironmentalMaterial3)
+    elevation = Column(Float)
+    rainfall = Column(Float)
+    min_temp = Column(Float)
+    max_temp = Column(Float)
+    land_type = Column(CIText, default="unknown")
+    soil_type = Column(CIText, default="unknown")
+    conversation_status = Column(Boolean)
+    regional_council = Column(CIText, default="unknown")
+    iwi_area = Column(CIText, default="unknown")
+    sample_description_area = Column(CIText, default="unknown")
     forward_primer = Column(CIText, default = "unknown")
     reverse_primer = Column(CIText, default = "unknown")
-    amplicon = Column(CIText, default = "16S")
-    
+
     # ONTOLOGICAL
     # TODO: implement same thing as sample_id except for tier 2 env feature
     environmental_material1 = relationship(SampleEnvironmentalMaterial1)

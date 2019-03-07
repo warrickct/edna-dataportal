@@ -302,7 +302,6 @@ class DataImporter:
         #     os.unlink(fname)
             return otu_lookup
 
-
     def load_edna_contextual_metadata(self):
         '''
         - Had to clean the fields with regex expressions that match the ones used to clean the sample_context columns in otu.py
@@ -329,6 +328,7 @@ class DataImporter:
                 field = re.sub(old, new, field)
             field = field.lower()
             # Made all the fields have a underscore at the start to prevent python word conflicts. Probably need a better solution.
+            logger.info(field)
             return field
 
         def _make_context():
@@ -344,23 +344,30 @@ class DataImporter:
                 # logger.warning('loading metadata file: %s' % fname)
                 with open(fname, "r", encoding='utf-8-sig') as file:
                     reader = csv.DictReader(file, delimiter='\t')
-                    for row in reader:
+                    for file_row in reader:
                         attrs ={}
+
+                        # DEBUG: 
                         logger.info(fname)
                         # logger.info(site_lookup)
                         try:
-                            site_lookup[site_hash(row['site'].upper())] = site_id
+                            site_lookup[site_hash(file_row['site'].upper())] = site_id
                         except:
                             # exception for new metadata structure
-                            site_lookup[site_hash(row['Sample_identifier'].upper())] = site_id
+                            site_lookup[site_hash(file_row['Sample_identifier'].upper())] = site_id
+                        # testing it won't grab two site id entries instead of overwrite existing
+                        # logger.info(site_hash(row['Sample_identifier'].upper()))
+
+                        # DEBUG:
+                        logger.info(len(site_lookup.items()))
                         attrs['id'] = site_id
-                        for field in DataImporter.edna_sample_ontologies:
+                        for edna_ontology_item in DataImporter.edna_sample_ontologies:
                             # if it's an ontology field just add '_id' to the end of the name
-                            if field not in row:
+                            if edna_ontology_item not in file_row:
                                 continue
-                            attrs[_clean_field(field) + '_id'] = mappings[field][row[field]]
-                        for field, value in row.items():
-                            cleaned_field = _clean_field(field)
+                            attrs[_clean_field(edna_ontology_item) + '_id'] = mappings[edna_ontology_item][file_row[edna_ontology_item]]
+                        for edna_ontology_item, value in file_row.items():
+                            cleaned_field = _clean_field(edna_ontology_item)
                             if cleaned_field in attrs or (cleaned_field + '_id') in attrs:
                                 continue
                             attrs[cleaned_field] = _clean_value(value)
@@ -404,6 +411,13 @@ class DataImporter:
             except:
                 print(column)
 
+        # DEBUG: need to update data cleaners
+        sample_otu_combinations_used = []
+        def check_for_duplicates(sample_id, otu_id, count):
+            logger.info(sample_id)
+            logger.info(otu_id)
+            logger.info(count)
+
         def _make_sample_otus():    
             for fname in sorted(glob(self._import_base + 'edna/separated-data/data/*.tsv')):
                 # logger.info('writing abundance rows from %s' % fname)
@@ -417,6 +431,8 @@ class DataImporter:
                             continue
                         sample_id = _validate_sample_id(column)
                         count = _validate_count(row[column])
+                        # check_for_duplicates(sample_id, otu_id, count)
+                        # logger.info(10/0)
                         if count > 0:
                             # count is already proportional, can be copied into proportional count column
                             if count < 1:
@@ -460,211 +476,3 @@ class DataImporter:
         with EdnaPostImport() as post_import:
             post_import._calculate_endemic_otus()
             post_import._calculate_abundance_proportion()
-            
-
-    # def load_otu_abundance(self, otu_lookup, site_lookup):
-    #     ''' 
-    #     Loads in the abundance data and populates the sample_otu table. Added custom site_lookup hashtable because our data refers to the sites as codes rather than ids
-    #     '''
-        
-    #     def otu_rows(fd):
-    #         reader = csv.reader(fd, dialect='excel-tab')
-    #         header = next(reader)
-    #         # there's taxonomy and control information in the last few columns. this can be
-    #         # excluded from the import: we skip until we hit a non-integer header
-    #         bpa_ids = [try_int(t.split('/')[-1]) for t in header[1:]]
-    #         try:
-    #             valid_until = bpa_ids.index(None)
-    #             bpa_ids = bpa_ids[:valid_until]
-    #         except ValueError:
-    #             pass
-    #         return bpa_ids, reader
-
-    #     # w: grabs all the site ids in the database, compares to the ones in the file. Adds the missing ones to the site table.
-    #     def _missing_bpa_ids(fname):
-    #         have_bpaids = set([t[0] for t in self._session.query(SampleContext.id)])
-    #         with open(fname, 'r') as fd:
-    #             bpa_ids, _ = otu_rows(fd)
-    #             for bpa_id in bpa_ids:
-    #                 if bpa_id not in have_bpaids:
-    #                     yield bpa_id
-
-    #     def _make_sample_otus(fname, skip_missing):
-    #         # note: (for now) we have to cope with duplicate columns in the input files.
-    #         # we just make sure they don't clash, and this can be reported to CSIRO
-    #         with open(fname, 'r') as fd:
-    #             bpa_ids, reader = otu_rows(fd)
-    #             for (imported, row) in enumerate(reader):
-    #                 otu_id = otu_lookup[otu_hash(row[0])]
-    #                 to_make = {}
-    #                 for bpa_id, count in zip(bpa_ids, row[1:]):
-    #                     if count == '' or count == '0' or count == '0.0':
-    #                         continue
-    #                     if bpa_id in skip_missing:
-    #                         continue
-    #                     count = int(float(count))
-    #                     if bpa_id in to_make and to_make[bpa_id] != count:
-    #                         raise Exception("conflicting OTU data, abort.")
-    #                     to_make[bpa_id] = count
-    #                 for bpa_id, count in to_make.items():
-    #                     yield [bpa_id, otu_id, count]
-    #             ImportFileLog.make_file_log(fname, file_type='Abundance', rows_imported=imported, rows_skipped=0)
-
-    #     # w: Goes through all the .txt files
-    #     logger.warning('Loading OTU abundance tables')
-    #     missing_bpa_ids = set()
-    #     for fname in glob(self._import_base + '/*/*.txt'):
-    #         logger.warning("first pass, reading from: %s" % (fname))
-    #         missing_bpa_ids |= set(_missing_bpa_ids(fname))
-
-    #     if missing_bpa_ids:
-    #         il = ImportSamplesMissingMetadataLog(samples_without_metadata=list(sorted(missing_bpa_ids)))
-    #         il.save()
-
-    #     for sampleotu_fname in glob(self._import_base + '/*/*.txt'):
-    #         try:
-    #             logger.warning("second pass, reading from: %s" % (sampleotu_fname))
-    #             with tempfile.NamedTemporaryFile(mode='w', dir='/data', prefix='bpaotu-', delete=False) as temp_fd:
-    #                 fname = temp_fd.name
-    #                 os.chmod(fname, 0o644)
-    #                 logger.warning("writing out OTU abundance data to CSV tempfile: %s" % fname)
-    #                 w = csv.writer(temp_fd)
-    #                 w.writerow(['sample_id', 'otu_id', 'count'])
-    #                 w.writerows(_make_sample_otus(sampleotu_fname, missing_bpa_ids))
-    #             logger.warning("loading OTU abundance data from temporary CSV file")
-    #             try:
-    #                 self._engine.execute(
-    #                     text('''COPY otu.sample_otu from :csv CSV header''').execution_options(autocommit=True),
-    #                     csv=fname)
-    #             except:  # noqa
-    #                 logger.critical("unable to import %s" % (sampleotu_fname))
-    #                 traceback.print_exc()
-    #         finally:
-    #             os.unlink(fname)
-
-# def load_soil_contextual_metadata(self):
-    #     """Loads the soil.xlsx into rows variable. Then maps the soil ontologies to the rows"""
-
-    #     logger.warning("loading Soil contextual metadata")
-
-    #     def _make_context():
-    #         for row in rows:
-    #             bpa_id = row['bpa_id']
-    #             if bpa_id is None:
-    #                 continue
-    #             attrs = {
-    #                 'id': int(bpa_id.split('.')[-1])
-    #             }
-    #             for field in DataImporter.soil_ontologies:
-    #                 if field not in row:
-    #                     continue
-    #                 attrs[field + '_id'] = mappings[field][row[field]]
-    #             for field, value in row.items():
-    #                 if field in attrs or (field + '_id') in attrs or field == 'bpa_id':
-    #                     continue
-    #                 attrs[field] = value
-    #             yield SampleContext(**attrs)
-
-    #     rows = soil_contextual_rows(glob(self._import_base + '/base/*.xlsx')[0])
-    #     mappings = self._load_ontology(DataImporter.soil_ontologies, rows)
-    #     self._session.bulk_save_objects(_make_context())
-    #
-    # def load_marine_contextual_metadata(self):
-    #     """Loads the marine.xlsx into rows variable. Then maps the marine ontologies to the rows"""
-
-    #     logger.warning("loading Marine contextual metadata")
-
-    #     def _make_context():
-    #         for row in rows:
-    #             bpa_id = row['bpa_id']
-    #             if bpa_id is None:
-    #                 continue
-    #             attrs = {
-    #                 'id': int(bpa_id.split('.')[-1])
-    #             }
-    #             for field in DataImporter.marine_ontologies:
-    #                 if field not in row:
-    #                     continue
-    #                 attrs[field + '_id'] = mappings[field][row[field]]
-    #             for field, value in row.items():
-    #                 if field in attrs or (field + '_id') in attrs or field == 'bpa_id':
-    #                     continue
-    #                 attrs[field] = value
-    #             yield SampleContext(**attrs)
-
-    #     rows = marine_contextual_rows(glob(self._import_base + '/mm/*.xlsx')[0])
-    #     mappings = self._load_ontology(DataImporter.marine_ontologies, rows)
-    #     self._session.bulk_save_objects(_make_context())
-    #     self._session.commit()
-    # def load_taxonomies(self):
-    #     '''
-    #     Loads up the taxonomies.
-    #     w: It does this by taking .taxonomy and the codes as input, making a csv then executing a postgres COPY command to transfer the temp.csv data into the OTU table.
-    #     '''
-    #     # md5(otu code) -> otu ID, returned
-    #     otu_lookup = {}
-    #     ontologies = OrderedDict([
-    #         ('kingdom', OTUKingdom),
-    #         ('phylum', OTUPhylum),
-    #         ('class', OTUClass),
-    #         ('order', OTUOrder),
-    #         ('family', OTUFamily),
-    #         ('genus', OTUGenus),
-    #         ('species', OTUSpecies),
-    #         ('amplicon', OTUAmplicon),
-    #     ])
-
-    #     def _taxon_rows_iter():
-    #         for fname in glob(self._import_base + '/*/*.taxonomy'):
-    #             logger.warning('reading taxonomy file: %s' % fname)
-    #             imported = 0
-    #             with open(fname) as fd:
-    #                 for row in csv.reader(fd, dialect='excel-tab'):
-    #                     if row[0].startswith('#'):
-    #                         continue
-    #                     otu = row[0]
-    #                     ontology_parts = row[1:]
-    #                     if len(ontology_parts) > len(ontologies):
-    #                         # work-around: duplicated species column; reported to CSIRO
-    #                         ontology_parts = ontology_parts[:len(ontologies) - 1] + [ontology_parts[-1]]
-    #                     elif len(ontology_parts) < len(ontologies):
-    #                         # work-around: short rows; reported to CSIRO
-    #                         ontology_parts = ontology_parts[:-1] + [''] * (len(ontologies) - len(ontology_parts)) + [ontology_parts[-1]]
-    #                     assert(len(ontology_parts) == len(ontologies))
-    #                     obj = dict(zip(ontologies.keys(), ontology_parts))
-    #                     obj['otu'] = otu
-    #                     imported += 1
-    #                     yield obj
-    #             ImportFileLog.make_file_log(fname, file_type='Taxonomy', rows_imported=imported, rows_skipped=0)
-
-    #     logger.warning("loading taxonomies - pass 1, defining ontologies")
-    #     mappings = self._load_ontology(ontologies, _taxon_rows_iter())
-
-    #     logger.warning("loading taxonomies - pass 2, defining OTUs")
-    #     try:
-    #         with tempfile.NamedTemporaryFile(mode='w', dir='/data', prefix='bpaotu-', delete=False) as temp_fd:
-    #             fname = temp_fd.name
-    #             os.chmod(fname, 0o644)
-    #             logger.warning("writing out taxonomy data to CSV tempfile: %s" % fname)
-    #             w = csv.writer(temp_fd)
-    #             # w: creates header for the temp file.
-    #             w.writerow(['id', 'code', 'kingdom_id', 'phylum_id', 'class_id', 'order_id', 'family_id', 'genus_id', 'species_id', 'amplicon_id'])
-    #             # w: For every row in the .taxonomy file starting at 1 (Not 0) do the following.
-    #             for _id, row in enumerate(_taxon_rows_iter(), 1):
-    #                 otu_lookup[otu_hash(row['otu'])] = _id
-    #                 out_row = [_id, row['otu']]
-    #                 for field in ontologies:
-    #                     if field not in row:
-    #                         out_row.append('')
-    #                     else:
-    #                         out_row.append(mappings[field][row[field]])
-    #                 w.writerow(out_row)
-    #         logger.warning("loading taxonomy data from temporary CSV file")
-    #         self._engine.execute(
-    #             text('''COPY otu.otu from :csv CSV header''').execution_options(autocommit=True),
-    #             csv=fname)
-    #     finally:
-    #         os.unlink(fname)
-    #     return otu_lookup
-
-    #      self._session.commit()
