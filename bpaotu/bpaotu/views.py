@@ -361,7 +361,6 @@ def edna_otu(request):
     '''
     returns otu table information.
     '''
-    
     # should improve the api structure. otu/{id}/kingdom/{kingdom id}/etc...
     filters = request.GET.getlist('id', None)
     if len(filters) > 0:

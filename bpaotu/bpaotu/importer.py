@@ -358,7 +358,6 @@ class DataImporter:
                         # logger.info(site_hash(row['Sample_identifier'].upper()))
 
                         # DEBUG:
-                        logger.info(len(site_lookup.items()))
                         attrs['id'] = site_id
                         for edna_ontology_item in DataImporter.edna_sample_ontologies:
                             # if it's an ontology field just add '_id' to the end of the name
@@ -410,18 +409,19 @@ class DataImporter:
             try:
                 if site_lookup[site_hash(column.upper())] is None:
                     # TODO: NEED TO FIX unharmonious Syrie site entries.
-                    print(site_lookup[site_hash(column.upper())])
-                    exit()
+                    print("skipping site: " + site_lookup[site_hash(column.upper())])
+                    # exit()
                 return site_lookup[site_hash(column.upper())]
             except:
                 print(column)
 
-        # DEBUG: need to update data cleaners
+        # TODO: need to update data cleaners
         sample_otu_combinations_used = []
         def check_for_duplicates(sample_id, otu_id, count):
-            logger.info(sample_id)
-            logger.info(otu_id)
-            logger.info(count)
+            # logger.info(sample_id)
+            return None
+            # logger.info(otu_id)
+            # logger.info(count)
 
         def _make_sample_otus():    
             for fname in sorted(glob(self._import_base + 'edna/separated-data/data/*.tsv')):
