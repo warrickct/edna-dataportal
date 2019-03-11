@@ -328,7 +328,7 @@ class DataImporter:
                 field = re.sub(old, new, field)
             field = field.lower()
             # Made all the fields have a underscore at the start to prevent python word conflicts. Probably need a better solution.
-            logger.info(field)
+            # logger.info(field)
             return field
 
         def _make_context():
@@ -340,13 +340,12 @@ class DataImporter:
             logger.info('loading edna contextual metadata from .tsv files')
             # site_id delcared here so we can go over multiple files at once.
             site_id = 0
-            for fname in sorted(glob(self._import_base + 'edna/separated-data/metadata/*.tsv')):
+            for fname in sorted(glob(self._import_base + 'edna/separated-data/metadata/*mastersheet.tsv')):
                 # logger.warning('loading metadata file: %s' % fname)
                 with open(fname, "r", encoding='utf-8-sig') as file:
                     reader = csv.DictReader(file, delimiter='\t')
                     for file_row in reader:
                         attrs ={}
-
                         # DEBUG: 
                         logger.info(fname)
                         # logger.info(site_lookup)
@@ -371,6 +370,8 @@ class DataImporter:
                             if cleaned_field in attrs or (cleaned_field + '_id') in attrs:
                                 continue
                             attrs[cleaned_field] = _clean_value(value)
+                            if _clean_value(value) == '' or _clean_value(value) == ' ':
+                                attrs[cleaned_field] = 0
                         site_id += 1
                         logger.info(attrs)
                         yield SampleContext(**attrs)
@@ -407,6 +408,10 @@ class DataImporter:
 
         def _validate_sample_id(column):
             try:
+                if site_lookup[site_hash(column.upper())] is None:
+                    # TODO: NEED TO FIX unharmonious Syrie site entries.
+                    print(site_lookup[site_hash(column.upper())])
+                    exit()
                 return site_lookup[site_hash(column.upper())]
             except:
                 print(column)
@@ -430,6 +435,8 @@ class DataImporter:
                         if column == '':
                             continue
                         sample_id = _validate_sample_id(column)
+                        if sample_id is None:
+                            continue
                         count = _validate_count(row[column])
                         # check_for_duplicates(sample_id, otu_id, count)
                         # logger.info(10/0)
@@ -439,6 +446,7 @@ class DataImporter:
                                 yield [sample_id, otu_id, count, count]
                             else:
                                 # add as a yet to be calculated field
+                                # works because we assume organism presence in order to be in abundance table.
                                 yield [sample_id, otu_id, count, 0]
 
         def _clear_edna_caches():
