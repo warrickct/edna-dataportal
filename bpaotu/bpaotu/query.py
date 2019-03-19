@@ -26,23 +26,9 @@ from .otu import (
     OTUFamily,
     OTUGenus,
     OTUSpecies,
-    OTUAmplicon,
     SampleContext,
     SampleOTU,
-    SampleAustralianSoilClassification,
-    SampleLandUse,
-    SampleColor,
-    SampleLandUse,
-    SampleFAOSoilClassification,
-    SampleEcologicalZone,
-    SampleHorizonClassification,
-    SampleLandUse,
-    SampleProfilePosition,
-    Environment,
     SampleType,
-    SampleStorageMethod,
-    SampleTillage,
-    SampleVegetationType,
     make_engine)
 
 
@@ -557,7 +543,7 @@ class EdnaOTUQuery:
         self._session.close()
 
     def _query_primary_keys(self, otus=None, use_endemism=False, endemic_value=False):
-        otu_columns = [OTU.kingdom_id, OTU.phylum_id, OTU.class_id, OTU.order_id, OTU.family_id, OTU.genus_id, OTU.species_id, OTU.amplicon_id]
+        otu_columns = [OTU.kingdom_id, OTU.phylum_id, OTU.class_id, OTU.order_id, OTU.family_id, OTU.genus_id, OTU.species_id]
         otu_ids = []
         query = self._session.query(OTU.id)
         if otus is not None:
@@ -594,7 +580,7 @@ class EdnaOTUQuery:
         }
 
     def _query_taxonomy_options(self):
-        ontology_tables = [OTUKingdom, OTUPhylum, OTUClass, OTUOrder, OTUFamily, OTUGenus, OTUSpecies, OTUAmplicon]
+        ontology_tables = [OTUKingdom, OTUPhylum, OTUClass, OTUOrder, OTUFamily, OTUGenus, OTUSpecies]
         ordered_otus = [r for r in (
             self._session.query(
                 OTU.kingdom_id,
@@ -604,8 +590,6 @@ class EdnaOTUQuery:
                 OTU.family_id,
                 OTU.genus_id,
                 OTU.species_id,
-                # NOTE: amplicon id is actually the species identifier (for small variations)
-                OTU.amplicon_id,
                 OTU.id
                 )
             .order_by(
@@ -616,7 +600,6 @@ class EdnaOTUQuery:
                 OTU.family_id,
                 OTU.genus_id,
                 OTU.species_id,
-                OTU.amplicon_id
                 )
             .all()
             )]
@@ -713,10 +696,21 @@ class EdnaPostImport:
     def __exit__(self, exec_type, exc_value, traceback):
         self._session.close()
 
+    def _create_otu_tree(self):
+        '''
+        creates otu table as a tree object to be sent for filter option creation.
+        '''
+
+        # iterate every otu in the otu table. and slowly generate the structure using the table ids.
+        # also need a structure with all ids from every taxon table to then reconstruct it I suppose?
+
+
     def _calculate_endemic_otus(self):
+        '''
+        gets all the otu_ids where they show in less than 1% of sites
+        Query to get the distinct otu_ids to avoid repeating ids.
+        '''
         logger.info("calculating endemic species")
-        # gets all the otu_ids where they show in less than 1% of sites
-        # Query to get the distinct otu_ids to avoid repeating ids.
         distinct_sample_count = len([r for r in self._session.query(SampleOTU.sample_id.distinct())]) 
         endemic_ids = [r[0] for r in (
             self._session.query(SampleOTU.otu_id, func.count(SampleOTU.sample_id))

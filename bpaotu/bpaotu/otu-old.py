@@ -62,6 +62,10 @@ class Environment(OntologyMixin, Base):
     pass
 
 
+class OTUAmplicon(OntologyMixin, Base):
+    pass
+
+
 class OTUKingdom(OntologyMixin, Base):
     pass
 
@@ -107,6 +111,7 @@ class OTU(SchemaMixin, Base):
     family_id = ontology_fkey(OTUFamily)
     genus_id = ontology_fkey(OTUGenus)
     species_id = ontology_fkey(OTUSpecies)
+    amplicon_id = ontology_fkey(OTUAmplicon, index=True)
     endemic = Column(Boolean, default=True)
 
     kingdom = relationship(OTUKingdom)
@@ -116,12 +121,14 @@ class OTU(SchemaMixin, Base):
     family = relationship(OTUFamily)
     genus = relationship(OTUGenus)
     species = relationship(OTUSpecies)
+    amplicon = relationship(OTUAmplicon)
 
     def __repr__(self):
         return "<OTU(%d: %s,%s,%s,%s,%s,%s,%s,%s)>" % (
             self.id,
             # w: custom name field
             self.name,
+            self.amplicon_id,
             self.kingdom_id,
             self.phylum_id,
             self.class_id,
@@ -130,6 +137,39 @@ class OTU(SchemaMixin, Base):
             self.genus_id,
             self.species_id
             )
+
+
+class SampleHorizonClassification(OntologyMixin, Base):
+    pass
+
+
+class SampleStorageMethod(OntologyMixin, Base):
+    pass
+
+
+class SampleLandUse(OntologyMixin, Base):
+    pass
+
+
+class SampleEcologicalZone(OntologyMixin, Base):
+    pass
+
+
+class SampleVegetationType(OntologyMixin, Base):
+    pass
+
+
+class SampleProfilePosition(OntologyMixin, Base):
+    pass
+
+
+class SampleAustralianSoilClassification(OntologyMixin, Base):
+    pass
+
+
+class SampleFAOSoilClassification(OntologyMixin, Base):
+    pass
+
 
 class SampleTillage(OntologyMixin, Base):
     pass
@@ -156,28 +196,41 @@ class SampleEnvironmentalMaterial3(OntologyMixin, Base):
     '''
     pass
 
-class Biome_T1(OntologyMixin, Base):
-    pass
-
-class Biome_T2(OntologyMixin, Base):
-    pass
-
-class Biome_T3(OntologyMixin, Base):
-    pass
-
 class SampleContext(SchemaMixin, Base):
     '''
-    Contextual table for sampling metadata
+    Site table 
     '''
+
     __tablename__ = 'sample_context'
 
     # w: Making the row iteration the site id now.
     id = Column(Integer, primary_key=True)
+
+    # w: example  columns
+    # a16s_comment = Column(CIText)
+    # ammonium_nitrogen = with_units('mg/Kg', Float)
+
+
+    # w: Cleaned up the columns using the regex patterns below.
+    '''
+    ' ' to _
+    / to '_or_'
+    & -> _and_
+    '-' -> '_dash_'
+    \(|\) -> '_bracket_'
+    '__' -> '_' (from 1+ to 1.)
+    Made all lowercase for consistency
+    // reverted: prepend underscore to var name to avoid keyword conflicts (OR) was causing issue.
+    '''
+
+    # site = Column(CIText)
+
     x = Column(Float, default=0)
     y = Column(Float, default=0)
 
     # eDNA phase 3 fields
     # new meta fields
+
     region = Column(CIText, default = "unknown")
     vineyard = Column(CIText, default = "1")
     host_plant = Column(CIText, default = "unknown")
@@ -222,6 +275,18 @@ class SampleContext(SchemaMixin, Base):
     primer_sequence_f = Column(CIText, default = "unknown")
     primer_sequence_r = Column(CIText, default = "unknown")
 
+    # ONTOLOGICAL
+    # TODO: implement same thing as sample_id except for tier 2 env feature
+
+    # DEBUG: disabling relation while trying to get everything in the table first
+    # environmental_material1 = relationship(SampleEnvironmentalMaterial1)
+    # environmental_material2 = relationship(SampleEnvironmentalMaterial2)
+
+    # sample_type_id = ontology_fkey(SampleType)
+
+    # australian_soil_classification_id = ontology_fkey(SampleAustralianSoilClassification)
+    # broad_land_use_id = ontology_fkey(SampleLandUse)
+
     def __repr__(self):
         return "<SampleContext(%d)>" % (self.id)
 
@@ -241,6 +306,17 @@ class SampleOTU(SchemaMixin, Base):
     # TEMP: 
     def __repr__(self):
         return "<SampleOTU(%s,%s,%d)>" % (self.sample_id, self.otu_id, self.count)
+
+    # ORIG:START: Original class contents. Rewrote the FK columns, the tostring and the PK.
+    # sample_id = Column(Integer, ForeignKey(SCHEMA + '.sample_context.id'), primary_key=True)
+
+    # otu_id = Column(Integer, ForeignKey(SCHEMA + '.otu.id'), primary_key=True)
+    # count = Column(Integer, nullable=False)
+
+    # def __repr__(self):
+    #     return "<SampleOTU(%d,%d,%d)>" % (self.sample_id, self.otu_id, self.count)
+    # ORIG:END:
+    
 
 def make_engine():
     conf = settings.DATABASES['default']

@@ -25,7 +25,6 @@ from .models import (
 from .otu import (
     Base,
     Environment,
-    OTUAmplicon,
     OTUKingdom,
     OTUPhylum,
     OTUClass,
@@ -39,17 +38,6 @@ from .otu import (
 
     # sample_contextuals
     SampleContext,
-    SampleHorizonClassification,
-    SampleStorageMethod,
-    SampleLandUse,
-    SampleEcologicalZone,
-    SampleVegetationType,
-    SampleProfilePosition,
-    SampleAustralianSoilClassification,
-    SampleFAOSoilClassification,
-    SampleTillage,
-    SampleType,
-    SampleColor,
 
     # edna phase 3
     SampleEnvironmentalMaterial1,
@@ -92,30 +80,11 @@ def site_hash(code):
     return md5(code.encode('ascii')).digest()
 
 class DataImporter:
-    soil_ontologies = OrderedDict([
-        ('environment', Environment),
-        ('sample_type', SampleType),
-        ('horizon_classification', SampleHorizonClassification),
-        ('soil_sample_storage_method', SampleStorageMethod),
-        ('broad_land_use', SampleLandUse),
-        ('detailed_land_use', SampleLandUse),
-        ('general_ecological_zone', SampleEcologicalZone),
-        ('vegetation_type', SampleVegetationType),
-        ('profile_position', SampleProfilePosition),
-        ('australian_soil_classification', SampleAustralianSoilClassification),
-        ('fao_soil_classification', SampleFAOSoilClassification),
-        ('immediate_previous_land_use', SampleLandUse),
-        ('tillage', SampleTillage),
-        ('color', SampleColor),
-    ])
-
-    marine_ontologies = OrderedDict([
-        ('environment', Environment),
-        ('sample_type', SampleType),
-    ])
-
+    # marine_ontologies = OrderedDict([
+    #     ('environment', Environment),
+    #     ('sample_type', SampleType),
+    # ])
     edna_sample_ontologies = OrderedDict([
-        ('sample_type', SampleType),
         ('sample_environmental_feature1', SampleEnvironmentalMaterial1),
         ('sample_environmental_feature2', SampleEnvironmentalMaterial2)
     ])
@@ -224,7 +193,6 @@ class DataImporter:
             ('family', OTUFamily),
             ('genus', OTUGenus),
             ('species', OTUSpecies),
-            ('amplicon', OTUAmplicon),
         ])
 
         def _normalize_taxonomy(ontology_parts):
@@ -262,12 +230,6 @@ class DataImporter:
                         ontology_parts = _normalize_taxonomy(ontology_parts)
                         obj = dict(zip(ontologies.keys(), ontology_parts))
                         obj['otu'] = otu
-                        if '|' in obj['species']:
-                            # TODO: Thought this was the amplicon but it's not however. Can add amplicon to the site information
-                            split = obj['species'].split('|')
-                            obj['species'] = split[0]
-                            obj['amplicon'] = split[1]
-                        # TEST:END:
                         imported += 1
                         yield obj
                 ImportFileLog.make_file_log(fname, file_type='Taxonomy', rows_imported=imported, rows_skipped=0)
@@ -282,7 +244,7 @@ class DataImporter:
                 os.chmod(fname, 0o644)
                 logger.warning("writing out OTU data to CSV tempfile: %s" % fname)
                 w = csv.writer(temp_fd)
-                w.writerow(['id', 'code', 'kingdom_id', 'phylum_id', 'class_id', 'order_id', 'family_id', 'genus_id', 'species_id', 'amplicon_id', 'endemic'])
+                w.writerow(['id', 'code', 'kingdom_id', 'phylum_id', 'class_id', 'order_id', 'family_id', 'genus_id', 'species_id', 'endemic'])
                 for _id, row in enumerate(_taxon_rows_iter(), 1):
                     # create lookup entry
                     otu_lookup[otu_hash(row['otu'])] = _id
