@@ -558,6 +558,9 @@ class EdnaOTUQuery:
         return otu_ids
 
     def get_taxonomy_options(self, filters, page=1, page_size=50):
+        '''
+        checks against list of codes with ids accompanying them. Returns the codes where the filter is contains within them.
+        '''
         cache = caches['edna_taxonomy_options_results']
         hash_str = 'eDNA_Taxonomy_Options:cached'
         key = sha256(hash_str.encode('utf8')).hexdigest()
