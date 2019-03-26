@@ -304,18 +304,21 @@ class DataImporter:
             site_id = 0
             for fname in sorted(glob(self._import_base + 'edna/separated-data/metadata/*mastersheet.tsv')):
                 # logger.warning('loading metadata file: %s' % fname)
-                with open(fname, "r", encoding='utf-8-sig') as file:
-                    reader = csv.DictReader(file, delimiter='\t')
+                with open(fname, "r") as file:
+                # with open(fname, "r", encoding='utf-8-sig') as file:
+                    reader = csv.DictReader(file, delimiter=',')
                     for file_row in reader:
                         attrs ={}
                         # DEBUG: 
                         logger.info(fname)
                         # logger.info(site_lookup)
-                        try:
-                            site_lookup[site_hash(file_row['site'].upper())] = site_id
-                        except:
+                        # try:
+                        #     site_lookup[site_hash(file_row['site'].upper())] = site_id
+                        # except:
                             # exception for new metadata structure
-                            site_lookup[site_hash(file_row['Sample_identifier'].upper())] = site_id
+                        logger.info(file_row)
+                        logger.info(file_row['Sample_identifier'])
+                        site_lookup[site_hash(file_row['Sample_identifier'].upper())] = site_id
                         # testing it won't grab two site id entries instead of overwrite existing
                         # logger.info(site_hash(row['Sample_identifier'].upper()))
 

@@ -696,11 +696,10 @@ class EdnaSampleOTUQuery:
             .order_by(SampleOTU.otu_id)
             # .all()
         )
-        query = query.filter(SampleOTU.sample_id.in_(sample_contextual_ids))
-        # if use_union:
-        #     query = query.filter(or_(SampleOTU.otu_id.in_(otu_ids), SampleOTU.sample_id.in_(sample_contextual_ids)))
-        # else:
-        #     query = query.filter(and_(SampleOTU.otu_id.in_(otu_ids), SampleOTU.sample_id.in_(sample_contextual_ids)))
+        if use_union:
+            query = query.filter(or_(SampleOTU.otu_id.in_(otu_ids), SampleOTU.sample_id.in_(sample_contextual_ids)))
+        else:
+            query = query.filter(and_(SampleOTU.otu_id.in_(otu_ids), SampleOTU.sample_id.in_(sample_contextual_ids)))
         sample_otu_results = [r for r in query]
         return sample_otu_results
 
