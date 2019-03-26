@@ -554,13 +554,17 @@ class EdnaOTUQuery:
         if use_endemism:
             query = query.filter(OTU.endemic == endemic_value)
         otu_ids = [r[0] for r in query.all()]
-        logger.info(otu_ids)
+        # logger.info(otu_ids)
         return otu_ids
 
     def get_taxonomy_options(self, filters, page=1, page_size=50):
         '''
         checks against list of codes with ids accompanying them. Returns the codes where the filter is contains within them.
         '''
+
+        def _sort_by_element_index(elem):
+            return elem[0]
+
         cache = caches['edna_taxonomy_options_results']
         hash_str = 'eDNA_Taxonomy_Options:cached'
         key = sha256(hash_str.encode('utf8')).hexdigest()
@@ -573,6 +577,7 @@ class EdnaOTUQuery:
             logger.info("Using cached taxonomic options")
         # only only return results with the param(s)
         filters = filters.lower()
+        logger.info(filters)
         result = [r for r in result if (filters in r[0].lower())]
         start = ((page -1) * page_size)
         end = ((page -1) * page_size) + page_size
@@ -583,6 +588,9 @@ class EdnaOTUQuery:
         }
 
     def _query_taxonomy_options(self):
+        '''
+        Where the queryin for the names occurs
+        '''
         ontology_tables = [OTUKingdom, OTUPhylum, OTUClass, OTUOrder, OTUFamily, OTUGenus, OTUSpecies]
         ordered_otus = [r for r in (
             self._session.query(
@@ -612,6 +620,7 @@ class EdnaOTUQuery:
             if table_index not in otu_ontology_lookups:
                 otu_ontology_lookups[table_index] = {}
             rows = [r for r in (self._session.query(table.id, table.value).all())]
+            # going over ontological rows
             for tuple in rows:
                 pk = tuple[0]
                 text = tuple[1]
@@ -629,26 +638,29 @@ class EdnaOTUQuery:
             ]
         # generate the options with the pk field for faster searching.
         # possibly making it paginated.
-        options = []
-        for otu in ordered_otus:
+        options = {}
+        ordered_otus_iter = iter(ordered_otus)
+        for otu in ordered_otus_iter:
             otu_text = ""
             combination_key = []
             # ignore the final element as it's the pk.
-            for index, col in enumerate(otu[:len(otu) -1]):
-                if otu_ontology_lookups[index][col] == "" or otu_ontology_lookups[index][col] == " ":
-                    continue
-                if otu_text == "":
-                    otu_text = otu_text + prefixes[index] + otu_ontology_lookups[index][col]
-                    combination_key.append(col)
-                else:
-                    otu_text = otu_text + ";" + prefixes[index] + otu_ontology_lookups[index][col]
-                    combination_key.append(col)
-            if otu_text in options:
-                continue
-            else:
-                otu_pk = otu[len(otu) -1]
-                options.append([otu_text, combination_key, otu_pk])
-        return options
+            for index, ontology_id in enumerate(otu[:len(otu) -1]):
+                otu_segment = otu_ontology_lookups[index][ontology_id].strip(' ')
+                taxon_prefix = prefixes[index]
+                otu_pk = otu[len(otu) - 1]
+                if otu_segment == '' or otu_segment == ' ':
+                    next(ordered_otus_iter)
+                otu_text = otu_text + taxon_prefix + otu_segment 
+                if index != len(otu):
+                    otu_text = otu_text + ";"
+                combination_key.append(ontology_id)
+                if otu_text not in options:
+                    options[otu_text] = [combination_key[:index + 1], otu_pk]
+        # converting it back to list from for easy use on front end
+        option_list = []
+        for key, value in options.items():
+            option_list.append([key, value[0], value[1]])
+        return option_list
 
     def get_otu_names(self, primary_keys=None):
         # accepts a list of primary keys, returns the otu names/codes where possible.
@@ -699,15 +711,6 @@ class EdnaPostImport:
     def __exit__(self, exec_type, exc_value, traceback):
         self._session.close()
 
-    def _create_otu_tree(self):
-        '''
-        creates otu table as a tree object to be sent for filter option creation.
-        '''
-
-        # iterate every otu in the otu table. and slowly generate the structure using the table ids.
-        # also need a structure with all ids from every taxon table to then reconstruct it I suppose?
-
-
     def _calculate_endemic_otus(self):
         '''
         gets all the otu_ids where they show in less than 1% of sites
@@ -729,9 +732,9 @@ class EdnaPostImport:
             endemic_otu.endemic = True;
         self._session.commit()
 
-    def _calculate_abundance_proportion(self):
+    def _normalize_abundances(self):
         '''
-        Find un-standardised count data and standardises to be proportional to the sample total count.
+        Find un-standardised count data (i.e. counts below 1) and normalizes the value to be proportional to the sample total count.
         '''
         logger.info("calculating abundance proportions")
         # TODO: group by site, entry_abundance/total abundance -> 
@@ -739,7 +742,6 @@ class EdnaPostImport:
         sample_totals_dict = { key: value for key, value in [r for r in (self._session.query(SampleOTU.sample_id, func.sum(SampleOTU.count)).group_by(SampleOTU.sample_id).filter(SampleOTU.count >= 1))]};
         for key, value in sample_totals_dict.items():
             for sample_otu in self._session.query(SampleOTU).filter(SampleOTU.sample_id == key):
-                # logger.info(sample_otu)
                 sample_otu.proportional_abundance = sample_otu.count / value
             self._session.commit()
 

@@ -445,4 +445,4 @@ class DataImporter:
             traceback.print_exc()
         with EdnaPostImport() as post_import:
             post_import._calculate_endemic_otus()
-            post_import._calculate_abundance_proportion()
+            post_import._normalize_abundances()
