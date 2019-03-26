@@ -387,19 +387,19 @@ class DataImporter:
 
         def _make_sample_otus():    
             for fname in sorted(glob(self._import_base + 'edna/separated-data/data/*.tsv')):
-                # logger.info('writing abundance rows from %s' % fname)
+                logger.info('writing abundance rows from %s' % fname)
                 file = open(fname, 'r')
                 reader = csv.DictReader(file, delimiter='\t')
                 for row in reader:
                     otu_code = row['']
                     otu_id = otu_lookup[otu_hash(otu_code)]
-                    for column in row:
-                        if column == '':
+                    for sample_context_col in row:
+                        if sample_context_col == '':
                             continue
-                        sample_id = _validate_sample_id(column)
+                        sample_id = _validate_sample_id(sample_context_col)
                         if sample_id is None:
                             continue
-                        count = _validate_count(row[column])
+                        count = _validate_count(row[sample_context_col])
                         # check_for_duplicates(sample_id, otu_id, count)
                         # logger.info(10/0)
                         if count > 0:

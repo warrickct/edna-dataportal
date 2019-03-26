@@ -319,7 +319,6 @@ def edna_get_sample_otu(request):
         else:
             sample_contextuals_data = sample_contextual.query_sample_contextuals()
         sample_contextual_ids = [sample['id'] for sample in sample_contextuals_data]
-    # logger.info(sample_contextual_ids)
 
     # otus
     otu_ids = []

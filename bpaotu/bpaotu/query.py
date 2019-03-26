@@ -486,16 +486,15 @@ class EdnaSampleContextualQuery:
 
     def query_contextual_fields(self, filters=None):
         '''
-        Returns an list of all the columns in the sample_contextual fields
+        Returns an list of all the columns in the sample_contextual fields used for suggestions
         '''
         field_results= [column.key for column in SampleContext.__table__.columns]
         return field_results
 
     def query_sample_contextuals(self, tags=None):
         '''
-        Returns a list of primary keys of sites which fit the filter conditions. When multiple tags are given the results are combined using OR operation.
+        Returns primary key set of sample_contextuals matching the filters
         '''
-
         def _row_to_dict(row):
             d = {}
             for column in row.__table__.columns:
@@ -514,21 +513,24 @@ class EdnaSampleContextualQuery:
                 if '$' in tag:
                     filter_segments = tag.split('$')
                     field = filter_segments[0]
-                    conditional = filter_segments[1][:2]
+                    operation = filter_segments[1][:2]
                     value = filter_segments[1][2:]
-                    if conditional == "eq":
+                    if operation == "eq":
                         or_filters.append(getattr(SampleContext, field) == value)
                         # base_query = base_query.filter(getattr(SampleContext, field) == value)
-                    if conditional == "gt":
+                    if operation == "gt":
                         or_filters.append(getattr(SampleContext, field) > value)
                         # logger.info(conditional)
                         # logger.info(value)
                         # base_query = base_query.filter(getattr(SampleContext, field) > value)
-                    if conditional == "lt":
+                    if operation == "lt":
                         or_filters.append(getattr(SampleContext, field) < value)
                         # base_query = base_query.filter(getattr(SampleContext, field) < value)
             query = query.filter(or_(*or_filters))
+            # logger.info(query)
+            # logger.info([r for r in query.all()])
         sample_contextual_results = [_row_to_dict(r) for r in query.all()]
+        # logger.info(sample_contextual_results)
         return sample_contextual_results
 
 
@@ -548,9 +550,10 @@ class EdnaOTUQuery:
         query = self._session.query(OTU.id)
         if otus is not None:
             for otu in otus:
-                for index, field_id in enumerate(otu.split(' ')):
+                for index, ontological_id in enumerate(otu.split(' ')):
                     otu_column = otu_columns[index]
-                    query = query.filter(otu_column == field_id)
+                    query = query.filter(otu_column == ontological_id)
+                    # logger.info([r for r in query])
         if use_endemism:
             query = query.filter(OTU.endemic == endemic_value)
         otu_ids = [r[0] for r in query.all()]
@@ -577,7 +580,6 @@ class EdnaOTUQuery:
             logger.info("Using cached taxonomic options")
         # only only return results with the param(s)
         filters = filters.lower()
-        logger.info(filters)
         result = [r for r in result if (filters in r[0].lower())]
         start = ((page -1) * page_size)
         end = ((page -1) * page_size) + page_size
@@ -687,17 +689,18 @@ class EdnaSampleOTUQuery:
         Returns the sample_otu entries with the sample standardised count (between 0-1)
         '''
         # TODO: will need to make this more dynamic (queryable by sample id, count range)
+        logger.info(sample_contextual_ids)
         sample_otu_results = []
         query = (
             self._session.query(SampleOTU.otu_id, SampleOTU.sample_id, SampleOTU.proportional_abundance)
             .order_by(SampleOTU.otu_id)
             # .all()
         )
-        # query = query.filter(SampleOTU.sample_id.in_(sample_contextual_ids))
-        if use_union:
-            query = query.filter(or_(SampleOTU.otu_id.in_(otu_ids), SampleOTU.sample_id.in_(sample_contextual_ids)))
-        else:
-            query = query.filter(and_(SampleOTU.otu_id.in_(otu_ids), SampleOTU.sample_id.in_(sample_contextual_ids)))
+        query = query.filter(SampleOTU.sample_id.in_(sample_contextual_ids))
+        # if use_union:
+        #     query = query.filter(or_(SampleOTU.otu_id.in_(otu_ids), SampleOTU.sample_id.in_(sample_contextual_ids)))
+        # else:
+        #     query = query.filter(and_(SampleOTU.otu_id.in_(otu_ids), SampleOTU.sample_id.in_(sample_contextual_ids)))
         sample_otu_results = [r for r in query]
         return sample_otu_results
 
