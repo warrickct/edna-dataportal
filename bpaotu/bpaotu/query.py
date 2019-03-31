@@ -591,7 +591,7 @@ class EdnaOTUQuery:
 
     def _query_taxonomy_options(self):
         '''
-        Where the queryin for the names occurs
+        Created the taxonomic search suggestions with their ontological keys are mapped.
         '''
         ontology_tables = [OTUKingdom, OTUPhylum, OTUClass, OTUOrder, OTUFamily, OTUGenus, OTUSpecies]
         ordered_otus = [r for r in (
@@ -643,21 +643,19 @@ class EdnaOTUQuery:
         options = {}
         ordered_otus_iter = iter(ordered_otus)
         for otu in ordered_otus_iter:
-            otu_text = ""
+            otu_text_segments = []
             combination_key = []
-            # ignore the final element as it's the pk.
             for index, ontology_id in enumerate(otu[:len(otu) -1]):
                 otu_segment = otu_ontology_lookups[index][ontology_id].strip(' ')
                 taxon_prefix = prefixes[index]
                 otu_pk = otu[len(otu) - 1]
                 if otu_segment == '' or otu_segment == ' ':
                     next(ordered_otus_iter)
-                otu_text = otu_text + taxon_prefix + otu_segment 
-                if index != len(otu):
-                    otu_text = otu_text + ";"
+                otu_text_segments.append(taxon_prefix + otu_segment)
                 combination_key.append(ontology_id)
-                if otu_text not in options:
-                    options[otu_text] = [combination_key[:index + 1], otu_pk]
+                otu_key = ';'.join(otu_text_segments)
+                if otu_key not in options:
+                    options[otu_key] = [combination_key[:index + 1], otu_pk]
         # converting it back to list from for easy use on front end
         option_list = []
         for key, value in options.items():
