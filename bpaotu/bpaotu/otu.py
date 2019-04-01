@@ -188,26 +188,29 @@ class SampleContext(SchemaMixin, Base):
     data_provider = Column(CIText, default="unknown")
     sequencing_platform = Column(CIText, default="unknown")
     amplicon = Column(CIText, default = "unknown")
-    date_collected = Column(CIText, default = "01/02/2016")
+    date_collected = Column(CIText, default = "unknown")
+
     sequences_accession = Column(CIText, default="unknown")
     longitude = Column(Float)
     latitude = Column(Float)
 
-    biome_t1 = Column(CIText, default = "terrestrial")
-    biome_t2 = Column(CIText, default = "anthropogenic_terrestrial")
-    biome_t3 = Column(CIText, default = "cropland")
+    biome_t1 = Column(CIText, default = "unknown")
+    biome_t2 = Column(CIText, default = "unknown")
+    biome_t3 = Column(CIText, default = "unknown")
 
-    environmental_feature_t1 = Column(CIText, default = "organic")
-    environmental_feature_t2 = Column(CIText, default = "organic")
-    environmental_feature_t3 = Column(CIText, default = "organic")
+    environmental_feature_t1 = Column(CIText, default = "unknown")
+    environmental_feature_t2 = Column(CIText, default = "unknown")
+    environmental_feature_t3 = Column(CIText, default = "unknown")
 
     # environmental_material_t1= ontology_fkey(SampleEnvironmentalMaterial1)
     # environmental_material_t2= ontology_fkey(SampleEnvironmentalMaterial2)
     # environmental_material_t3= ontology_fkey(SampleEnvironmentalMaterial3)
 
-    environmental_material_t1= Column(CIText, default = "organic")
-    environmental_material_t2= Column(CIText, default = "organic")
-    environmental_material_t3= Column(CIText, default = "organic")
+    # TODO: Not sure if it's that efficient to ontologise the environments just yet since coloring is already working somewhat and sampleOtu results are searched by sample id anyway. Metafield filtering is still only compared to the <2000 site entries.
+
+    environmental_material_t1= Column(CIText, default = "unknown")
+    environmental_material_t2= Column(CIText, default = "unknown")
+    environmental_material_t3= Column(CIText, default = "unknown")
 
     elevation = Column(Float, default=0)
     rainfall = Column(Float, default=0)
