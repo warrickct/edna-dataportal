@@ -93,3 +93,23 @@ When I ran the ingest command using just the /data directory as the path (theref
 7. Writes OTU abundance data to new csv tempfile /data/bpaotu-6ig_m8up
 
 8. Loads in the data from the step 7 temp file into the database I think?
+
+### steps for updating production database and application.
+
+1. update frontend the api url from dev to prod and run npm build so it updates the main.js file.
+
+2. make a saved version of the current frontend master branch and push it to the remote.
+
+3. push the compatible version of frontend to the master branch
+
+4. push the data files to the edna-data repo
+
+5. push the updated dataportal version to the master (and make a new branch of the  master pre-push)
+
+6. ssh into the server ssh -i pathtoprivatekey ubuntu@ipOfeDNA
+
+7. pull the new data portal branch
+
+8. pull the new edna-data repo and replace the existing one in the dataportal project.
+
+9. in views.py replace disable use_cors otherwise responses contain double asterisks in the cors field.
