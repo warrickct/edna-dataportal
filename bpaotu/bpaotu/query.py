@@ -315,7 +315,6 @@ class EdnaAbundanceQuery:
                 .join(OTU)
                 # .all()
             )
-            logger.info(abundance_rows)
         else:
             abundance_rows = (
                 self._session.query(SampleOTU.count, SampleContext._site, OTU.code)
@@ -520,17 +519,12 @@ class EdnaSampleContextualQuery:
                         # base_query = base_query.filter(getattr(SampleContext, field) == value)
                     if operation == "gt":
                         or_filters.append(getattr(SampleContext, field) > value)
-                        # logger.info(conditional)
-                        # logger.info(value)
                         # base_query = base_query.filter(getattr(SampleContext, field) > value)
                     if operation == "lt":
                         or_filters.append(getattr(SampleContext, field) < value)
                         # base_query = base_query.filter(getattr(SampleContext, field) < value)
             query = query.filter(or_(*or_filters))
-            # logger.info(query)
-            # logger.info([r for r in query.all()])
         sample_contextual_results = [_row_to_dict(r) for r in query.all()]
-        # logger.info(sample_contextual_results)
         return sample_contextual_results
 
 
@@ -545,6 +539,9 @@ class EdnaOTUQuery:
         self._session.close()
 
     def _query_primary_keys(self, otus=None, use_endemism=False, endemic_value=False):
+        '''
+        Returns otu primary keys that match the search parameters
+        '''
         otu_columns = [OTU.kingdom_id, OTU.phylum_id, OTU.class_id, OTU.order_id, OTU.family_id, OTU.genus_id, OTU.species_id]
         otu_ids = []
         query = self._session.query(OTU.id)
@@ -687,12 +684,10 @@ class EdnaSampleOTUQuery:
         Returns the sample_otu entries with the sample standardised count (between 0-1)
         '''
         # TODO: will need to make this more dynamic (queryable by sample id, count range)
-        logger.info(sample_contextual_ids)
         sample_otu_results = []
         query = (
             self._session.query(SampleOTU.otu_id, SampleOTU.sample_id, SampleOTU.proportional_abundance)
             .order_by(SampleOTU.otu_id)
-            # .all()
         )
         if use_union:
             query = query.filter(or_(SampleOTU.otu_id.in_(otu_ids), SampleOTU.sample_id.in_(sample_contextual_ids)))
@@ -723,9 +718,6 @@ class EdnaPostImport:
             .group_by(SampleOTU.otu_id)
             .having(((func.count(SampleOTU.sample_id)) * 100) / distinct_sample_count < 1)
         )]
-        # logger.info(len([r for r in endemic_ids]))
-        # logger.info(endemic_ids)
-
         # TODO: getting potentially false endemism results due to otu some otu entries being more general than others.
         # TODO: i.e. highly specific classification more likely to be considered endemic due to being seen as different species without accounting for how closely related species are
         for endemic_otu in self._session.query(OTU).filter(OTU.id.in_(endemic_ids)):

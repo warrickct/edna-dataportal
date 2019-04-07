@@ -146,7 +146,6 @@ class DataImporter:
         vals = defaultdict(set)
         for row in row_iter:
             for db_class, fields in by_class.items():
-                # logger.info(fields)
                 for field in fields:
                     if field in row:
                         vals[db_class].add(row[field])
@@ -290,7 +289,6 @@ class DataImporter:
                 field = re.sub(old, new, field)
             field = field.lower()
             # Made all the fields have a underscore at the start to prevent python word conflicts. Probably need a better solution.
-            # logger.info(field)
             return field
 
         def _make_context():
@@ -303,24 +301,14 @@ class DataImporter:
             # site_id delcared here so we can go over multiple files at once.
             site_id = 0
             for fname in sorted(glob(self._import_base + 'edna/separated-data/metadata/*mastersheet.tsv')):
-                # logger.warning('loading metadata file: %s' % fname)
                 with open(fname, "r") as file:
                 # with open(fname, "r", encoding='utf-8-sig') as file:
                     reader = csv.DictReader(file, delimiter=',')
                     for file_row in reader:
                         attrs ={}
                         # DEBUG: 
-                        logger.info(fname)
-                        # logger.info(site_lookup)
-                        # try:
-                        #     site_lookup[site_hash(file_row['site'].upper())] = site_id
-                        # except:
-                            # exception for new metadata structure
-                        logger.info(file_row)
-                        logger.info(file_row['Sample_identifier'])
                         site_lookup[site_hash(file_row['Sample_identifier'].upper())] = site_id
                         # testing it won't grab two site id entries instead of overwrite existing
-                        # logger.info(site_hash(row['Sample_identifier'].upper()))
 
                         # DEBUG:
                         attrs['id'] = site_id
@@ -337,7 +325,6 @@ class DataImporter:
                             if _clean_value(value) == '' or _clean_value(value) == ' ':
                                 attrs[cleaned_field] = 0
                         site_id += 1
-                        logger.info(attrs)
                         yield SampleContext(**attrs)
 
         def _combined_rows():
@@ -383,10 +370,7 @@ class DataImporter:
         # TODO: need to update data cleaners
         sample_otu_combinations_used = []
         def check_for_duplicates(sample_id, otu_id, count):
-            # logger.info(sample_id)
             return None
-            # logger.info(otu_id)
-            # logger.info(count)
 
         def _make_sample_otus():    
             for fname in sorted(glob(self._import_base + 'edna/separated-data/data/*.tsv')):
@@ -404,7 +388,6 @@ class DataImporter:
                             continue
                         count = _validate_count(row[sample_context_col])
                         # check_for_duplicates(sample_id, otu_id, count)
-                        # logger.info(10/0)
                         if count > 0:
                             # count is already proportional, can be copied into proportional count column
                             if count < 1:

@@ -188,6 +188,8 @@ class SampleContext(SchemaMixin, Base):
     data_provider = Column(CIText, default="unknown")
     sequencing_platform = Column(CIText, default="unknown")
     amplicon = Column(CIText, default = "unknown")
+
+    # date_collected = Column(Date, default = "unknown")
     date_collected = Column(CIText, default = "unknown")
 
     sequences_accession = Column(CIText, default="unknown")
