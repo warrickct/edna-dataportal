@@ -686,13 +686,12 @@ class EdnaSampleOTUQuery:
         '''
         if user requesting all otus then send a cached version.
         '''
-        if otu_ids is None and sample_contextual_ids is None and use_union is None or use_union is False:
+        if otu_ids is None and sample_contextual_ids is None and (use_union is None or use_union is True):
             cache = caches['edna_sample_otu_results']
             hash_str = 'eDNA_Sample_OTUs:cached'
             key = sha256(hash_str.encode('utf8')).hexdigest()
             result = cache.get(key)
 
-            result = self._query_sample_otus()
             # DEBUG:
             if not result:
                 logger.info("sample_otu_cache not found, making new cache")
@@ -704,7 +703,7 @@ class EdnaSampleOTUQuery:
                 logger.info("Using cached sample_otu results")
             return result
         else:
-            result = _query_sample_otus(self, otu_ids, sample_contextual_ids, use_union)
+            result = self._query_sample_otus(otu_ids, sample_contextual_ids, use_union)
             return result
 
     def _query_sample_otus(self, otu_ids=None, sample_contextual_ids=None, use_union=None):
@@ -714,21 +713,16 @@ class EdnaSampleOTUQuery:
         # TODO: will need to make this more dynamic (queryable by sample id, count range)
         sample_otu_results = []
 
-        # DEBUG:
-        start = time.clock()
         query = (
             self._session.query(SampleOTU.otu_id, SampleOTU.sample_id, SampleOTU.proportional_abundance)
             .order_by(SampleOTU.otu_id)
         )
 
-        if sample_contextual_ids is not None and otu_ids is not None:
-            if use_union is False:
-                query = query.filter(or_(SampleOTU.otu_id.in_(otu_ids), SampleOTU.sample_id.in_(sample_contextual_ids)))
-            else:
-                query = query.filter(and_(SampleOTU.otu_id.in_(otu_ids), SampleOTU.sample_id.in_(sample_contextual_ids)))
+        if use_union is True:
+            query = query.filter(or_(SampleOTU.otu_id.in_(otu_ids), SampleOTU.sample_id.in_(sample_contextual_ids)))
+        else:
+            query = query.filter(and_(SampleOTU.otu_id.in_(otu_ids), SampleOTU.sample_id.in_(sample_contextual_ids)))
         sample_otu_results = [r for r in query]
-        logger.info(time.clock() - start)
-        # logger.info(sample_otu_results)
         return sample_otu_results
 
 class EdnaPostImport:

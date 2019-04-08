@@ -337,7 +337,7 @@ def edna_get_sample_otu(request):
         # Getting the sample otu entries that are within either otu_id set or sample_contextual_id set.
         sample_otu_results = sample_otu_query.query_sample_otus(otu_ids, sample_contextual_ids, use_union)
     # Filter to only include sample contextual data that is included in sample otu result set.
-    contextual_ids_in_sampleotu_results = [so[1] for so in sample_otu_results]
+    contextual_ids_in_sampleotu_results = set([so[1] for so in sample_otu_results])
     # grabbing contextual data for sites we need.
     sample_contextuals_data = [sc for sc in sample_contextuals_data if (sc['id'] in contextual_ids_in_sampleotu_results)]
     response = JsonResponse({
