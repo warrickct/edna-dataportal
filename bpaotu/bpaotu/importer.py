@@ -256,7 +256,7 @@ class DataImporter:
                     # since COPY to doesn't support missing fields
                     # appending a false/default value for endemism.
                     out_row.append("False")
-                    # appending a false/default value for pathogenid
+                    # appending a false/default value for pathogenic
                     out_row.append("False")
                     w.writerow(out_row)
             logger.warning("loading taxonomy data from temporary CSV file")

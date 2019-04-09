@@ -543,7 +543,7 @@ class EdnaOTUQuery:
 
     def _query_primary_keys(self, otus=None, use_endemism=False, endemic_value=False):
         '''
-        Returns otu primary keys that match the search parameters
+        Returns otu primary keys that match the search parameters. Currently used as part of the sample otu query for a filter.
         '''
         otu_columns = [OTU.kingdom_id, OTU.phylum_id, OTU.class_id, OTU.order_id, OTU.family_id, OTU.genus_id, OTU.species_id]
         otu_ids = []
@@ -670,7 +670,13 @@ class EdnaOTUQuery:
         query = (self._session.query(OTU.id, OTU.code).filter(OTU.id.in_(primary_keys)).all())
         otu_codes = [r._asdict() for r in query]
         return otu_codes
-
+    
+    def get_otu_field_by_id(self, primary_keys = None, field):
+        if (primary_keys is None):
+            return
+        query = (self._session.query(OTU).filter(OTU.id.in_(primary_keys)).all())
+        for item in query.all():
+            logger.info(item[id])
 
 class EdnaSampleOTUQuery:
     def __init__(self):
@@ -783,7 +789,7 @@ class EdnaPostImport:
                     return False
             return True
                     
-        logger.info("evaluating pathogenic status")
+        logger.info("assigning pathogenic status")
         with open(import_base + 'edna/separated-data/pathogen_data/Potential_pathogens_list.txt', 'r') as f_input:
             lines = f_input.readlines()
             with open('./potential_pathogens.csv', 'w') as f_out:
