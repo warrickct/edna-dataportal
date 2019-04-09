@@ -194,7 +194,7 @@ class DataImporter:
             ('species', OTUSpecies),
         ])
 
-        def _normalize_taxonomy(ontology_parts):
+        def _clean_taxonomy_fields(ontology_parts):
             '''
             Pads or trims the taxonomic list size to match the number of columns in the otu table.
             '''
@@ -226,7 +226,7 @@ class DataImporter:
                         otu_lookup[otu_hash(row[''])] = index
                         otu = row['']
                         ontology_parts = otu.split(';')
-                        ontology_parts = _normalize_taxonomy(ontology_parts)
+                        ontology_parts = _clean_taxonomy_fields(ontology_parts)
                         obj = dict(zip(ontologies.keys(), ontology_parts))
                         obj['otu'] = otu
                         imported += 1
@@ -432,3 +432,4 @@ class DataImporter:
         with EdnaPostImport() as post_import:
             post_import._calculate_endemic_otus()
             post_import._normalize_abundances()
+            post_import._calculate_pathogenic_otus(self._import_base)

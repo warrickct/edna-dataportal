@@ -5,6 +5,7 @@ from itertools import chain
 import logging
 
 import time
+import csv
 
 import sqlalchemy
 from sqlalchemy import (
@@ -765,6 +766,47 @@ class EdnaPostImport:
             for sample_otu in self._session.query(SampleOTU).filter(SampleOTU.sample_id == key):
                 sample_otu.proportional_abundance = sample_otu.count / value
             self._session.commit()
+
+    def _calculate_pathogenic_otus(self, import_base):
+        '''
+        compares to a list of pathogenic taxon classifications, if matches then sets pathogenic boolean to true
+        '''
+
+        def __contains_all_terms(code, classification):
+            '''
+            checks that all the term segments are in a code.
+            '''
+            for segment in classification:
+                if segment in code:
+                    continue
+                else:
+                    return False
+            return True
+                    
+        with open(import_base + 'edna/separated-data/pathogen_data/Potential_pathogens_list.txt', 'r') as f_input:
+            lines = f_input.readlines()
+            with open('./potential_pathogens.csv', 'w') as f_out:
+                writer = csv.writer(f_out, delimiter=',')
+                # first pass get headers
+                pathogen_dict = {}
+                classified_terms_list = []
+                for line in lines[1:]:
+                    header, entries = line.split(':')
+                    for entry in entries.split(','):
+                        entry.strip()
+                        classification = entry.split()
+                        if 'subsp.' in classification:
+                            classification.remove('subsp.')
+                        if 'pv.' in classification:
+                            classification.remove('pv.')
+                        classified_terms_list.append(classification)
+            otu_codes = [r for r in self._session.query(OTU.code, OTU.id)]
+            for code in otu_codes:
+                for classification in classified_terms_list:
+                    if __contains_all_terms(code[0], classification):
+                        logger.info(code[1])
+                    else:
+                        continue
 
 class ContextualFilter:
     mode_operators = {
