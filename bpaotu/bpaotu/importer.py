@@ -243,7 +243,7 @@ class DataImporter:
                 os.chmod(fname, 0o644)
                 logger.warning("writing out OTU data to CSV tempfile: %s" % fname)
                 w = csv.writer(temp_fd)
-                w.writerow(['id', 'code', 'kingdom_id', 'phylum_id', 'class_id', 'order_id', 'family_id', 'genus_id', 'species_id', 'endemic'])
+                w.writerow(['id', 'code', 'kingdom_id', 'phylum_id', 'class_id', 'order_id', 'family_id', 'genus_id', 'species_id', 'endemic', 'pathogenic'])
                 for _id, row in enumerate(_taxon_rows_iter(), 1):
                     # create lookup entry
                     otu_lookup[otu_hash(row['otu'])] = _id
@@ -253,6 +253,10 @@ class DataImporter:
                             out_row.append('')
                         else:
                             out_row.append(mappings[field][row[field]])
+                    # since COPY to doesn't support missing fields
+                    # appending a false/default value for endemism.
+                    out_row.append("False")
+                    # appending a false/default value for pathogenid
                     out_row.append("False")
                     w.writerow(out_row)
             logger.warning("loading taxonomy data from temporary CSV file")

@@ -108,7 +108,7 @@ class OTU(SchemaMixin, Base):
     genus_id = ontology_fkey(OTUGenus)
     species_id = ontology_fkey(OTUSpecies)
     endemic = Column(Boolean, default=False)
-    # pathogenic = Column(Boolean, default=False)
+    pathogenic = Column(Boolean, default=False)
 
     kingdom = relationship(OTUKingdom)
     phylum = relationship(OTUPhylum)

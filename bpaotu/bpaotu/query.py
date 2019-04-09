@@ -783,6 +783,7 @@ class EdnaPostImport:
                     return False
             return True
                     
+        logger.info("evaluating pathogenic status")
         with open(import_base + 'edna/separated-data/pathogen_data/Potential_pathogens_list.txt', 'r') as f_input:
             lines = f_input.readlines()
             with open('./potential_pathogens.csv', 'w') as f_out:
@@ -800,13 +801,18 @@ class EdnaPostImport:
                         if 'pv.' in classification:
                             classification.remove('pv.')
                         classified_terms_list.append(classification)
-            otu_codes = [r for r in self._session.query(OTU.code, OTU.id)]
-            for code in otu_codes:
+            otus = [otu for otu in self._session.query(OTU)]
+            pathogenic_ids = []
+            for otu in otus:
                 for classification in classified_terms_list:
-                    if __contains_all_terms(code[0], classification):
-                        logger.info(code[1])
+                    if __contains_all_terms(otu.code, classification):
+                        pathogenic_ids.append(otu.id)
                     else:
                         continue
+
+            for otu in [r for r in self._session.query(OTU).filter(OTU.id.in_(pathogenic_ids))]:
+                otu.pathogenic = True
+            self._session.commit()
 
 class ContextualFilter:
     mode_operators = {
