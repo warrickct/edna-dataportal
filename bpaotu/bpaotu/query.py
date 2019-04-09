@@ -671,12 +671,24 @@ class EdnaOTUQuery:
         otu_codes = [r._asdict() for r in query]
         return otu_codes
     
-    def get_otu_field_by_id(self, primary_keys = None, field):
+    def get_otu_pathogenic_status_by_id(self,  field, primary_keys = None):
+        '''
+        Returns input otus grouped into in pathogenic and nonpathogenic categories.
+        '''
         if (primary_keys is None):
             return
-        query = (self._session.query(OTU).filter(OTU.id.in_(primary_keys)).all())
-        for item in query.all():
-            logger.info(item[id])
+
+        result = {}
+        pathogenic = []
+        nonpathogenic = []
+        for x in [r for r in self._session.query(OTU.id, OTU.pathogenic).filter(OTU.id.in_(primary_keys))]:
+            if x[1] is True:
+                pathogenic.append(x[0])
+            else:
+                nonpathogenic.append(x[0])
+        result['pathogenic'] = pathogenic
+        result['nonpathogenic'] = nonpathogenic
+        return result
 
 class EdnaSampleOTUQuery:
     def __init__(self):
