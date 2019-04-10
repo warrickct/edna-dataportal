@@ -547,17 +547,24 @@ class EdnaOTUQuery:
         '''
         otu_columns = [OTU.kingdom_id, OTU.phylum_id, OTU.class_id, OTU.order_id, OTU.family_id, OTU.genus_id, OTU.species_id]
         otu_ids = []
-        query = self._session.query(OTU.id)
+        base_query = self._session.query(OTU.id)
         if otus is not None:
             for otu in otus:
+                otu_query = base_query
                 for index, ontological_id in enumerate(otu.split(' ')):
                     otu_column = otu_columns[index]
-                    query = query.filter(otu_column == ontological_id)
-                    # logger.info([r for r in query])
-        if use_endemism:
-            query = query.filter(OTU.endemic == endemic_value)
-        otu_ids = [r[0] for r in query.all()]
-        # logger.info(otu_ids)
+                    otu_query = otu_query.filter(otu_column == ontological_id)
+                if use_endemism:
+                    otu_query = otu_query.filter(OTU.endemic == endemic_value)
+                otu_ids = otu_ids + [r[0] for r in otu_query]
+
+        # if use_endemism:
+        #     endemic_query = base_query.filter(OTU.endemic == endemic_value)
+        #     otu_ids = otu_ids + [r[0] for r in endemic_query.all()]
+
+        # removes duplicates
+        otu_ids = list(set(otu_ids))
+        logger.info(len(otu_ids))
         return otu_ids
 
     def get_taxonomy_options(self, filters, page=1, page_size=50):
@@ -707,6 +714,7 @@ class EdnaSampleOTUQuery:
         if user requesting all otus then send a cached version.
         '''
         if otu_ids is None and sample_contextual_ids is None and (use_union is None or use_union is True):
+            logger.info("returning entire sample otu data")
             cache = caches['edna_sample_otu_results']
             hash_str = 'eDNA_Sample_OTUs:cached'
             key = sha256(hash_str.encode('utf8')).hexdigest()
@@ -737,9 +745,16 @@ class EdnaSampleOTUQuery:
         )
 
         if use_union is True:
+            # sample otu needs to match EITHER the samples specified or the otus specified
             query = query.filter(or_(SampleOTU.otu_id.in_(otu_ids), SampleOTU.sample_id.in_(sample_contextual_ids)))
         else:
-            query = query.filter(and_(SampleOTU.otu_id.in_(otu_ids), SampleOTU.sample_id.in_(sample_contextual_ids)))
+            # sample otu needs to match the samples specified AND the otus specified
+            if len(otu_ids) > 0:
+                query = query.filter(SampleOTU.otu_id.in_(otu_ids))
+            if len(sample_contextual_ids) > 0:
+                query = query.filter(SampleOTU.sample_id.in_(sample_contextual_ids))
+            # same thing as below
+            # query = query.filter(and_(SampleOTU.otu_id.in_(otu_ids), SampleOTU.sample_id.in_(sample_contextual_ids)))
         sample_otu_results = [r for r in query]
         return sample_otu_results
 
