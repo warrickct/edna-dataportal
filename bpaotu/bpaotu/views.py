@@ -330,7 +330,6 @@ def edna_get_sample_otu(request):
         use_endemism = True
     with EdnaOTUQuery() as otu_query:
         otu_ids = otu_query._query_primary_keys(otus, use_endemism, endemic_value)
-        logger.info(otu_ids)
         # otu ids sorted by pathogenic status
         # TODO: fix no pathogen ids and no otu ids when no filter params.
         pathogenic_otu_ids = otu_query.get_otu_pathogenic_status_by_id(otu_ids)

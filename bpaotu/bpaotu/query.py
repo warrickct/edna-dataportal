@@ -493,7 +493,7 @@ class EdnaSampleContextualQuery:
         field_results= [column.key for column in SampleContext.__table__.columns]
         return field_results
 
-    def query_sample_contextuals(self, tags=None):
+    def query_sample_contextuals(self, filters=None):
         '''
         Returns primary key set of sample_contextuals matching the filters
         '''
@@ -506,14 +506,14 @@ class EdnaSampleContextualQuery:
         query = self._session.query(SampleContext)
         # iterative build the filter then join it all in one bang and filter at the end.
         sample_contextual_results = []
-        if tags is not None:
+        if filters:
             logger.info("contextual tags is not none.")
             or_filters = list()
-            for tag in tags:
+            for filter in filters:
                 # TODO: Add support for parsing AND and OR operators in the tags.
                 # if filter contains a value to compare
-                if '$' in tag:
-                    filter_segments = tag.split('$')
+                if '$' in filter:
+                    filter_segments = filter.split('$')
                     field = filter_segments[0]
                     operation = filter_segments[1][:2]
                     value = filter_segments[1][2:]
@@ -548,7 +548,7 @@ class EdnaOTUQuery:
         otu_columns = [OTU.kingdom_id, OTU.phylum_id, OTU.class_id, OTU.order_id, OTU.family_id, OTU.genus_id, OTU.species_id]
         otu_ids = []
         base_query = self._session.query(OTU.id)
-        if len(otus) > 0:
+        if otus:
             for otu in otus:
                 otu_query = base_query
                 for index, ontological_id in enumerate(otu.split(' ')):
@@ -557,14 +557,13 @@ class EdnaOTUQuery:
                 if use_endemism:
                     otu_query = otu_query.filter(OTU.endemic == endemic_value)
                 otu_ids = otu_ids + [r[0] for r in otu_query]
-
-        # if use_endemism:
-        #     endemic_query = base_query.filter(OTU.endemic == endemic_value)
-        #     otu_ids = otu_ids + [r[0] for r in endemic_query.all()]
+        else:
+            if use_endemism:
+                endemic_query = base_query.filter(OTU.endemic == endemic_value)
+                otu_ids = otu_ids + [r[0] for r in endemic_query.all()]
 
         # removes duplicates
         otu_ids = list(set(otu_ids))
-        logger.info(len(otu_ids))
         return otu_ids
 
     def get_taxonomy_options(self, filters, page=1, page_size=50):
@@ -749,12 +748,14 @@ class EdnaSampleOTUQuery:
             query = query.filter(or_(SampleOTU.otu_id.in_(otu_ids), SampleOTU.sample_id.in_(sample_contextual_ids)))
         else:
             # sample otu needs to match the samples specified AND the otus specified
-            if len(otu_ids) > 0:
-                query = query.filter(SampleOTU.otu_id.in_(otu_ids))
-            if len(sample_contextual_ids) > 0:
-                query = query.filter(SampleOTU.sample_id.in_(sample_contextual_ids))
+
+            # if len(otu_ids) > 0:
+            #     query = query.filter(SampleOTU.otu_id.in_(otu_ids))
+            # if len(sample_contextual_ids) > 0:
+            #     query = query.filter(SampleOTU.sample_id.in_(sample_contextual_ids))
+
             # same thing as below
-            # query = query.filter(and_(SampleOTU.otu_id.in_(otu_ids), SampleOTU.sample_id.in_(sample_contextual_ids)))
+            query = query.filter(and_(SampleOTU.otu_id.in_(otu_ids), SampleOTU.sample_id.in_(sample_contextual_ids)))
         sample_otu_results = [r for r in query]
         return sample_otu_results
 
