@@ -548,7 +548,7 @@ class EdnaOTUQuery:
         otu_columns = [OTU.kingdom_id, OTU.phylum_id, OTU.class_id, OTU.order_id, OTU.family_id, OTU.genus_id, OTU.species_id]
         otu_ids = []
         base_query = self._session.query(OTU.id)
-        if otus is not None:
+        if len(otus) > 0:
             for otu in otus:
                 otu_query = base_query
                 for index, ontological_id in enumerate(otu.split(' ')):
