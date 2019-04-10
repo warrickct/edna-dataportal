@@ -59,7 +59,7 @@ logger = logging.getLogger("rainbow")
 ORDERING_PATTERN = re.compile(r'^order\[(\d+)\]\[(dir|column)\]$')
 COLUMN_PATTERN = re.compile(r'^columns\[(\d+)\]\[(data|name|searchable|orderable)\]$')
 
-use_cors = False
+use_cors = True
 
 def make_environment_lookup():
     with OntologyInfo() as info:
@@ -331,6 +331,9 @@ def edna_get_sample_otu(request):
     with EdnaOTUQuery() as otu_query:
         otu_ids = otu_query._query_primary_keys(otus, use_endemism, endemic_value)
 
+        # otu ids sorted by pathogenic status
+        pathogenic_otu_ids = otu_query.get_otu_pathogenic_status_by_id(otu_ids)
+
     use_union = request.GET.get('operator', None) == "union" 
 
     with EdnaSampleOTUQuery() as sample_otu_query:
@@ -343,6 +346,7 @@ def edna_get_sample_otu(request):
     response = JsonResponse({
         'sample_otu_data': sample_otu_results,
         'sample_contextual_data': sample_contextuals_data,
+        'pathogenic_otus': pathogenic_otu_ids
     })
 
     # TODO: response['Access-Control-Allow-Origin'] =   'http://localhost:5500/'
