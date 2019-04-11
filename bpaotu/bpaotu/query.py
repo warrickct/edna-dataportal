@@ -742,19 +742,11 @@ class EdnaSampleOTUQuery:
             self._session.query(SampleOTU.otu_id, SampleOTU.sample_id, SampleOTU.proportional_abundance)
             .order_by(SampleOTU.otu_id)
         )
-
         if use_union is True:
             # sample otu needs to match EITHER the samples specified or the otus specified
             query = query.filter(or_(SampleOTU.otu_id.in_(otu_ids), SampleOTU.sample_id.in_(sample_contextual_ids)))
         else:
             # sample otu needs to match the samples specified AND the otus specified
-
-            # if len(otu_ids) > 0:
-            #     query = query.filter(SampleOTU.otu_id.in_(otu_ids))
-            # if len(sample_contextual_ids) > 0:
-            #     query = query.filter(SampleOTU.sample_id.in_(sample_contextual_ids))
-
-            # same thing as below
             query = query.filter(and_(SampleOTU.otu_id.in_(otu_ids), SampleOTU.sample_id.in_(sample_contextual_ids)))
         sample_otu_results = [r for r in query]
         return sample_otu_results
