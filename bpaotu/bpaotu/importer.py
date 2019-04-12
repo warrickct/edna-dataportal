@@ -295,7 +295,7 @@ class DataImporter:
             # Made all the fields have a underscore at the start to prevent python word conflicts. Probably need a better solution.
             return field
 
-        def _make_context():
+        def _make_context(file_paths):
             '''
             Iterates the metadata, Makes an object mirror a sample_context tuple and returns it 
             TODO: Allow for automated 0 values when a field is missing.
@@ -304,7 +304,7 @@ class DataImporter:
             logger.info('loading edna contextual metadata from .tsv files')
             # site_id delcared here so we can go over multiple files at once.
             site_id = 0
-            for fname in sorted(glob(self._import_base + 'edna/separated-data/metadata/*mastersheet.tsv')):
+            for fname in file_paths:
                 with open(fname, "r") as file:
                 # with open(fname, "r", encoding='utf-8-sig') as file:
                     reader = csv.DictReader(file, delimiter=',')
@@ -331,13 +331,13 @@ class DataImporter:
                         site_id += 1
                         yield SampleContext(**attrs)
 
-        def _combined_rows():
+        def _combined_rows(file_paths):
             '''
-            Custom to eDNA project - aggregate row iterable for iterating over multiple files
+            Iterates all files in a specified pattern, converts the rows to a dictionary
             '''
-            for fname in sorted(glob(self._import_base + 'enda/separated-data/metadata/*.tsv')):
+            for fname in file_paths:
                 with open(fname, "r") as file:
-                    reader = csv.reader(file, delimiter='\t')
+                    reader = csv.reader(file)
                     headers = next(reader)
                     for row in reader:
                         # adding compatibility for the ontology builder.
@@ -348,8 +348,9 @@ class DataImporter:
 
         # custom site lookup dictionary edna ones use the code rather than PK in the data files. For faster abundance loading
         site_lookup = {}
-        mappings = self._load_ontology(DataImporter.edna_sample_ontologies, _combined_rows())
-        self._session.bulk_save_objects(_make_context())
+        file_paths = sorted(glob(self._import_base + 'edna/separated-data/metadata_new_columns/*.csv'))
+        mappings = self._load_ontology(DataImporter.edna_sample_ontologies, _combined_rows(file_paths))
+        self._session.bulk_save_objects(_make_context(file_paths))
         self._session.commit()
         return site_lookup
         
@@ -364,12 +365,14 @@ class DataImporter:
         def _validate_sample_id(column):
             try:
                 if site_lookup[site_hash(column.upper())] is None:
+                    print("couldnt validate/find site " + column.upper() + "in site lookup")
                     # TODO: NEED TO FIX unharmonious Syrie site entries.
-                    print("skipping site: " + site_lookup[site_hash(column.upper())])
+                    # print("skipping site: " + site_lookup[site_hash(column.upper())])
                     # exit()
                 return site_lookup[site_hash(column.upper())]
             except:
-                print(column)
+                x = 1
+                # print(column)
 
         # TODO: need to update data cleaners
         sample_otu_combinations_used = []
