@@ -410,22 +410,22 @@ def edna_filter_options(request):
 
 @csrf_exempt
 @require_GET
-def edna_suggestions_2(request, arg=None, arg2=None, arg3=None, arg4=None, arg5=None, arg6=None, arg7=None):
+def edna_suggestions_2(request, kingdom=None, phylum=None, klass=None, order=None, family=None, genus=None, species=None):
     response = ""
-    if arg:
-        response = response + arg
-    if arg2:
-        response = response + arg2
-    if arg3:
-        response = response + arg3
-    if arg4:
-        response = response + arg4
-    if arg5:
-        response = response + arg5
-    if arg6:
-        response = response + arg6
-    if arg7:
-        response = response + arg7
+    if kingdom:
+        response = response + kingdom
+    if phylum:
+        response = response + phylum
+    if klass:
+        response = response + klass
+    if order:
+        response = response + order
+    if family:
+        response = response + family
+    if genus:
+        response = response + genus
+    if species:
+        response = response + species
     return HttpResponse("<h1>"+ response +"</h1>")
 
 
