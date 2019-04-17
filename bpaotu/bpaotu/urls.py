@@ -17,14 +17,23 @@ urlpatterns = [
     url(r'^private/api/v1/submit_to_galaxy$', views.submit_to_galaxy, name="submit_to_galaxy"),
     url(r'^private/api/v1/export$', views.otu_export, name="otu_export"),
 
-    # w: eDNA endpoints.
+    # eDNA endpoints.
     # returns sample_otu entries
     url(r'^edna/api/v1.0/abundance$', views.edna_get_sample_otu, name="edna_sample_otus"),
     # returns filter options list
     url(r'^edna/api/v1.0/filter-options$', views.edna_filter_options, name="edna_filter_options"),
 
     url(r'^edna/api/v1.0/otu/', views.edna_otu, name="edna_otu"),
-    # url(r'^edna/api/v1.0/otu/[0-9]', views.edna_otu, name="edna_otu"),
+
+    # # otu ontology tables
+    url(r'^edna/api/v1.0/suggestions/?(?P<arg>[0-9]*)?(/(?P<arg2>[a-zA-Z]*))?$', views.edna_suggestions_2, name="edna_suggestions_2"),
+    url(r'^edna/api/v1.0/suggestions/kingdom/?(?P<arg>[0-9]*)?/$', views.edna_suggestions_2, name="edna_suggestions_2"),
+    url(r'^edna/api/v1.0/suggestions/kingdom/?(?P<arg>[0-9]*)/phylum/?(?P<arg2>[a-zA-Z]*)?$', views.edna_suggestions_2, name="edna_suggestions_2"),
+    url(r'^edna/api/v1.0/suggestions/kingdom/?(?P<arg>[0-9]*)/phylum/?(?P<arg2>[a-zA-Z]*)/class/?(?P<arg3>[a-zA-Z]*)?$', views.edna_suggestions_2, name="edna_suggestions_2"),
+    url(r'^edna/api/v1.0/suggestions/kingdom/?(?P<arg>[0-9]*)/phylum/?(?P<arg2>[a-zA-Z]*)/class/?(?P<arg3>[a-zA-Z]*)/order/?(?P<arg4>[a-zA-Z]*)?$', views.edna_suggestions_2, name="edna_suggestions_2"),
+    url(r'^edna/api/v1.0/suggestions/kingdom/?(?P<arg>[0-9]*)/phylum/?(?P<arg2>[a-zA-Z]*)/class/?(?P<arg3>[a-zA-Z]*)/order/?(?P<arg4>[a-zA-Z]*)/family/?(?P<arg5>[a-zA-Z]*)?$', views.edna_suggestions_2, name="edna_suggestions_2"),
+    url(r'^edna/api/v1.0/suggestions/kingdom/?(?P<arg>[0-9]*)/phylum/?(?P<arg2>[a-zA-Z]*)/class/?(?P<arg3>[a-zA-Z]*)/order/?(?P<arg4>[a-zA-Z]*)/family/?(?P<arg5>[a-zA-Z]*)/genus/?(?P<arg6>[a-zA-Z]*)?$', views.edna_suggestions_2, name="edna_suggestions_2"),
+    url(r'^edna/api/v1.0/suggestions/kingdom/?(?P<arg>[0-9]*)/phylum/?(?P<arg2>[a-zA-Z]*)/class/?(?P<arg3>[a-zA-Z]*)/order/?(?P<arg4>[a-zA-Z]*)/family/?(?P<arg5>[a-zA-Z]*)/genus/?(?P<arg6>[a-zA-Z]*)/species/?(?P<arg7>[a-zA-Z]*)?$', views.edna_suggestions_2, name="edna_suggestions_2"),
 
     # w: TODO: WIP: For posting new data sets.
     # url(r'^edna/api/upload$', views.AbundanceUpload.as_view()),

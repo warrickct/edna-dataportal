@@ -341,7 +341,8 @@ def edna_get_sample_otu(request):
         sample_otu_results = sample_otu_query.query_sample_otus(otu_ids, sample_contextual_ids, use_union)
     # Filter to only include sample contextual data that is included in sample otu result set.
     contextual_ids_in_sampleotu_results = set([so[1] for so in sample_otu_results])
-    # grabbing contextual data for sites we need.
+
+    # grabbing contextual data for sites included in sample_otu result set
     sample_contextuals_data = [sc for sc in sample_contextuals_data if (sc['id'] in contextual_ids_in_sampleotu_results)]
     response = JsonResponse({
         'sample_otu_data': sample_otu_results,
@@ -406,6 +407,64 @@ def edna_filter_options(request):
         response['Access-Control-Allow-Origin'] = '*'
     response['Access-Control-Allow-Headers'] = 'Content-Type'
     return response
+
+@csrf_exempt
+@require_GET
+def edna_suggestions_2(request, arg=None, arg2=None, arg3=None, arg4=None, arg5=None, arg6=None, arg7=None):
+    response = ""
+    if arg:
+        response = response + arg
+    if arg2:
+        response = response + arg2
+    if arg3:
+        response = response + arg3
+    if arg4:
+        response = response + arg4
+    if arg5:
+        response = response + arg5
+    if arg6:
+        response = response + arg6
+    if arg7:
+        response = response + arg7
+    return HttpResponse("<h1>"+ response +"</h1>")
+
+
+# @csrf_exempt
+# @require_GET
+# def edna_kingdom(request):
+#     logger.info("kingdom stub")
+    
+
+# @csrf_exempt
+# @require_GET
+# def edna_phylum(request):
+#     logger.info("phylum stub")
+
+# @csrf_exempt
+# @require_GET
+# def edna_klass(request):
+#     logger.info("class stub")
+
+# @csrf_exempt
+# @require_GET
+# def edna_order(request):
+#     logger.info("order stub")
+
+# @csrf_exempt
+# @require_GET
+# def edna_family(request):
+#     logger.info("family stub")
+
+# @csrf_exempt
+# @require_GET
+# def edna_genus(request):
+#     logger.info("genus stub")
+
+# @csrf_exempt
+# @require_GET
+# def edna_species(request):
+#     logger.info("species stub")
+
 
 # TEMP:TEST: API class made for easier uploading.
 class UploadFileForm(forms.Form):

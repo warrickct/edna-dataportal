@@ -310,11 +310,9 @@ class DataImporter:
                     reader = csv.DictReader(file, delimiter=',')
                     for file_row in reader:
                         attrs ={}
-                        # DEBUG: 
                         site_lookup[site_hash(file_row['Sample_identifier'].upper())] = site_id
                         # testing it won't grab two site id entries instead of overwrite existing
 
-                        # DEBUG:
                         attrs['id'] = site_id
                         for edna_ontology_item in DataImporter.edna_sample_ontologies:
                             # if it's an ontology field just add '_id' to the end of the name
@@ -348,7 +346,7 @@ class DataImporter:
 
         # custom site lookup dictionary edna ones use the code rather than PK in the data files. For faster abundance loading
         site_lookup = {}
-        file_paths = sorted(glob(self._import_base + 'edna/separated-data/metadata_new_columns/*.csv'))
+        file_paths = sorted(glob(self._import_base + 'edna/separated-data/metadata/*.csv'))
         mappings = self._load_ontology(DataImporter.edna_sample_ontologies, _combined_rows(file_paths))
         self._session.bulk_save_objects(_make_context(file_paths))
         self._session.commit()
@@ -362,17 +360,13 @@ class DataImporter:
             except:
                 return 0
 
-        def _validate_sample_id(column):
-            try:
-                if site_lookup[site_hash(column.upper())] is None:
-                    print("couldnt validate/find site " + column.upper() + "in site lookup")
-                    # TODO: NEED TO FIX unharmonious Syrie site entries.
-                    # print("skipping site: " + site_lookup[site_hash(column.upper())])
-                    # exit()
+        def _sample_id_exists(column):
+            if site_hash(column.upper()) in site_lookup:
+                print(column.upper() + " in site lookup")
                 return site_lookup[site_hash(column.upper())]
-            except:
-                x = 1
-                # print(column)
+            else:
+                # print("couldnt validate/find site " + column.upper() + " in site lookup")
+                return False
 
         # TODO: need to update data cleaners
         sample_otu_combinations_used = []
@@ -390,14 +384,15 @@ class DataImporter:
                     for sample_context_col in row:
                         if sample_context_col == '':
                             continue
-                        sample_id = _validate_sample_id(sample_context_col)
-                        if sample_id is None:
+                        if _sample_id_exists(sample_context_col):
+                            sample_id = _sample_id_exists(sample_context_col)
+                        else:
                             continue
                         count = _validate_count(row[sample_context_col])
                         # check_for_duplicates(sample_id, otu_id, count)
                         if count > 0:
-                            # count is already proportional, can be copied into proportional count column
                             if count < 1:
+                                # counts < 1 have already been calculated proportionally
                                 yield [sample_id, otu_id, count, count]
                             else:
                                 # add as a yet to be calculated field
