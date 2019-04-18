@@ -566,7 +566,7 @@ class EdnaOTUQuery:
         otu_ids = list(set(otu_ids))
         return otu_ids
 
-    def get_taxonomy_options(self, filters, page=1, page_size=50):
+    def get_taxonomy_options(self, filters=None, page=1, page_size=50):
         '''
         checks against list of codes with ids accompanying them. Returns the codes where the filter is contains within them.
         '''
@@ -584,20 +584,12 @@ class EdnaOTUQuery:
             cache.set(key, result)
         else:
             logger.info("Using cached taxonomic options")
-        # only only return results with the param(s)
-        filters = filters.lower()
-        result = [r for r in result if (filters in r[0].lower())]
-        start = ((page -1) * page_size)
-        end = ((page -1) * page_size) + page_size
-        paginated_result = result[start:end]
-        return {
-            "result": paginated_result,
-            "total_results": len(result)
-        }
+        return result
 
     def _query_taxonomy_options(self):
         '''
         Created the taxonomic search suggestions with their ontological keys are mapped.
+        Returns a list of otu codes (including prefix), accompanied by combination key of ids.
         '''
         ontology_tables = [OTUKingdom, OTUPhylum, OTUClass, OTUOrder, OTUFamily, OTUGenus, OTUSpecies]
         ordered_otus = [r for r in (
@@ -669,7 +661,7 @@ class EdnaOTUQuery:
         return option_list
 
     def get_otu_names(self, primary_keys=None):
-        # accepts a list of primary keys, returns the otu names/codes where possible.
+        ''' Accepts a list of primary keys, returns the otu names/codes where possible.'''
         if (primary_keys is None):
             return None
 

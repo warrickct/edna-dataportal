@@ -26,14 +26,19 @@ urlpatterns = [
     url(r'^edna/api/v1.0/otu/', views.edna_otu, name="edna_otu"),
 
     # # otu ontology tables
-    url(r'^edna/api/v1.0/suggestions/?(?P<kingdom>[0-9]*)?(/(?P<phylum>[a-zA-Z]*))?$', views.edna_suggestions_2, name="edna_suggestions_2"),
+
+    url(r'^edna/api/v1.0/suggestions/?(?P<kingdom>[0-9]*)?(/(?P<phylum>[0-9]*))?$', views.edna_suggestions_2, name="edna_suggestions_2"),
     url(r'^edna/api/v1.0/suggestions/kingdom/?(?P<kingdom>[0-9]*)?/$', views.edna_suggestions_2, name="edna_suggestions_2"),
-    url(r'^edna/api/v1.0/suggestions/kingdom/?(?P<kingdom>[0-9]*)/phylum/?(?P<phylum>[a-zA-Z]*)?$', views.edna_suggestions_2, name="edna_suggestions_2"),
-    url(r'^edna/api/v1.0/suggestions/kingdom/?(?P<kingdom>[0-9]*)/phylum/?(?P<phylum>[a-zA-Z]*)/class/?(?P<klass>[a-zA-Z]*)?$', views.edna_suggestions_2, name="edna_suggestions_2"),
-    url(r'^edna/api/v1.0/suggestions/kingdom/?(?P<kingdom>[0-9]*)/phylum/?(?P<phylum>[a-zA-Z]*)/class/?(?P<klass>[a-zA-Z]*)/order/?(?P<order>[a-zA-Z]*)?$', views.edna_suggestions_2, name="edna_suggestions_2"),
-    url(r'^edna/api/v1.0/suggestions/kingdom/?(?P<kingdom>[0-9]*)/phylum/?(?P<phylum>[a-zA-Z]*)/class/?(?P<klass>[a-zA-Z]*)/order/?(?P<order>[a-zA-Z]*)/family/?(?P<family>[a-zA-Z]*)?$', views.edna_suggestions_2, name="edna_suggestions_2"),
-    url(r'^edna/api/v1.0/suggestions/kingdom/?(?P<kingdom>[0-9]*)/phylum/?(?P<phylum>[a-zA-Z]*)/class/?(?P<klass>[a-zA-Z]*)/order/?(?P<order>[a-zA-Z]*)/family/?(?P<family>[a-zA-Z]*)/genus/?(?P<genus>[a-zA-Z]*)?$', views.edna_suggestions_2, name="edna_suggestions_2"),
-    url(r'^edna/api/v1.0/suggestions/kingdom/?(?P<kingdom>[0-9]*)/phylum/?(?P<phylum>[a-zA-Z]*)/class/?(?P<klass>[a-zA-Z]*)/order/?(?P<order>[a-zA-Z]*)/family/?(?P<family>[a-zA-Z]*)/genus/?(?P<genus>[a-zA-Z]*)/species/?(?P<species>[a-zA-Z]*)?$', views.edna_suggestions_2, name="edna_suggestions_2"),
+    url(r'^edna/api/v1.0/suggestions/kingdom/?(?P<kingdom>[0-9]*)/phylum/?(?P<phylum>[0-9]*)?$', views.edna_suggestions_2, name="edna_suggestions_2"),
+    url(r'^edna/api/v1.0/suggestions/kingdom/?(?P<kingdom>[0-9]*)/phylum/?(?P<phylum>[0-9]*)/class/?(?P<klass>[0-9]*)?$', views.edna_suggestions_2, name="edna_suggestions_2"),
+    url(r'^edna/api/v1.0/suggestions/kingdom/?(?P<kingdom>[0-9]*)/phylum/?(?P<phylum>[0-9]*)/class/?(?P<klass>[0-9]*)/order/?(?P<order>[0-9]*)?$', views.edna_suggestions_2, name="edna_suggestions_2"),
+    url(r'^edna/api/v1.0/suggestions/kingdom/?(?P<kingdom>[0-9]*)/phylum/?(?P<phylum>[0-9]*)/class/?(?P<klass>[0-9]*)/order/?(?P<order>[0-9]*)/family/?(?P<family>[0-9]*)?$', views.edna_suggestions_2, name="edna_suggestions_2"),
+    url(r'^edna/api/v1.0/suggestions/kingdom/?(?P<kingdom>[0-9]*)/phylum/?(?P<phylum>[0-9]*)/class/?(?P<klass>[0-9]*)/order/?(?P<order>[0-9]*)/family/?(?P<family>[0-9]*)/genus/?(?P<genus>[0-9]*)?$', views.edna_suggestions_2, name="edna_suggestions_2"),
+    url(r'^edna/api/v1.0/suggestions/kingdom/?(?P<kingdom>[0-9]*)/phylum/?(?P<phylum>[0-9]*)/class/?(?P<klass>[0-9]*)/order/?(?P<order>[0-9]*)/family/?(?P<family>[0-9]*)/genus/?(?P<genus>[0-9]*)/species/?(?P<species>[0-9]*)?$', views.edna_suggestions_2, name="edna_suggestions_2"),
+
+
+    # TEST
+    # url(r'^edna/api/v1.0/suggestions/(?:kingdom/(?P<kingdom>[0-9]*))?(?:/phylum/(?P<phylum>[0-9]*))(?:/class/(?P<klass>[0-9]*))', views.edna_suggestions_2, name="edna_suggestions_2"),
 
     # w: TODO: WIP: For posting new data sets.
     # url(r'^edna/api/upload$', views.AbundanceUpload.as_view()),

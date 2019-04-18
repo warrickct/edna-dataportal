@@ -387,19 +387,37 @@ def edna_filter_options(request):
     '''
     Calls both meta and otu filter option methods, combined and returns.
     '''
+
+    def _paginate_results(result, page=1, page_size=50):
+        start = ((page -1) * page_size)
+        end = ((page -1) * page_size) + page_size
+        paginated_result = result[start:end]
+        return paginated_result
+
+    def _filter_results(results, filters=None):
+        if filters is not None:
+            if filters:
+                filters = filters.lower()
+            # filtering by text string, r[0]
+            results = [r for r in results if (filters in r[0].lower())]
+        logger.info(results)
+        return results
+
     filters = request.GET['q']
     page = int(request.GET['page'])
     page_size = int(request.GET['page_size'])
-
     with EdnaOTUQuery() as query:
-        taxonomy_options = query.get_taxonomy_options(filters, page, page_size)
+        otu_suggestions = query.get_taxonomy_options()
+        total_otu_suggestions = len(otu_suggestions)
+        paginated_otu_suggestions = _paginate_results(_filter_results(otu_suggestions, filters))
+        logger.info(len(otu_suggestions))
     with EdnaSampleContextualQuery() as query:
         context_options = query.get_sample_contextual_options(filters)
     # combined_options = taxonomy_options + context_options
     response = JsonResponse({
         'data': {
-            'total_results': taxonomy_options["total_results"],
-            'taxonomy_options': taxonomy_options["result"],
+            'total_results': total_otu_suggestions,
+            'taxonomy_options': paginated_otu_suggestions,
             'context_options': context_options,
         }
     })
@@ -413,19 +431,24 @@ def edna_filter_options(request):
 def edna_suggestions_2(request, kingdom=None, phylum=None, klass=None, order=None, family=None, genus=None, species=None):
     response = ""
     if kingdom:
-        response = response + kingdom
+        response = response + kingdom + "kingdom"
     if phylum:
-        response = response + phylum
+        response = response + phylum + "phylum"
     if klass:
-        response = response + klass
+        response = response + klass + "klass"
     if order:
-        response = response + order
+        response = response + order + "order"
     if family:
-        response = response + family
+        response = response + family + "family"
     if genus:
-        response = response + genus
+        response = response + genus + "genus"
     if species:
-        response = response + species
+        response = response + species + "species"
+
+    with EdnaOTUQuery() as query:
+        results = query.get_taxonomy_options()
+        logger.info(results)
+
     return HttpResponse("<h1>"+ response +"</h1>")
 
 

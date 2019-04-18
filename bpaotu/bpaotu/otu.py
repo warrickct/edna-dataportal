@@ -121,8 +121,7 @@ class OTU(SchemaMixin, Base):
     def __repr__(self):
         return "<OTU(%d: %s,%s,%s,%s,%s,%s,%s,%s)>" % (
             self.id,
-            # w: custom name field
-            self.name,
+            self.code,
             self.kingdom_id,
             self.phylum_id,
             self.class_id,
