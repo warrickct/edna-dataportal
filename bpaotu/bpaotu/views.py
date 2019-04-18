@@ -410,7 +410,6 @@ def edna_filter_options(request):
         otu_suggestions = query.get_taxonomy_options()
         total_otu_suggestions = len(otu_suggestions)
         paginated_otu_suggestions = _paginate_results(_filter_results(otu_suggestions, filters))
-        logger.info(len(otu_suggestions))
     with EdnaSampleContextualQuery() as query:
         context_options = query.get_sample_contextual_options(filters)
     # combined_options = taxonomy_options + context_options
