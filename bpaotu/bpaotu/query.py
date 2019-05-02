@@ -661,6 +661,7 @@ class EdnaOTUQuery:
         return option_list
 
     def get_otu_names(self, primary_keys=None):
+
         ''' Accepts a list of primary keys, returns the otu names/codes where possible.'''
         if (primary_keys is None):
             return None
@@ -679,9 +680,9 @@ class EdnaOTUQuery:
         result = {}
         pathogenic = []
         # nonpathogenic = []
-        for x in [r for r in self._session.query(OTU.id, OTU.pathogenic).filter(OTU.id.in_(primary_keys))]:
-            if x[1] is True:
-                pathogenic.append(x[0])
+        for otu in [r for r in self._session.query(OTU.id, OTU.pathogenic).filter(OTU.id.in_(primary_keys))]:
+            if otu[1] is True:
+                pathogenic.append(otu[0])
             # else:
             #     nonpathogenic.append(x[0])
         # result['pathogenic'] = pathogenic

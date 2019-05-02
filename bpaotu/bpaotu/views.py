@@ -444,11 +444,33 @@ def edna_suggestions_2(request, kingdom=None, phylum=None, klass=None, order=Non
     if species:
         response = response + species + "species"
 
-    with EdnaOTUQuery() as query:
-        results = query.get_taxonomy_options()
-        logger.info(results)
+    with EdnaOTUQuery() as q:
+        results = q.get_taxonomy_options()
 
-    return HttpResponse("<h1>"+ response +"</h1>")
+        tree ={}
+        for r in results:
+            level = tree
+            # logger.info(r)
+            s = r[0].split(';')
+            for index, value in enumerate(s):
+                if value in level:
+                    level = level[value]
+                else:
+                    level[value] = {
+                        '_id': r[1][index]
+                        # 'text': r[1][index]
+                    }
+        logger.info(tree.keys())
+        logger.info(tree['k__Fungi'].keys())
+        # logger.info(tree['k__Fungi']['_id'])
+    # logger.info(tree)
+
+    suggestions = ""
+    if kingdom:
+        logger.info(tree["k__Fungi"])
+        suggestions = ",".join(tree["k__Fungi"].keys())
+
+    return HttpResponse("<h1>"+ response +"</h1><br />" + suggestions)
 
 
 # @csrf_exempt
