@@ -27,14 +27,10 @@ urlpatterns = [
 
     # # otu ontology tables
 
-    url(r'^edna/api/v1.0/suggestions/?(?P<kingdom>[0-9]*)?(/(?P<phylum>[0-9]*))?$', views.edna_suggestions_2, name="edna_suggestions_2"),
-    url(r'^edna/api/v1.0/suggestions/kingdom/?(?P<kingdom>[0-9]*)?/$', views.edna_suggestions_2, name="edna_suggestions_2"),
-    url(r'^edna/api/v1.0/suggestions/kingdom/?(?P<kingdom>[0-9]*)/phylum/?(?P<phylum>[0-9]*)?$', views.edna_suggestions_2, name="edna_suggestions_2"),
-    url(r'^edna/api/v1.0/suggestions/kingdom/?(?P<kingdom>[0-9]*)/phylum/?(?P<phylum>[0-9]*)/class/?(?P<klass>[0-9]*)?$', views.edna_suggestions_2, name="edna_suggestions_2"),
-    url(r'^edna/api/v1.0/suggestions/kingdom/?(?P<kingdom>[0-9]*)/phylum/?(?P<phylum>[0-9]*)/class/?(?P<klass>[0-9]*)/order/?(?P<order>[0-9]*)?$', views.edna_suggestions_2, name="edna_suggestions_2"),
-    url(r'^edna/api/v1.0/suggestions/kingdom/?(?P<kingdom>[0-9]*)/phylum/?(?P<phylum>[0-9]*)/class/?(?P<klass>[0-9]*)/order/?(?P<order>[0-9]*)/family/?(?P<family>[0-9]*)?$', views.edna_suggestions_2, name="edna_suggestions_2"),
-    url(r'^edna/api/v1.0/suggestions/kingdom/?(?P<kingdom>[0-9]*)/phylum/?(?P<phylum>[0-9]*)/class/?(?P<klass>[0-9]*)/order/?(?P<order>[0-9]*)/family/?(?P<family>[0-9]*)/genus/?(?P<genus>[0-9]*)?$', views.edna_suggestions_2, name="edna_suggestions_2"),
-    url(r'^edna/api/v1.0/suggestions/kingdom/?(?P<kingdom>[0-9]*)/phylum/?(?P<phylum>[0-9]*)/class/?(?P<klass>[0-9]*)/order/?(?P<order>[0-9]*)/family/?(?P<family>[0-9]*)/genus/?(?P<genus>[0-9]*)/species/?(?P<species>[0-9]*)?$', views.edna_suggestions_2, name="edna_suggestions_2"),
+    # url(r'^edna/api/v1.0/suggestions/?(?P<kingdom>[0-9]*)?(/(?P<phylum>[0-9]*))?$', views.edna_suggestions_2, name="edna_suggestions_2"),
+
+    url(r'^edna/api/v1.0/suggestions/', views.edna_suggestions_2, name="edna_suggestions_2"),
+    
 
 
     # TEST

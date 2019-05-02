@@ -427,22 +427,17 @@ def edna_filter_options(request):
 
 @csrf_exempt
 @require_GET
-def edna_suggestions_2(request, kingdom=None, phylum=None, klass=None, order=None, family=None, genus=None, species=None):
-    response = ""
-    if kingdom:
-        response = response + kingdom + "kingdom"
-    if phylum:
-        response = response + phylum + "phylum"
-    if klass:
-        response = response + klass + "klass"
-    if order:
-        response = response + order + "order"
-    if family:
-        response = response + family + "family"
-    if genus:
-        response = response + genus + "genus"
-    if species:
-        response = response + species + "species"
+def edna_suggestions_2(request):
+    kingdom = request.GET.get('kingdom', None)
+    phylum = request.GET.get('phylum', None)
+    klass = request.GET.get('class', None)
+    order = request.GET.get('order', None)
+    family = request.GET.get('family', None)
+    genus = request.GET.get('genus', None)
+    species = request.GET.get('species', None)
+
+    print("%s " % kingdom)
+    # print("%s %s %s %s %s %s %s " % kingdom, phylum, klass, order, family, genus, species)
 
     with EdnaOTUQuery() as q:
         results = q.get_taxonomy_options()
@@ -451,27 +446,54 @@ def edna_suggestions_2(request, kingdom=None, phylum=None, klass=None, order=Non
         for r in results:
             level = tree
             # logger.info(r)
-            s = r[0].split(';')
-            for index, value in enumerate(s):
-                if value in level:
-                    level = level[value]
+            fks = r[1]
+            for index, fk in enumerate(fks):
+                if fk in level:
+                    level = level[fk]
                 else:
-                    level[value] = {
-                        '_id': r[1][index]
-                        # 'text': r[1][index]
+                    level[fk] = {
+                        'text': r[0].split(';')[index]
                     }
-        logger.info(tree.keys())
-        logger.info(tree['k__Fungi'].keys())
+        # logger.info(tree.keys())
         # logger.info(tree['k__Fungi']['_id'])
     # logger.info(tree)
 
-    suggestions = ""
-    if kingdom:
-        logger.info(tree["k__Fungi"])
-        suggestions = ",".join(tree["k__Fungi"].keys())
+    suggestions = []
+    taxons = [kingdom, phylum, klass, order, family, genus, species]
+    level = tree
+    for t in taxons:
+        # logger.info(t)
+        if t:
+            t_id = int(t)
+            if t_id in level:
+                level = level[t_id]
+                logger.info(level.keys())
+            else:
+                raise KeyError('taxon id not found')
+        else:
+            # grab all within level
+            for k, v in level.items():
+                if k == "text":
+                    continue
+                # logger.info(k)
+                # logger.info(v)
+                suggestion = {
+                    'id': k,
+                    'text': v['text']
+                }
+                suggestions.append(suggestion)
+            break
+    # logger.info(suggestions)
 
-    return HttpResponse("<h1>"+ response +"</h1><br />" + suggestions)
-
+    # return HttpResponse("<h1>"+ response +"</h1>")
+    
+    response =  JsonResponse({
+        'suggestions': suggestions
+    })
+    if use_cors:    
+        response['Access-Control-Allow-Origin'] = '*'
+    response['Access-Control-Allow-Headers'] = 'Content-Type'
+    return response
 
 # @csrf_exempt
 # @require_GET
