@@ -26,6 +26,9 @@ tar xzvf 16S.tar.gz
 docker-compose exec runserver bash
 /app/docker-entrypoint.sh django-admin otu_ingest /data/2018-03/
 
+Note: If on nectar vm there is no need to include 2018-03/ directory
+/app/docker-entrypoint.sh django-admin otu_ingest /data/
+
 ## Getting into the DB
 
 warrick@warrick-OptiPlex-9030-AIO:~/bpaotu$ docker-compose exec db bash
