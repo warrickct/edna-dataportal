@@ -306,6 +306,7 @@ class DataImporter:
             site_id = 0
             for fname in file_paths:
                 with open(fname, "r") as file:
+                    logger.info(fname)
                 # with open(fname, "r", encoding='utf-8-sig') as file:
                     reader = csv.DictReader(file, delimiter=',')
                     for file_row in reader:
@@ -362,7 +363,6 @@ class DataImporter:
 
         def _sample_id_exists(column):
             if site_hash(column.upper()) in site_lookup:
-                print(column.upper() + " in site lookup")
                 return site_lookup[site_hash(column.upper())]
             else:
                 # print("couldnt validate/find site " + column.upper() + " in site lookup")
