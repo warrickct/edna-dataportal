@@ -19,6 +19,8 @@ urlpatterns = [
 
     # eDNA endpoints.
     # returns sample_otu entries
+
+    # http://localhost:8000/edna/api/v1.0/abundance?otu=&q=elevation$gt1&q=elevation$lt100&operator=intersection
     url(r'^edna/api/v1.0/abundance$', views.edna_get_sample_otu, name="edna_sample_otus"),
     # returns filter options list
     url(r'^edna/api/v1.0/filter-options$', views.edna_filter_options, name="edna_filter_options"),

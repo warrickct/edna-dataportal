@@ -59,7 +59,7 @@ logger = logging.getLogger("rainbow")
 ORDERING_PATTERN = re.compile(r'^order\[(\d+)\]\[(dir|column)\]$')
 COLUMN_PATTERN = re.compile(r'^columns\[(\d+)\]\[(data|name|searchable|orderable)\]$')
 
-use_cors = False
+use_cors = True
 
 def make_environment_lookup():
     with OntologyInfo() as info:
@@ -307,7 +307,8 @@ def edna_get_sample_otu(request):
     '''
 
     # FIXME: otu filters applied subtractively, contextual filters applied additively.
-    # contextuals
+
+    # Sample Contexts
     sample_contextual_ids = []
     contextual_params = request.GET.getlist('q', None)
     # just the primary keys for querying
@@ -320,22 +321,34 @@ def edna_get_sample_otu(request):
             sample_contextuals_data = sample_contextual.query_sample_contextuals()
         sample_contextual_ids = [sample['id'] for sample in sample_contextuals_data]
 
-    # otus
+    # OTUs
+
+    # Retrieving fk combination keys from request
     otu_ids = []
-    otus = [otu for otu in request.GET.getlist('otu') if otu is not '']
+    otu_taxonomic_ids = [otu for otu in request.GET.getlist('otu') if otu is not '']
+
+    # Getting text if there is any
+    otu_texts = [otu for otu in request.GET.getlist('text') if otu is not '']
+    logger.info(otu_texts)
+    if otu_texts:
+        logger.info("otu texts true")
+    else:
+        logger.info("otu texts false")
+
     # if endemism value exists in request then query will include it.
     endemic_value = request.GET.get('endemic', None) == "true" 
     use_endemism = False
     if endemic_value is not None:
         use_endemism = True
+
     with EdnaOTUQuery() as otu_query:
-        otu_ids = otu_query._query_primary_keys(otus, use_endemism, endemic_value)
+        otu_ids = otu_query._query_primary_keys(otu_combination_keys=otu_taxonomic_ids, otu_terms=otu_texts, use_endemism=use_endemism, endemic_value=endemic_value)
         # otu ids sorted by pathogenic status
         # TODO: fix no pathogen ids and no otu ids when no filter params.
         pathogenic_otu_ids = otu_query.get_otu_pathogenic_status_by_id(otu_ids)
 
     use_union = request.GET.get('operator', None) == "union" 
-
+    # Combining OTU id sets with Contextual sets to query Abundance table
     with EdnaSampleOTUQuery() as sample_otu_query:
         # Getting the sample otu entries that are within either otu_id set or sample_contextual_id set.
         sample_otu_results = sample_otu_query.query_sample_otus(otu_ids, sample_contextual_ids, use_union)
