@@ -25,7 +25,7 @@ urlpatterns = [
     # returns filter options list
     url(r'^edna/api/v1.0/filter-options$', views.edna_filter_options, name="edna_filter_options"),
 
-    url(r'^edna/api/v1.0/otu/', views.edna_otu, name="edna_otu"),
+    url(r'^edna/api/v1.0/otu/(?P<id>[0-9]*)', views.edna_otu, name="edna_otu"),
 
     # # otu ontology tables
 

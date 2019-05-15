@@ -550,7 +550,7 @@ class EdnaOTUQuery:
         base_query = self._session.query(OTU.id)
         if otu_terms:
             for term in otu_terms:
-                base_query = base_query.filter(OTU.code.like('%' + term + '%'))
+                base_query = base_query.filter(OTU.code.ilike('%' + term + '%'))
 
         if otu_combination_keys:
             for otu_fk in otu_combination_keys:
@@ -666,7 +666,6 @@ class EdnaOTUQuery:
         return option_list
 
     def get_otu_names(self, primary_keys=None):
-
         ''' Accepts a list of primary keys, returns the otu names/codes where possible.'''
         if (primary_keys is None):
             return None
@@ -675,10 +674,14 @@ class EdnaOTUQuery:
         otu_codes = [r._asdict() for r in query]
         return otu_codes
     
+
+    def get_otu(self, otu_id):
+        ''' returns the otu taxonomic code of otu with the matching id'''
+        otu_code = self._session.query(OTU.code).filter(OTU.id == otu_id).first()
+        return otu_code
+    
     def get_otu_pathogenic_status_by_id(self, primary_keys = None):
-        '''
-        Returns input otus grouped into in pathogenic and nonpathogenic categories.
-        '''
+        ''' Returns input otus grouped into in pathogenic and nonpathogenic categories. '''
         if (primary_keys is None):
             return
 

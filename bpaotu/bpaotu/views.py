@@ -374,15 +374,18 @@ def edna_get_sample_otu(request):
 
 @csrf_exempt
 @require_GET
-def edna_otu(request):
+def edna_otu(request, id=None):
     '''
     returns otu table information.
     '''
     # should improve the api structure. otu/{id}/kingdom/{kingdom id}/etc...
-    filters = request.GET.getlist('id', None)
-    if len(filters) > 0:
+    logger.info(id)
+
+    otu_ids = request.GET.getlist('id', None)
+    logger.info(otu_ids)
+    if len(otu_ids) > 0:
         with EdnaOTUQuery() as query:
-            otu_names = query.get_otu_names(filters)
+            otu_names = query.get_otu_names(otu_ids)
         response = JsonResponse({
             'otu_names': otu_names
         })
@@ -390,6 +393,14 @@ def edna_otu(request):
         response = JsonResponse({
             'otu_names': []
         })
+
+    if id:
+        with EdnaOTUQuery() as q:
+            otu_code = q.get_otu(id)
+            response = JsonResponse({
+                'otu_names': otu_code
+            })
+
     if use_cors:    
         response['Access-Control-Allow-Origin'] = '*'
     return response
