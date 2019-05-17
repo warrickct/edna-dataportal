@@ -530,6 +530,14 @@ class EdnaSampleContextualQuery:
         sample_contextual_results = [_row_to_dict(r) for r in query.all()]
         return sample_contextual_results
 
+    def get_sample_context_entry(self, sample_id):
+        '''Gets the sample context entry based on primary key.'''
+        # TODO: Get full contextual data and return as a dictionary
+        logger.info("getting sample ident using id")
+        sample_identifier = self._session.query(SampleContext.sample_identifier).filter(SampleContext.id == sample_id).first()
+        logger.info(sample_identifier)
+        return sample_identifier[0]
+
 
 class EdnaOTUQuery:
     def __init__(self):

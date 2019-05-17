@@ -27,6 +27,8 @@ urlpatterns = [
 
     url(r'^edna/api/v1.0/otu/(?P<id>[0-9]*)', views.edna_otu, name="edna_otu"),
 
+    url(r'^edna/api/v1.0/sample_context/(?P<id>[0-9]*)', views.edna_sample_contextual, name="edna_sample_context"),
+
     # # otu ontology tables
 
     # url(r'^edna/api/v1.0/suggestions/?(?P<kingdom>[0-9]*)?(/(?P<phylum>[0-9]*))?$', views.edna_suggestions_2, name="edna_suggestions_2"),

@@ -382,7 +382,6 @@ def edna_otu(request, id=None):
     logger.info(id)
 
     otu_ids = request.GET.getlist('id', None)
-    logger.info(otu_ids)
     if len(otu_ids) > 0:
         with EdnaOTUQuery() as query:
             otu_names = query.get_otu_names(otu_ids)
@@ -448,6 +447,21 @@ def edna_filter_options(request):
         response['Access-Control-Allow-Origin'] = '*'
     response['Access-Control-Allow-Headers'] = 'Content-Type'
     return response
+
+@csrf_exempt
+@require_GET
+def edna_sample_contextual(request, id=None):
+    logger.info("calling enda sample_context")
+    with EdnaSampleContextualQuery() as q:
+        site_name = q.get_sample_context_entry(id)
+    response = JsonResponse({
+        'name': site_name
+    })
+    if use_cors:
+        response['Access-Control-Allow-Origin'] = '*'
+    response['Access-Control-Allow-Headers'] = 'Content-Type'
+    return response
+
 
 @csrf_exempt
 @require_GET
