@@ -679,7 +679,7 @@ class EdnaOTUQuery:
                 taxon_prefix = prefixes[index]
                 otu_pk = otu[len(otu) - 1]
                 if otu_segment == '' or otu_segment == ' ':
-                    next(ordered_otus_iter)
+                    continue
                 otu_text_segments.append(taxon_prefix + otu_segment)
                 combination_key.append(ontology_id)
                 otu_key = ';'.join(otu_text_segments)
