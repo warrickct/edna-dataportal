@@ -509,17 +509,7 @@ class EdnaSampleContextualQuery:
 
         if not password:
             logger.info("no password")
-            # query = query.filter(SampleContext.password.like(''))
-            query = query.filter(SampleContext.password == None)
-        # else:
-        #     logger.info("password present:")
-        #     logger.info(password)
-        #     # trim arg
-        #     password_args = password.split('$')
-        #     password_text = password_args[1]
-        #     password = password_text[2:]
-        #     logger.info(password)
-        #     query = query.filter(SampleContext.password.like('%' + password + '%'))
+            query = query.filter(or_(SampleContext.password == None, SampleContext.password.like('')))
 
         if filters:
             logger.info("contextual tags is not none.")
