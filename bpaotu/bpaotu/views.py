@@ -311,12 +311,20 @@ def edna_get_sample_otu(request):
     # Sample Contexts
     sample_contextual_ids = []
     contextual_params = request.GET.getlist('q', None)
+
+    # check for password
+    password = 'no password'
+    for param in contextual_params:
+        if "password" in param:
+            password = param
+    logger.info(password)
+
     # just the primary keys for querying
     # the sample data for plotting geographically etc.
     sample_contextuals_data = []
     with EdnaSampleContextualQuery() as sample_contextual:
         if len(contextual_params) > 0:
-            sample_contextuals_data = sample_contextual.query_sample_contextuals(contextual_params)
+            sample_contextuals_data = sample_contextual.query_sample_contextuals(contextual_params, password)
         else:
             sample_contextuals_data = sample_contextual.query_sample_contextuals()
         sample_contextual_ids = [sample['id'] for sample in sample_contextuals_data]
@@ -342,7 +350,7 @@ def edna_get_sample_otu(request):
         use_endemism = True
 
     with EdnaOTUQuery() as otu_query:
-        otu_ids = otu_query._query_primary_keys(otu_combination_keys=otu_taxonomic_ids, otu_terms=otu_texts, use_endemism=use_endemism, endemic_value=endemic_value)
+        otu_ids = otu_query._query_otu_primary_keys(otu_combination_keys=otu_taxonomic_ids, otu_terms=otu_texts, use_endemism=use_endemism, endemic_value=endemic_value)
         # otu ids sorted by pathogenic status
         # TODO: fix no pathogen ids and no otu ids when no filter params.
         pathogenic_otu_ids = otu_query.get_otu_pathogenic_status_by_id(otu_ids)

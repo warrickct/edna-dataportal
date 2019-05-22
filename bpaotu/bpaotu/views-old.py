@@ -330,7 +330,7 @@ def edna_get_sample_otu(request):
     if endemic_value is not None:
         use_endemism = True
     with EdnaOTUQuery() as otu_query:
-        otu_ids = otu_query._query_primary_keys(otus, use_endemism, endemic_value)
+        otu_ids = otu_query._query_otu_primary_keys(otus, use_endemism, endemic_value)
 
     use_union = request.GET.get('operator', None) == "union" 
 

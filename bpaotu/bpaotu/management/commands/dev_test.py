@@ -20,4 +20,4 @@ class Command(BaseCommand):
 
         with EdnaOTUQuery() as query:
             # query.get_otu_pathogenic_status_by_id("code", ids)
-            query._query_primary_keys(['1'])
+            query._query_otu_primary_keys(['1'])

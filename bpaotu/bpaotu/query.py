@@ -493,7 +493,7 @@ class EdnaSampleContextualQuery:
         field_results= [column.key for column in SampleContext.__table__.columns]
         return field_results
 
-    def query_sample_contextuals(self, filters=None):
+    def query_sample_contextuals(self, filters=None, password=None):
         '''
         Returns primary key set of sample_contextuals matching the filters
         '''
@@ -506,6 +506,21 @@ class EdnaSampleContextualQuery:
         query = self._session.query(SampleContext)
         # iterative build the filter then join it all in one bang and filter at the end.
         sample_contextual_results = []
+
+        if not password:
+            logger.info("no password")
+            # query = query.filter(SampleContext.password.like(''))
+            query = query.filter(SampleContext.password == None)
+        # else:
+        #     logger.info("password present:")
+        #     logger.info(password)
+        #     # trim arg
+        #     password_args = password.split('$')
+        #     password_text = password_args[1]
+        #     password = password_text[2:]
+        #     logger.info(password)
+        #     query = query.filter(SampleContext.password.like('%' + password + '%'))
+
         if filters:
             logger.info("contextual tags is not none.")
             or_filters = list()
@@ -517,6 +532,8 @@ class EdnaSampleContextualQuery:
                     field = filter_segments[0]
                     operation = filter_segments[1][:2]
                     value = filter_segments[1][2:]
+                    logger.info(field)
+                    logger.info(value)
                     if operation == "eq":
                         or_filters.append(getattr(SampleContext, field) == value)
                         # base_query = base_query.filter(getattr(SampleContext, field) == value)
@@ -528,6 +545,7 @@ class EdnaSampleContextualQuery:
                         # base_query = base_query.filter(getattr(SampleContext, field) < value)
             query = query.filter(or_(*or_filters))
         sample_contextual_results = [_row_to_dict(r) for r in query.all()]
+        logger.info(len(sample_contextual_results))
         return sample_contextual_results
 
     def get_sample_context_entry(self, sample_id):
@@ -549,7 +567,7 @@ class EdnaOTUQuery:
     def __exit__(self, exec_type, exc_value, traceback):
         self._session.close()
 
-    def _query_primary_keys(self, otu_combination_keys=None, otu_terms=None, use_endemism=False, endemic_value=False):
+    def _query_otu_primary_keys(self, otu_combination_keys=None, otu_terms=None, use_endemism=False, endemic_value=False):
         '''
         Returns otu primary keys that match the search parameters. Currently used as part of the sample otu query for a filter.
         '''
