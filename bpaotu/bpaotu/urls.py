@@ -29,18 +29,13 @@ urlpatterns = [
 
     url(r'^edna/api/v1.0/sample_context/(?P<id>[0-9]*)', views.edna_sample_contextual, name="edna_sample_context"),
 
-    # # otu ontology tables
-
-    # url(r'^edna/api/v1.0/suggestions/?(?P<kingdom>[0-9]*)?(/(?P<phylum>[0-9]*))?$', views.edna_suggestions_2, name="edna_suggestions_2"),
+    url(r'^edna/api/v1.0/suggestions/', views.edna_suggestions_2, name="edna_suggestions_2"),
 
     url(r'^edna/api/v1.0/suggestions/', views.edna_suggestions_2, name="edna_suggestions_2"),
     
-
-
-    # TEST
-    # url(r'^edna/api/v1.0/suggestions/(?:kingdom/(?P<kingdom>[0-9]*))?(?:/phylum/(?P<phylum>[0-9]*))(?:/class/(?P<klass>[0-9]*))', views.edna_suggestions_2, name="edna_suggestions_2"),
-
-    # w: TODO: WIP: For posting new data sets.
+    url(r'^edna/api/v1.0/context-suggestions/(?P<context_field>[a-zA-Z\d_]*)', views.edna_contextual_suggestions, name="edna_contextual_suggestions"),
+    
+    # TODO: WIP: For posting new data sets.
     # url(r'^edna/api/upload$', views.AbundanceUpload.as_view()),
     # url(r'^edna/api/dev/test/$', views.test, name="Test stub method"),
 

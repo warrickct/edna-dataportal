@@ -487,16 +487,19 @@ class EdnaSampleContextualQuery:
         return result
 
     def query_contextual_fields(self, filters=None):
-        '''
-        Returns an list of all the columns in the sample_contextual fields used for suggestions
-        '''
+        ''' Returns an list of all the columns in the sample_contextual fields used for suggestions '''
         field_results= [column.key for column in SampleContext.__table__.columns]
         return field_results
 
+    def query_distinct_field_values(self, field):
+        '''Gets the distinct values of a field which will function as selection options.'''
+        query = self._session.query(SampleContext.__table__.c[field]).distinct(SampleContext.__table__.c[field])
+        distinct_values = [r[0] for r in query.all()]
+        # logger.info(distinct_values)
+        return distinct_values
+
     def query_sample_contextuals(self, filters=None, password=None):
-        '''
-        Returns primary key set of sample_contextuals matching the filters
-        '''
+        ''' Returns primary key set of sample_contextuals matching the filters '''
         def _row_to_dict(row):
             d = {}
             for column in row.__table__.columns:

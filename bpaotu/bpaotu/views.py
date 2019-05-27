@@ -59,7 +59,7 @@ logger = logging.getLogger("rainbow")
 ORDERING_PATTERN = re.compile(r'^order\[(\d+)\]\[(dir|column)\]$')
 COLUMN_PATTERN = re.compile(r'^columns\[(\d+)\]\[(data|name|searchable|orderable)\]$')
 
-use_cors = False
+use_cors = True
 
 def make_environment_lookup():
     with OntologyInfo() as info:
@@ -541,42 +541,21 @@ def edna_suggestions_2(request):
     response['Access-Control-Allow-Headers'] = 'Content-Type'
     return response
 
-# @csrf_exempt
-# @require_GET
-# def edna_kingdom(request):
-#     logger.info("kingdom stub")
-    
 
-# @csrf_exempt
-# @require_GET
-# def edna_phylum(request):
-#     logger.info("phylum stub")
-
-# @csrf_exempt
-# @require_GET
-# def edna_klass(request):
-#     logger.info("class stub")
-
-# @csrf_exempt
-# @require_GET
-# def edna_order(request):
-#     logger.info("order stub")
-
-# @csrf_exempt
-# @require_GET
-# def edna_family(request):
-#     logger.info("family stub")
-
-# @csrf_exempt
-# @require_GET
-# def edna_genus(request):
-#     logger.info("genus stub")
-
-# @csrf_exempt
-# @require_GET
-# def edna_species(request):
-#     logger.info("species stub")
-
+@csrf_exempt
+@require_GET
+# def edna_contextual_suggestions(contextual_field=None):
+def edna_contextual_suggestions(request, context_field):
+    logger.info(context_field)
+    with EdnaSampleContextualQuery() as q:
+        distinct_field_values = q.query_distinct_field_values(context_field)
+    response = JsonResponse({
+        'data': distinct_field_values
+    })
+    if use_cors:    
+        response['Access-Control-Allow-Origin'] = '*'
+    response['Access-Control-Allow-Headers'] = 'Content-Type'
+    return response
 
 # TEMP:TEST: API class made for easier uploading.
 class UploadFileForm(forms.Form):
