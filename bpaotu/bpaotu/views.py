@@ -488,6 +488,9 @@ def edna_suggestions_2(request):
     with EdnaOTUQuery() as q:
         results = q.get_taxonomy_options()
 
+        # Constructing the tree
+
+        # TODO: this doesn't need to be done everytime.
         tree ={}
         for r in results:
             level = tree
@@ -504,31 +507,38 @@ def edna_suggestions_2(request):
         # logger.info(tree['k__Fungi']['_id'])
     # logger.info(tree)
 
+
+    # Traverse tree
+
+    def _grab_current_level_suggestions():
+        # grab all within level
+        for k, v in level.items():
+            if k == "text":
+                continue
+            # logger.info(k)
+            # logger.info(v)
+            suggestion = {
+                'id': k,
+                'text': v['text']
+            }
+            suggestions.append(suggestion)
+
     suggestions = []
     taxons = [kingdom, phylum, klass, order, family, genus, species]
     level = tree
-    for t in taxons:
+    for taxon in taxons:
         # logger.info(t)
-        if t:
-            t_id = int(t)
+        if taxon:
+            t_id = int(taxon)
             if t_id in level:
                 level = level[t_id]
                 logger.info(level.keys())
             else:
                 raise KeyError('taxon id not found')
         else:
-            # grab all within level
-            for k, v in level.items():
-                if k == "text":
-                    continue
-                # logger.info(k)
-                # logger.info(v)
-                suggestion = {
-                    'id': k,
-                    'text': v['text']
-                }
-                suggestions.append(suggestion)
-            break
+            print("end of the road")
+        _grab_current_level_suggestions()
+        break
     # logger.info(suggestions)
 
     # return HttpResponse("<h1>"+ response +"</h1>")
