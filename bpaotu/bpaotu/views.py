@@ -313,7 +313,7 @@ def edna_get_sample_otu(request):
     contextual_params = request.GET.getlist('q', None)
 
     # check for password
-    password = 'no password'
+    password = None
     for param in contextual_params:
         if "password" in param:
             password = param
