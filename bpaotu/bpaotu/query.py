@@ -493,9 +493,12 @@ class EdnaSampleContextualQuery:
 
     def query_distinct_field_values(self, field):
         '''Gets the distinct values of a field which will function as selection options.'''
-        query = self._session.query(SampleContext.__table__.c[field]).distinct(SampleContext.__table__.c[field])
-        distinct_values = [r[0] for r in query.all()]
-        # logger.info(distinct_values)
+        distinct_values = []
+        if field != "password":
+            query = self._session.query(SampleContext.__table__.c[field]).distinct(SampleContext.__table__.c[field])
+            distinct_values = [r[0] for r in query.all()]
+        else:
+            distinct_values = [""]
         return distinct_values
 
     def query_sample_contextuals(self, filters=None, password=None):
@@ -511,7 +514,6 @@ class EdnaSampleContextualQuery:
         sample_contextual_results = []
 
         if not password:
-            logger.info("no password")
             query = query.filter(or_(SampleContext.password == None, SampleContext.password.like('')))
 
         if filters:
