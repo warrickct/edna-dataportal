@@ -510,7 +510,7 @@ def edna_suggestions_2(request):
 
     # Traverse tree
 
-    def _grab_current_level_suggestions():
+    def _get_current_level_suggestions():
         # grab all within level
         for k, v in level.items():
             if k == "text":
@@ -523,6 +523,78 @@ def edna_suggestions_2(request):
             }
             suggestions.append(suggestion)
 
+    def _find_next_truthy_taxon_node():
+        # find the next truthy taxon in the list
+        # however many skips it is to find that then concatenate the results that many levels down the the tree from the current level.
+        print("stub")
+
+    def _test():
+
+        def _flatten(dict):
+            ''' goal - flatten only the final level of dictionary entires within the b subtree.'''
+            # logger.info(dict)
+            level = dict['b']
+            for key, value in level.items():
+                logger.info(key)
+            logger.info(level)
+
+        logger.info("running test")
+        test_dict = {
+            'a': {
+                '1':{
+                    'xx': "",
+                    'yy': "",
+                    'zz': "",
+                },
+                '2':{
+                    'xx': "",
+                    'yy': "",
+                    'zz': "",
+                },
+                '3':{
+                    'xx': "",
+                    'yy': "",
+                    'zz': "",
+                },
+            },
+            'b': {
+                '1':{
+                    'xx': "",
+                    'yy': "",
+                    'zz': "",
+                },
+                '2':{
+                    'xx': "",
+                    'yy': "",
+                    'zz': "",
+                },
+                '3':{
+                    'xx': "",
+                    'yy': "",
+                    'zz': "",
+                },
+            },
+            'c': {
+                '1':{
+                    'xx': "",
+                    'yy': "",
+                    'zz': "",
+                },
+                '2':{
+                    'xx': "",
+                    'yy': "",
+                    'zz': "",
+                },
+                '3':{
+                    'xx': "",
+                    'yy': "",
+                    'zz': "",
+                },
+            }
+        }
+        _flatten(test_dict)
+
+    _test()
     suggestions = []
     taxons = [kingdom, phylum, klass, order, family, genus, species]
     level = tree
@@ -536,8 +608,10 @@ def edna_suggestions_2(request):
             else:
                 raise KeyError('taxon id not found')
         else:
-            print("end of the road")
-        _grab_current_level_suggestions()
+            # continue on to next truthy taxon
+            # find next truthy taxon, 
+            _find_next_truthy_taxon_node()
+        _get_current_level_suggestions()
         break
     # logger.info(suggestions)
 
