@@ -473,6 +473,28 @@ def edna_sample_contextual(request, id=None):
 
 @csrf_exempt
 @require_GET
+def edna_suggestions_3(request, taxon):
+    ''' gets the taxonomic categories with other matching taxonomic parameters'''
+
+    # grab taxon ids from the args
+    kingdom = request.GET.get('kingdom', None)
+    phylum = request.GET.get('phylum', None)
+    klass = request.GET.get('class', None)
+    order = request.GET.get('order', None)
+    family = request.GET.get('family', None)
+    genus = request.GET.get('genus', None)
+    species = request.GET.get('species', None)
+    with EdnaOTUQuery() as q:
+        suggestions = q.get_taxon_suggestions(taxon, kingdom=kingdom, phylum=phylum, klass=klass, order=order, family=family, genus=genus, species=species)
+    # logger.info(phylum)
+    return JsonResponse({
+        'data': suggestions
+    })
+
+
+
+@csrf_exempt
+@require_GET
 def edna_suggestions_2(request):
     kingdom = request.GET.get('kingdom', None)
     phylum = request.GET.get('phylum', None)
@@ -523,14 +545,6 @@ def edna_suggestions_2(request):
             }
             suggestions.append(suggestion)
 
-    def _find_next_node(index, level):
-        # find the next truthy taxon in the list
-        # however many skips it is to find that then concatenate the results that many levels down the the tree from the current level.
-        logger.info("hi")
-        logger.info(index)
-        logger.info(level)
-
-
     suggestions = []
     taxons = [kingdom, phylum, klass, order, family, genus, species]
     logger.info(taxons)
@@ -541,18 +555,11 @@ def edna_suggestions_2(request):
             t_id = int(taxon)
             if t_id in level:
                 level = level[t_id]
-                logger.info(level.keys())
             else:
                 raise KeyError('taxon id not found')
         else:
-            # continue on to next truthy taxon
-            # find next truthy taxon, 
-            _find_next_node(index, level)
-        _get_current_level_suggestions()
-        break
-    # logger.info(suggestions)
-
-    # return HttpResponse("<h1>"+ response +"</h1>")
+            _get_current_level_suggestions()
+            break
     
     response =  JsonResponse({
         'suggestions': suggestions
@@ -601,7 +608,6 @@ class AbundanceUpload(TemplateView):
             logger.info(line)
 
     def post(self, request):
-        
         return HttpResponse("post method")
 
 @csrf_exempt

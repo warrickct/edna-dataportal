@@ -593,9 +593,7 @@ class EdnaOTUQuery:
         return otu_ids
 
     def get_taxonomy_options(self, filters=None, page=1, page_size=50):
-        '''
-        checks against list of codes with ids accompanying them. Returns the codes where the filter is contains within them.
-        '''
+        ''' Retrieves taxonomic filter suggestions. If no entry in cache, queries the database then stores in the cache. '''
 
         def _sort_by_element_index(elem):
             return elem[0]
@@ -613,10 +611,7 @@ class EdnaOTUQuery:
         return result
 
     def _query_taxonomy_options(self):
-        '''
-        Created the taxonomic search suggestions with their ontological keys are mapped.
-        Returns a list of otu codes (including prefix), accompanied by combination key of ids.
-        '''
+        ''' Created the taxonomic search suggestions with their ontological keys are mapped. Returns a list of otu codes (including prefix), accompanied by combination key of ids. '''
         ontology_tables = [OTUKingdom, OTUPhylum, OTUClass, OTUOrder, OTUFamily, OTUGenus, OTUSpecies]
         ordered_otus = [r for r in (
             self._session.query(
@@ -686,15 +681,12 @@ class EdnaOTUQuery:
             option_list.append([key, value[0], value[1]])
         return option_list
 
-    def get_otu_names(self, primary_keys=None):
-        ''' Accepts a list of primary keys, returns the otu names/codes where possible.'''
         if (primary_keys is None):
             return None
 
         query = (self._session.query(OTU.id, OTU.code).filter(OTU.id.in_(primary_keys)).all())
         otu_codes = [r._asdict() for r in query]
         return otu_codes
-    
 
     def get_otu(self, otu_id):
         ''' returns the otu taxonomic code of otu with the matching id'''
@@ -718,6 +710,27 @@ class EdnaOTUQuery:
         result = pathogenic
         # result['nonpathogenic'] = nonpathogenic
         return result
+
+    def get_taxon_suggestions(self, taxon, **kwargs):
+        logger.info(kwargs)
+
+        # query the otu table with the known params
+
+        # specify taxon suggestions we want
+        query = self._session.query(OTU.__table__.c[taxon + "_id"]).distinct(OTU.__table__.c[taxon + "_id"])
+        logger.info(query)
+        for key, value in kwargs.items():
+            if value is None:
+                continue
+            if key == "klass":
+                key = "class"
+            logger.info(key)
+            logger.info(value)
+            query = query.filter(OTU.__table__.c[key + "_id"] == value)
+        logger.info(query)
+        taxon_ids = [r[0] for r in query.all()]
+        return taxon_ids
+        # query = self._session.query(SampleContext.__table__.c[field]).distinct(SampleContext.__table__.c[field])
 
 class EdnaSampleOTUQuery:
     def __init__(self):
