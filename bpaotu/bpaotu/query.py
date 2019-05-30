@@ -515,9 +515,7 @@ class EdnaOTUQuery:
         self._session.close()
 
     def _query_otu_primary_keys(self, otu_combination_keys=None, otu_terms=None, use_endemism=False, endemic_value=False):
-        '''
-        Returns otu primary keys that match the search parameters. Currently used as part of the sample otu query for a filter.
-        '''
+        ''' Returns otu primary keys that match the search parameters. Currently used as part of the sample otu query for a filter. '''
         otu_columns = [OTU.kingdom_id, OTU.phylum_id, OTU.class_id, OTU.order_id, OTU.family_id, OTU.genus_id, OTU.species_id]
         otu_ids = []
         base_query = self._session.query(OTU.id)
@@ -529,6 +527,10 @@ class EdnaOTUQuery:
             for otu_fk in otu_combination_keys:
                 otu_query = base_query
                 for index, ontological_id in enumerate(otu_fk.split(' ')):
+                    if ontological_id == "any":
+                        # quick addition to skip over unspecified taxons in an otu fk chain.
+                        logger.info("skipping missing foreign key filter.")
+                        continue
                     otu_column = otu_columns[index]
                     otu_query = otu_query.filter(otu_column == ontological_id)
                 if use_endemism:

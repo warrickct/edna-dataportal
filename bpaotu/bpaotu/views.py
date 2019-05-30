@@ -332,10 +332,10 @@ def edna_get_sample_otu(request):
     # Retrieving fk combination keys from request
     otu_ids = []
     otu_taxonomic_ids = [otu for otu in request.GET.getlist('otu') if otu is not '']
+    logger.info(otu_taxonomic_ids)
 
     # Getting text if there is any for text based search (endangered organisms)
     otu_texts = [otu for otu in request.GET.getlist('text') if otu is not '']
-    logger.info(otu_texts)
 
     # if endemism value exists in request then query will include it.
     endemic_value = request.GET.get('endemic', None) == "true" 
