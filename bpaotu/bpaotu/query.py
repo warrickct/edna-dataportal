@@ -412,54 +412,6 @@ class EdnaMetadataQuery:
         return results
 
 
-# depcrecated:
-class EdnaOrderedSampleOTU:
-    def __init__(self):
-        self._session = Session()
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exec_type, exc_value, traceback):
-        self._session.close()
-
-    def get_sample_otu_ordered(self):
-        cache = caches['edna_sample_otu_results']
-        hash_str = 'eDNA_Sample_OTUs:cached'
-        key = sha256(hash_str.encode('utf8')).hexdigest()
-        result = cache.get(key)
-        if not result:
-            logger.info("sample_otu_cache not found, making new cache")
-            result = self._query_sample_otu_ordered()
-            # cache.set(key, result)
-        else:
-            logger.info("Using cached sample_otu results")
-        return result
-
-    def _query_sample_otu_ordered(self):
-        # assume otu.code and sample_context ordered by id
-        otus = [r[0] for r in (
-            self._session.query(OTU.code)
-                .order_by(OTU.id)
-                .all()
-        )]
-        sites = [r[0] for r in (
-            self._session.query(SampleContext._site)
-                .order_by(SampleContext.id)
-                .all()
-        )]
-        abundances = (
-                self._session.query(SampleOTU.otu_id, SampleOTU.sample_id, SampleOTU.count)
-                .all()
-        )
-        response = {
-            'otus': otus,
-            'sites': sites,
-            'abundances': abundances,
-        }
-        return response
-
-
 class EdnaSampleContextualQuery:
     def __init__(self):
         self._session = Session()
@@ -712,25 +664,33 @@ class EdnaOTUQuery:
         return result
 
     def get_taxon_suggestions(self, taxon, **kwargs):
-        logger.info(kwargs)
-
-        # query the otu table with the known params
-
+        ''' Returns all distinct values for a taxonomic columns that match other taxonomic classifications that are input. '''
         # specify taxon suggestions we want
-        query = self._session.query(OTU.__table__.c[taxon + "_id"]).distinct(OTU.__table__.c[taxon + "_id"])
-        logger.info(query)
+        taxon_ids_query = self._session.query(OTU.__table__.c[taxon + "_id"]).distinct(OTU.__table__.c[taxon + "_id"])
         for key, value in kwargs.items():
-            if value is None:
+            if not value:
                 continue
             if key == "klass":
                 key = "class"
             logger.info(key)
             logger.info(value)
-            query = query.filter(OTU.__table__.c[key + "_id"] == value)
-        logger.info(query)
-        taxon_ids = [r[0] for r in query.all()]
-        return taxon_ids
-        # query = self._session.query(SampleContext.__table__.c[field]).distinct(SampleContext.__table__.c[field])
+            taxon_ids_query = taxon_ids_query.filter(OTU.__table__.c[key + "_id"] == value)
+        taxon_ids = [r[0] for r in taxon_ids_query.all()]
+
+        # Ontology table look-up
+        taxon_hierarchy = {
+            'kingdom': OTUKingdom, 
+            'phylum': OTUPhylum, 
+            'class': OTUClass, 
+            'order': OTUOrder, 
+            'family': OTUFamily, 
+            'genus': OTUGenus, 
+            'species': OTUSpecies
+        }
+        active_ontology_table = taxon_hierarchy[taxon]
+        taxon_values_query = self._session.query(active_ontology_table.id, active_ontology_table.value).filter(active_ontology_table.id.in_(taxon_ids))
+        taxon_values = [{'id':r[0], 'text':r[1]} for r in taxon_values_query.all()]
+        return taxon_values
 
 class EdnaSampleOTUQuery:
     def __init__(self):

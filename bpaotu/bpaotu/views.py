@@ -302,9 +302,7 @@ def test(request):
 @csrf_exempt
 @require_GET
 def edna_get_sample_otu(request):
-    '''
-    Returns sample_otu entries from otu table combination-keys
-    '''
+    ''' Returns sample_otu entries from otu table combination-keys '''
 
     # FIXME: otu filters applied subtractively, contextual filters applied additively.
 
@@ -335,13 +333,9 @@ def edna_get_sample_otu(request):
     otu_ids = []
     otu_taxonomic_ids = [otu for otu in request.GET.getlist('otu') if otu is not '']
 
-    # Getting text if there is any
+    # Getting text if there is any for text based search (endangered organisms)
     otu_texts = [otu for otu in request.GET.getlist('text') if otu is not '']
     logger.info(otu_texts)
-    if otu_texts:
-        logger.info("otu texts true")
-    else:
-        logger.info("otu texts false")
 
     # if endemism value exists in request then query will include it.
     endemic_value = request.GET.get('endemic', None) == "true" 
@@ -475,7 +469,6 @@ def edna_sample_contextual(request, id=None):
 @require_GET
 def edna_suggestions_3(request, taxon):
     ''' gets the taxonomic categories with other matching taxonomic parameters'''
-
     # grab taxon ids from the args
     kingdom = request.GET.get('kingdom', None)
     phylum = request.GET.get('phylum', None)
@@ -487,10 +480,13 @@ def edna_suggestions_3(request, taxon):
     with EdnaOTUQuery() as q:
         suggestions = q.get_taxon_suggestions(taxon, kingdom=kingdom, phylum=phylum, klass=klass, order=order, family=family, genus=genus, species=species)
     # logger.info(phylum)
-    return JsonResponse({
-        'data': suggestions
+    response = JsonResponse({
+        'suggestions': suggestions
     })
-
+    if use_cors:
+        response['Access-Control-Allow-Origin'] = '*'
+    response['Access-Control-Allow-Headers'] = 'Content-Type'
+    return response
 
 
 @csrf_exempt
