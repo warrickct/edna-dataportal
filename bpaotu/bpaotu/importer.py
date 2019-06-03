@@ -194,14 +194,16 @@ class DataImporter:
             ('species', OTUSpecies),
         ])
 
-        def _clean_taxonomy_fields(ontology_parts):
+        def _clean_taxonomy_fields(ontology_parts, fname):
             '''
             Pads or trims the taxonomic list size to match the number of columns in the otu table.
             '''
             changes = 0
-            # TEMP: Stripping the prefix from ontology segments.
+            # Stripping the prefix and whitespace from ontology segments.
             for index, part in enumerate(ontology_parts):
-                ontology_parts[index] = re.sub('[A-z]__', '', part)
+                # removing taxonomic prefix, whitespaces, and parenthesis
+                part = re.sub('[A-z]__|[\[\]\(\)]|\s', '', part)
+                ontology_parts[index] = part
             while len(ontology_parts) < len(ontologies):
                 unclassified_padding = ''
                 ontology_parts.append(unclassified_padding)
@@ -226,7 +228,7 @@ class DataImporter:
                         otu_lookup[otu_hash(row[''])] = index
                         otu = row['']
                         ontology_parts = otu.split(';')
-                        ontology_parts = _clean_taxonomy_fields(ontology_parts)
+                        ontology_parts = _clean_taxonomy_fields(ontology_parts, fname)
                         obj = dict(zip(ontologies.keys(), ontology_parts))
                         obj['otu'] = otu
                         imported += 1
