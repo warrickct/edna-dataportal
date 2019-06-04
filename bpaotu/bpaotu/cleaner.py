@@ -8,7 +8,6 @@ logger = logging.getLogger("rainbow")
 
 class DataCleaner:
 
-
     def __init__(self, import_base, **kwargs):
         self._import_base = import_base
         self._dev_test = False
@@ -30,6 +29,8 @@ class DataCleaner:
         return new_row
 
     def remove_duplicate_sample_otus(self):
+        ''' Combines abundance values for rows that contain the exact same OTU definition within a file.'''
+        # TODO: Make the duplicate search apply across entire dataset or better yet, handle it within database entry rather than data pre-import cleaning.
         logger.info(self._import_base)
         for fname in sorted(glob(self._import_base + 'edna/separated-data/data/*.tsv')):
             with open(fname, 'rU') as input_file:
@@ -59,6 +60,5 @@ class DataCleaner:
                 for row in otu_row_dict:
                     # TODO: small casting of values to reduce file size ?
                     writer.writerow(otu_row_dict[row])
-
-            print('Rows combined: %d' % duplicates_handled_count)
-            print('Rows checked: %d' % rows_checked)
+            print('Total rows combined: %d' % duplicates_handled_count)
+            print('Total Rows checked: %d' % rows_checked)
