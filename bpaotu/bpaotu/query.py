@@ -522,7 +522,6 @@ class EdnaOTUQuery:
         if otu_terms:
             for term in otu_terms:
                 base_query = base_query.filter(OTU.code.ilike('%' + term + '%'))
-
         if otu_combination_keys:
             for otu_fk in otu_combination_keys:
                 otu_query = base_query
@@ -637,7 +636,14 @@ class EdnaOTUQuery:
 
         if (primary_keys is None):
             return None
+        query = (self._session.query(OTU.id, OTU.code).filter(OTU.id.in_(primary_keys)).all())
+        otu_codes = [r._asdict() for r in query]
+        return otu_codes
 
+    def get_otu_names(self, primary_keys=None):
+        ''' Accepts a list of primary keys, returns the otu names/codes where possible.'''
+        if (primary_keys is None):
+            return None
         query = (self._session.query(OTU.id, OTU.code).filter(OTU.id.in_(primary_keys)).all())
         otu_codes = [r._asdict() for r in query]
         return otu_codes
@@ -651,7 +657,6 @@ class EdnaOTUQuery:
         ''' Returns input otus grouped into in pathogenic and nonpathogenic categories. '''
         if (primary_keys is None):
             return
-
         result = {}
         pathogenic = []
         # nonpathogenic = []
@@ -678,7 +683,6 @@ class EdnaOTUQuery:
             logger.info(value)
             taxon_ids_query = taxon_ids_query.filter(OTU.__table__.c[key + "_id"] == value)
         taxon_ids = [r[0] for r in taxon_ids_query.all()]
-
         # Ontology table look-up
         taxon_hierarchy = {
             'kingdom': OTUKingdom, 
