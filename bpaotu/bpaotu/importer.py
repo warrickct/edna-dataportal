@@ -200,6 +200,7 @@ class DataImporter:
             # Stripping the prefix and whitespace from ontology segments.
             for index, part in enumerate(ontology_parts):
                 # removing taxonomic prefix, whitespaces, and parenthesis
+                part = part.lower()
                 part = re.sub('[A-z]__|[\[\]\(\)]|\s', '', part)
                 ontology_parts[index] = part
             while len(ontology_parts) < len(ontologies):
