@@ -132,14 +132,10 @@ class DataImporter:
         return dict((t.value, t.id) for t in self._session.query(db_class).all())
 
     def _load_ontology(self, ontology_defn, row_iter):
-        '''
-        import the ontologies, and build a mapping from
-        permitted values into IDs in those ontologies
-        '''
+        ''' import the ontologies, and build a mapping from permitted values into IDs in those ontologies '''
         by_class = defaultdict(list)
         for field, db_class in ontology_defn.items():
             by_class[db_class].append(field)
-
         # each unique category for an a classification level.
         # w: goes through the list of categories under an item
         # w: if the row contains one of them add the value to the set.
@@ -202,9 +198,11 @@ class DataImporter:
                 # removing taxonomic prefix, whitespaces, and parenthesis
                 part = part.lower()
                 part = re.sub('[A-z]__|[\[\]\(\)]|\s', '', part)
+                if part =='' or re.search('unclassified|unidentified', part):
+                    part = 'unclassified'
                 ontology_parts[index] = part
             while len(ontology_parts) < len(ontologies):
-                unclassified_padding = ''
+                unclassified_padding = 'unclassified'
                 ontology_parts.append(unclassified_padding)
                 changes += 1
             while len(ontology_parts) > len(ontologies):
@@ -295,8 +293,7 @@ class DataImporter:
             return field
 
         def _make_context(file_paths):
-            '''
-            Iterates the metadata, Makes an object mirror a sample_context tuple and returns it 
+            ''' Iterates the metadata, Makes an object mirror a sample_context tuple and returns it 
             TODO: Allow for automated 0 values when a field is missing.
             '''
 
@@ -330,9 +327,7 @@ class DataImporter:
                         yield SampleContext(**attrs)
 
         def _combined_rows(file_paths):
-            '''
-            Iterates all files in a specified pattern, converts the rows to a dictionary
-            '''
+            ''' Iterates all files in a specified pattern, converts the rows to a dictionary '''
             for fname in file_paths:
                 with open(fname, "r") as file:
                     reader = csv.reader(file)
@@ -366,11 +361,6 @@ class DataImporter:
             else:
                 # print("couldnt validate/find site " + column.upper() + " in site lookup")
                 return False
-
-        # TODO: need to update data cleaners
-        sample_otu_combinations_used = []
-        def check_for_duplicates(sample_id, otu_id, count):
-            return None
 
         def _make_sample_otus():    
             ''' Generates tuples from a glob to be written to row.'''
