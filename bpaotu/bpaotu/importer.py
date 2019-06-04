@@ -195,9 +195,7 @@ class DataImporter:
         ])
 
         def _clean_taxonomy_fields(ontology_parts, fname):
-            '''
-            Pads or trims the taxonomic list size to match the number of columns in the otu table.
-            '''
+            ''' Pads or trims the taxonomic list size to match the number of columns in the otu table. '''
             changes = 0
             # Stripping the prefix and whitespace from ontology segments.
             for index, part in enumerate(ontology_parts):
@@ -215,9 +213,7 @@ class DataImporter:
             return ontology_parts
 
         def _taxon_rows_iter():
-            '''
-            Iterates over abundance file. Returns segmented version of the name otu's name field using ';' as the delimiting character.
-            '''
+            ''' Iterates over abundance file. Returns segmented version of the name otu's name field using ';' as the delimiting character. '''
             for fname in sorted(glob(self._import_base + 'edna/separated-data/data/*.tsv')):
                 # logger.info("Reading taxonomy file: %s" % fname)
                 with open(fname) as file:
@@ -376,6 +372,7 @@ class DataImporter:
             return None
 
         def _make_sample_otus():    
+            ''' Generates tuples from a glob to be written to row.'''
             for fname in sorted(glob(self._import_base + 'edna/separated-data/data/*.tsv')):
                 logger.info('writing abundance rows from %s' % fname)
                 file = open(fname, 'r')
@@ -416,7 +413,7 @@ class DataImporter:
             key = sha256(hash_str.encode('utf8')).hexdigest()
             cache.delete(key)
 
-        logger.warning("Starting edna abundance loader.")
+        logger.warning("Starting edna abundance loading...")
         with tempfile.NamedTemporaryFile(mode='w', dir='/data', prefix='bpaotu-', delete=False) as temp_fd:
             fname = temp_fd.name
             os.chmod(fname, 0o644)
