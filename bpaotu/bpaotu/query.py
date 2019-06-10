@@ -826,10 +826,8 @@ class EdnaPostImport:
 
         logger.info("Assigning pathogenic status.")
         otus_with_genus = [otu for otu in self._session.query(OTU) if('g__' in otu.code)]
-        pathogenic_ids = []
         for otu in otus_with_genus:
             otu_genus_species_substr = otu.code.split('g__')[1]
-            logger.info(otu_genus_species_substr)
             for classification in __classified_terms_iter():
                 if __contains_all_terms(otu.code, classification):
                     otu.pathogenic = True
