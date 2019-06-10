@@ -446,11 +446,11 @@ class EdnaSampleContextualQuery:
     def query_distinct_field_values(self, field):
         '''Gets the distinct values of a field which will function as selection options.'''
         distinct_values = []
-        if field != "password":
+        if field == "password":
+            distinct_values = ["None"]
+        else:
             query = self._session.query(SampleContext.__table__.c[field]).distinct(SampleContext.__table__.c[field])
             distinct_values = [r[0] for r in query.all()]
-        else:
-            distinct_values = [""]
         return distinct_values
 
     def query_sample_contextuals(self, filters=None, password=None):
@@ -794,51 +794,48 @@ class EdnaPostImport:
             self._session.commit()
 
     def _calculate_pathogenic_otus(self, import_base):
-        '''
-        compares to a list of pathogenic taxon classifications, if matches then sets pathogenic boolean to true
-        '''
+        ''' compares to a list of pathogenic taxon classifications, if matches then sets pathogenic boolean to true '''
 
         def __contains_all_terms(code, classification):
-            '''
-            checks that all the term segments are in a code.
-            '''
+            ''' checks that all the term segments are in a code. '''
             for segment in classification:
                 if segment in code:
                     continue
                 else:
                     return False
             return True
-                    
-        logger.info("assigning pathogenic status")
-        with open(import_base + 'edna/separated-data/pathogen_data/Potential_pathogens_list.txt', 'r') as f_input:
-            lines = f_input.readlines()
-            with open('./potential_pathogens.csv', 'w') as f_out:
-                writer = csv.writer(f_out, delimiter=',')
-                # first pass get headers
-                pathogen_dict = {}
-                classified_terms_list = []
-                for line in lines[1:]:
-                    header, entries = line.split(':')
-                    for entry in entries.split(','):
-                        entry.strip()
-                        classification = entry.split()
-                        if 'subsp.' in classification:
-                            classification.remove('subsp.')
-                        if 'pv.' in classification:
-                            classification.remove('pv.')
-                        classified_terms_list.append(classification)
-            otus = [otu for otu in self._session.query(OTU)]
-            pathogenic_ids = []
-            for otu in otus:
-                for classification in classified_terms_list:
-                    if __contains_all_terms(otu.code, classification):
-                        pathogenic_ids.append(otu.id)
-                    else:
-                        continue
 
-            for otu in [r for r in self._session.query(OTU).filter(OTU.id.in_(pathogenic_ids))]:
-                otu.pathogenic = True
-            self._session.commit()
+        def __classified_terms_iter():
+            ''' Retrieves pathogenic definitions in iterable form '''
+            with open(import_base + 'edna/separated-data/pathogen_data/Potential_pathogens_list.txt', 'r') as f_input:
+                lines = f_input.readlines()
+                with open('./potential_pathogens.csv', 'w') as f_out:
+                    writer = csv.writer(f_out, delimiter=',')
+                    # first pass get headers
+                    pathogen_dict = {}
+                    for line in lines[1:]:
+                        header, entries = line.split(':')
+                        for entry in entries.split(','):
+                            entry.strip()
+                            classification = entry.split()
+                            if 'subsp.' in classification:
+                                classification.remove('subsp.')
+                            if 'pv.' in classification:
+                                classification.remove('pv.')
+                            yield classification
+
+        logger.info("Assigning pathogenic status.")
+        otus_with_genus = [otu for otu in self._session.query(OTU) if('g__' in otu.code)]
+        pathogenic_ids = []
+        for otu in otus_with_genus:
+            otu_genus_species_substr = otu.code.split('g__')[1]
+            logger.info(otu_genus_species_substr)
+            for classification in __classified_terms_iter():
+                if __contains_all_terms(otu.code, classification):
+                    otu.pathogenic = True
+                else:
+                    continue
+        self._session.commit()
 
 class ContextualFilter:
     mode_operators = {
