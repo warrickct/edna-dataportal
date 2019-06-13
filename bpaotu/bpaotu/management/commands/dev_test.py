@@ -1,6 +1,8 @@
 from django.core.management.base import BaseCommand
 from ...query import EdnaOTUQuery
 
+from ...data_enhancer import DataEnhancer
+
 import logging
 
 logger = logging.getLogger("rainbow")
@@ -13,11 +15,16 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         logger.info("testing dev_test command")
-        
-        ids = []
-        for i in range(4000):
-            ids.append(i)
 
-        with EdnaOTUQuery() as query:
-            # query.get_otu_pathogenic_status_by_id("code", ids)
-            query._query_otu_primary_keys(['1'])
+        logger.info(kwargs)
+        dd = DataEnhancer(kwargs['base_dir'])
+        dd.combine_data()
+        # DataEnhancer.using_csv()
+        
+        # ids = []
+        # for i in range(4000):
+        #     ids.append(i)
+
+        # with EdnaOTUQuery() as query:
+        #     # query.get_otu_pathogenic_status_by_id("code", ids)
+        #     query._query_otu_primary_keys(['1'])
