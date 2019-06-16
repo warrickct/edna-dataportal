@@ -462,10 +462,11 @@ class EdnaSampleContextualQuery:
             return d
 
         query = self._session.query(SampleContext)
-        # iterative build the filter then join it all in one bang and filter at the end.
+        # iteratively build the filter then run the query at the end
         sample_contextual_results = []
 
         if not password:
+            # If there is no password entered, explicitly exclude password datasets
             query = query.filter(or_(SampleContext.password == None, SampleContext.password.like('')))
 
         if filters:
