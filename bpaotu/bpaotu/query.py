@@ -467,7 +467,7 @@ class EdnaSampleContextualQuery:
 
         if not password:
             query = query.filter(or_(SampleContext.password == None, SampleContext.password.like('')))
-
+        
         if filters:
             logger.info("contextual tags is not none.")
             or_filters = list()
@@ -479,8 +479,10 @@ class EdnaSampleContextualQuery:
                     field = filter_segments[0]
                     operation = filter_segments[1][:2]
                     value = filter_segments[1][2:]
-                    logger.info(field)
-                    logger.info(value)
+                    if field == 'password' and value == 'none':
+                        value = None
+                    # logger.info('field: ' + field)
+                    # logger.info('value: ' + value)
                     if operation == "eq":
                         or_filters.append(getattr(SampleContext, field) == value)
                         # base_query = base_query.filter(getattr(SampleContext, field) == value)
@@ -492,6 +494,7 @@ class EdnaSampleContextualQuery:
                         # base_query = base_query.filter(getattr(SampleContext, field) < value)
             query = query.filter(or_(*or_filters))
         sample_contextual_results = [_row_to_dict(r) for r in query.all()]
+        logger.info("returning")
         logger.info(len(sample_contextual_results))
         return sample_contextual_results
 
