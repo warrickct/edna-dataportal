@@ -480,10 +480,8 @@ class EdnaSampleContextualQuery:
                     field = filter_segments[0]
                     operation = filter_segments[1][:2]
                     value = filter_segments[1][2:]
-                    if field == 'password' and value == 'none':
+                    if field == 'password' and value.lower() == 'none':
                         value = None
-                    # logger.info('field: ' + field)
-                    # logger.info('value: ' + value)
                     if operation == "eq":
                         or_filters.append(getattr(SampleContext, field) == value)
                         # base_query = base_query.filter(getattr(SampleContext, field) == value)
