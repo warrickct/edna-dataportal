@@ -444,7 +444,7 @@ class EdnaSampleContextualQuery:
         return field_results
 
     def query_distinct_field_values(self, field):
-        '''Gets the distinct values of a field which will function as selection options.'''
+        ''' Gets the distinct values of a field which will function as selection options.'''
         distinct_values = []
         if field == "password":
             distinct_values = ["None"]
@@ -499,7 +499,7 @@ class EdnaSampleContextualQuery:
 
     def get_sample_context_entry(self, sample_id):
         '''Gets the sample context entry based on primary key.'''
-        # TODO: Get full contextual data and return as a dictionary
+        # TODO: Get full contextual data and return as a dictionary currently only returns sample_identifier
         logger.info("getting sample ident using id")
         sample_identifier = self._session.query(SampleContext.sample_identifier).filter(SampleContext.id == sample_id).first()
         logger.info(sample_identifier)

@@ -49,14 +49,14 @@ class DataEnhancer:
             yield point
 
     def polygon_file_iterator():
-        for row in iterate_csv('./nzlri-soil.csv'):
+        for row in iterate_csv('edna/geographic-data/nzlri-soil.csv'):
             poly = wkt.loads(row['WKT'])
             yield poly
 
-    def make_poly_list():
+    def make_poly_list(self):
         print("making poly list...")
         casted_poly_list = []
-        for row in iterate_csv('./nzlri-soil.csv'):
+        for row in self.iterate_csv('edna/geographic-data/nzlri-soil.csv'):
             poly = wkt.loads(row['WKT'])
             row['poly'] = poly
             casted_poly_list.append(row)
@@ -65,30 +65,30 @@ class DataEnhancer:
     def make_sample_list(self):
         print("making sample point lookup")
         samples_list = []
-        for row in self.iterate_csv(self.base_dir + 'edna/separated-data/data/p7_sarah_thompson.csv'):
+        for row in self.iterate_csv(self.base_dir + 'edna/separated-data/metadata/p7_sarah_thompson.csv'):
             point = Point(float(row['Longitude']), float('-' + row['Latitude']))
             row['point'] = point
             samples_list.append(row)
         return samples_list
 
-    def add_fields_to_dict(dict1, dict2, string):
+    def add_fields_to_dict(self, dict1, dict2, string):
         for key, value in dict2.items():
             if string in key.lower():
                 print("adding: " + key)
                 dict1[key] = value
         return dict1
 
-    def alter_sample_properties(sample, poly_tuple):
-        new_sample = add_fields_to_dict(sample, poly_tuple, "soil")
+    def alter_sample_properties(self, sample, poly_tuple):
+        new_sample = self.add_fields_to_dict(sample, poly_tuple, "soil")
         del new_sample['point']
         return new_sample
 
     def combine_data(self):
         sample_list = self.make_sample_list()
-        p_list = make_poly_list()
+        p_list = self.make_poly_list()
         for sample in sample_list:
             for poly_tuple in p_list:
                 if poly_tuple['poly'].contains(sample['point']):
-                    new_sample = alter_sample_properties(sample, poly_tuple)
+                    new_sample = self.alter_sample_properties(sample, poly_tuple)
                     print(new_sample)
                     break
