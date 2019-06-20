@@ -43,7 +43,7 @@ class DataEnhancer:
     #         yield point
 
     def insert_str_at(self, file_path, insert_str, index_substr):
-        idx = file_path.index(index_substr)
+        idx = file_path.rfind(index_substr)
         return file_path[:idx] + insert_str + file_path[idx:]
 
     def iterate_csv(self, path):
@@ -81,6 +81,8 @@ class DataEnhancer:
         for key, value in soil_tuple.items():
             if string in key.lower():
                 # print("adding: " + key)
+                if value == '':
+                    value = 'unclassified'
                 sample[key] = value
         return sample
 
@@ -101,25 +103,18 @@ class DataEnhancer:
                     break
         return enhanced_sample_list
 
-    def enhance_data2(self):
-        f = open("dict_test", 'w+')
-        writer = csv.DictWriter(f, ['1', '2'])
-        writer.writeheader()
-        writer.writerow({
-            '1': 'test',
-            '2': 'test2',
-        })
-        f.close()
-
-        # output_file_path = self.insert_str_at(self.sample_dir, '-new', '.csv')
-        # print(output_file_path)
-        # with open(output_file_path, 'w') as out_file:
-        #     w2 = csv.writer(out_file)
-        #     w2.writerow("hi")
-
+    # def enhance_data2(self):
+    #     f = open("dict_test", 'w+')
+    #     writer = csv.DictWriter(f, ['1', '2'])
+    #     writer.writeheader()
+    #     writer.writerow({
+    #         '1': 'test',
+    #         '2': 'test2',
+    #     })
+    #     f.close()
     
     def enhance_data(self):
-        output_file_path = self.insert_str_at(self.sample_dir, '-new', '.csv')
+        output_file_path = self.insert_str_at(self.sample_dir, '/enhanced', '/')
         # print('output file in : %s' % output_file_path)
         # f = open("dict_test", 'w+')
         f = open(output_file_path, 'w+')
