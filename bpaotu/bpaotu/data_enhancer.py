@@ -23,30 +23,36 @@ class DataEnhancer:
 
     def __init__(self, base_dir):
         self.base_dir = base_dir
+        self.sample_dir = self.base_dir + 'edna/separated-data/metadata/p7_sarah_thompson.csv'
+        self.geographic_dir = self.base_dir + 'edna/geographic-data/nzlri-soil.csv'
 
-    def using_shape():
-        for coord in sample_context_file_iterator():
-            print(coord)
-        df = gpd.read_file('./nzlri-soil.shp')
-        for row in df.iterrows():
-            print(row)
+    # def using_shape():
+    #     for coord in sample_context_file_iterator():
+    #         print(coord)
+    #     df = gpd.read_file('./nzlri-soil.shp')
+    #     for row in df.iterrows():
+    #         print(row)
+
+
+    # def sample_context_file_iterator():
+    #     for row in iterate_csv('edna/separated-data/data/p7_sarah_thompson.csv'):
+    #         try:
+    #             point = Point(float(row['Longitude']), float('-' + row['Latitude']))
+    #         except:
+    #             continue
+    #         yield point
+
+    def insert_str_at(self, file_path, insert_str, index_substr):
+        idx = file_path.index(index_substr)
+        return file_path[:idx] + insert_str + file_path[idx:]
 
     def iterate_csv(self, path):
         # edna/separated-data/data/p7_sarah_thompson.csv
-        print(self.base_dir)
         csv.field_size_limit(sys.maxsize)
         with open(path, mode='r', encoding='utf-8-sig') as file:
             reader = csv.DictReader(file, delimiter=',')
             for row in reader:
                 yield row
-
-    def sample_context_file_iterator():
-        for row in iterate_csv('edna/separated-data/data/p7_sarah_thompson.csv'):
-            try:
-                point = Point(float(row['Longitude']), float('-' + row['Latitude']))
-            except:
-                continue
-            yield point
 
     def polygon_file_iterator():
         for row in iterate_csv('edna/geographic-data/nzlri-soil.csv'):
@@ -71,24 +77,59 @@ class DataEnhancer:
             samples_list.append(row)
         return samples_list
 
-    def add_fields_to_dict(self, dict1, dict2, string):
-        for key, value in dict2.items():
+    def add_fields_to_dict(self, sample, soil_tuple, string):
+        for key, value in soil_tuple.items():
             if string in key.lower():
-                print("adding: " + key)
-                dict1[key] = value
-        return dict1
+                # print("adding: " + key)
+                sample[key] = value
+        return sample
 
     def alter_sample_properties(self, sample, poly_tuple):
         new_sample = self.add_fields_to_dict(sample, poly_tuple, "soil")
         del new_sample['point']
         return new_sample
 
-    def combine_data(self):
+    def create_enhanced_sample_list(self):
         sample_list = self.make_sample_list()
         p_list = self.make_poly_list()
+        enhanced_sample_list = []
         for sample in sample_list:
             for poly_tuple in p_list:
                 if poly_tuple['poly'].contains(sample['point']):
-                    new_sample = self.alter_sample_properties(sample, poly_tuple)
-                    print(new_sample)
+                    enhanced_sample = self.alter_sample_properties(sample, poly_tuple)
+                    enhanced_sample_list.append(enhanced_sample)
                     break
+        return enhanced_sample_list
+
+    def enhance_data2(self):
+        f = open("dict_test", 'w+')
+        writer = csv.DictWriter(f, ['1', '2'])
+        writer.writeheader()
+        writer.writerow({
+            '1': 'test',
+            '2': 'test2',
+        })
+        f.close()
+
+        # output_file_path = self.insert_str_at(self.sample_dir, '-new', '.csv')
+        # print(output_file_path)
+        # with open(output_file_path, 'w') as out_file:
+        #     w2 = csv.writer(out_file)
+        #     w2.writerow("hi")
+
+    
+    def enhance_data(self):
+        # output_file_path = self.insert_str_at(self.sample_dir, '-new', '.csv')
+        # print('output file in : %s' % output_file_path)
+        f = open("dict_test", 'w+')
+        new_samples = self.create_enhanced_sample_list()
+        fieldnames = new_samples[0].keys()
+        # with open(f, 'w') as out_file:
+
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        for sample in new_samples:
+            # print('x')
+            writer.writerow(sample)
+            # exit()
+        f.close()

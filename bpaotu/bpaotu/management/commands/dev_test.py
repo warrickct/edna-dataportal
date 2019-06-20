@@ -18,7 +18,10 @@ class Command(BaseCommand):
 
         logger.info(kwargs)
         dd = DataEnhancer(kwargs['base_dir'])
-        dd.combine_data()
+
+        dd.enhance_data()
+        # dd.combine_data()
+
         # DataEnhancer.using_csv()
         
         # ids = []
