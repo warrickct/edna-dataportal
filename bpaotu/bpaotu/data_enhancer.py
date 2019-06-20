@@ -119,17 +119,14 @@ class DataEnhancer:
 
     
     def enhance_data(self):
-        # output_file_path = self.insert_str_at(self.sample_dir, '-new', '.csv')
+        output_file_path = self.insert_str_at(self.sample_dir, '-new', '.csv')
         # print('output file in : %s' % output_file_path)
-        f = open("dict_test", 'w+')
+        # f = open("dict_test", 'w+')
+        f = open(output_file_path, 'w+')
         new_samples = self.create_enhanced_sample_list()
         fieldnames = new_samples[0].keys()
-        # with open(f, 'w') as out_file:
-
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         for sample in new_samples:
-            # print('x')
             writer.writerow(sample)
-            # exit()
         f.close()
