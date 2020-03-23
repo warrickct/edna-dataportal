@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile-base
       args:
         http_proxy:
-    image: muccg/bpaotu-base
+    image: wazzx/edna-muccg-python-base
 
   builder:
     build:
@@ -15,7 +15,7 @@ services:
       dockerfile: Dockerfile-builder
       args:
         http_proxy:
-    image: muccg/bpaotu-builder
+    image: wazzx/edna-builder
     command: releasetarball
     network_mode: host
     environment:
@@ -35,7 +35,7 @@ services:
         ARG_PIP_INDEX_URL: ${PIP_INDEX_URL}
         ARG_PIP_TRUSTED_HOST: ${PIP_TRUSTED_HOST}
         http_proxy:
-    image: muccg/bpaotu-dev
+    image: wazzx/edna-dev
     volumes:
       - .:/app
 

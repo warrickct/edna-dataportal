@@ -28,7 +28,7 @@ services:
         - ./data/nginx:/data
 
     runserver:
-      image: muccg/bpaotu-dev
+      image: wazzx/edna-dev
       env_file:
         - .env_local
       environment:
@@ -36,14 +36,14 @@ services:
         - WAIT_FOR_CACHE=1
 
     celeryworker:
-      image: muccg/bpaotu-dev
+      image: wazzx/edna-dev
       command: celery_worker
       environment:
         - WAIT_FOR_DB=1
         - WAIT_FOR_CACHE=1
 
     uwsgi:
-      image: muccg/bpaotu-dev
+      image: wazzx/edna-dev
       command: uwsgi_local
       environment:
         - WAIT_FOR_DB=1

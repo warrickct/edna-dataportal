@@ -1,5 +1,5 @@
 #
-FROM muccg/bpaotu-builder
+FROM wazzx/edna-builder
 MAINTAINER https://github.com/muccg/bpaotu
 
 #At build time changing these args allow us to use a local devpi mirror
