@@ -1,5 +1,5 @@
 # Container used to build bpaotu
-FROM muccg/bpaotu-base
+FROM wazzx/edna-muccg-python-base
 MAINTAINER https://github.com/muccg/bpaotu
 
 ENV PIP_NO_CACHE_DIR "off"
