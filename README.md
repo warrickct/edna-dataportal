@@ -34,8 +34,6 @@ root@420c1d1e9fe4:~# /app/docker-entrypoint.sh django-admin otu_ingest /data/otu
 
 This is an `.tsv` file that contains the name of sites where eDNA was sampled from and contains metrics regarding the sample.
 
-[Bioplatforms Australia data portal](https://data.bioplatforms.com).
-
 ### Abundance files
 
 A tab-delimited file with the extension `.tsv`
