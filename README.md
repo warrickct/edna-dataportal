@@ -1,11 +1,11 @@
-# Bioplatforms Australia - Operational taxonomic unit (OTU) query system
+# eDNA Dataportal
 
-BPA-OTU is a web-based portal into Operational Taxonomic Unit (OTU) data, developed to access data from the Australian Microbiome.
+This repository is a variation of the Bioplatforms Australia dataportal which has been adapted to be a backend for the eDNA Virtual Hub.
 
 ## Quick Setup
 
 * [Install docker and compose](https://docs.docker.com/compose/install/)
-* git clone [https://github.com/muccg/bpaotu.git](https://github.com/muccg/bpaotu.git)
+* git clone [https://github.com/warrickct/edna-dataportal.git](https://github.com/warrickct/edna-dataportal.git)
 * `./develop.sh build base`
 * `./develop.sh build builder`
 * `./develop.sh build dev`
@@ -15,14 +15,13 @@ wrappers arround docker and docker-compose.
 
 ## Input data
 
-BPA-OTU loads input data to generate a PostgreSQL schema named `otu`. The importer functionality completely
+The eDNA dataportal loads input data to generate a PostgreSQL schema named `otu`. The importer functionality completely
 erases all previously loaded data.
 
 Three categories of file are ingested:
 
 * contextual metadata (XLSX format; data import is provided for Marine Microbes and BASE metadata)
-* taxonomy files (extension: `.tax`)
-* OTU abundance tables (extension: `.otu`)
+* OTU abundance tables (extension: `.tsv`)
 
 All files should be placed under a base directory, and then the ingest can be run as a Django management command:
 
@@ -33,42 +32,22 @@ root@420c1d1e9fe4:~# /app/docker-entrypoint.sh django-admin otu_ingest /data/otu
 
 ### Contextual Metadata
 
-These files are managed by Bioplatforms Australia. The latest version of these files can be found at the
+This is an `.tsv` file that contains the name of sites where eDNA was sampled from and contains metrics regarding the sample.
+
 [Bioplatforms Australia data portal](https://data.bioplatforms.com).
-
-### Taxonomy files
-
-A tab-delimited file with extension '.tax'
-
-The first row of this file is a header, and has the form:
-
-```tsv
-OTU ID\tkingdom\tphylum\tclass\torder\tfamily\tgenus
-```
-
-Each column has the following format:
-
-* OTU ID: a string describing the OTU (GATC string)
-* technology: text string (e.g. 16S, A16S, 18S, ITS, ...)
-* kingdom: text string
-* phylum: text string
-* class: text string
-* order: text string
-* family: text string
-* genus: text string
 
 ### Abundance files
 
-A tab-delimited file with the extension `.otu`
+A tab-delimited file with the extension `.tsv`
 
 The first row is a header, with the following format:
 
-* OTU ID: header for OTU ID column
+* OTU code: The OTU name column.
 * Sample ID [repeated]: the identifier for the sample ID for which this column specifies abundance
 
 Each following has the following format:
 
-* OTU ID: the OTU ID (text string, corresponding to the strings in the taxonomy file)
+* OTU code: The full taxonomic name of the organism delimited with "`;`" (text string, corresponding to the strings in the taxonomy file)
 * Abundance [repeated]: the abundance (floating point) for the column's sample ID
 
 ## Development
@@ -80,10 +59,6 @@ and development. Appropiate configuration files are available depending on usage
 
 Note that for data ingestion to work you need passwords to the hosted data, these are available from BPA on request.
 Set passwords in your environment, these will be passed to the container.
-
-## Deployments
-
-[Bioplatforms Australia - Australian Microbiome Search Facility](https://data.bioplatforms.com/bpa/otu/)
 
 ## Licence
 
