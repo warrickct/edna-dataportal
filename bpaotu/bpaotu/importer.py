@@ -213,7 +213,7 @@ class DataImporter:
 
         def _taxon_rows_iter():
             ''' Iterates over abundance file. Returns segmented version of the name otu's name field using ';' as the delimiting character. '''
-            for fname in sorted(glob(self._import_base + 'edna/separated-data/data/*.tsv')):
+            for fname in sorted(glob(self._import_base + 'edna/data/*.tsv')):
                 # logger.info("Reading taxonomy file: %s" % fname)
                 with open(fname) as file:
                     reader = csv.DictReader(file, delimiter='\t')
@@ -341,7 +341,7 @@ class DataImporter:
 
         # custom site lookup dictionary edna ones use the code rather than PK in the data files. For faster abundance loading
         site_lookup = {}
-        file_paths = sorted(glob(self._import_base + 'edna/separated-data/metadata/*.csv'))
+        file_paths = sorted(glob(self._import_base + 'edna/metadata/*.csv'))
         mappings = self._load_ontology(DataImporter.edna_sample_ontologies, _combined_rows(file_paths))
         self._session.bulk_save_objects(_make_context(file_paths))
         self._session.commit()
@@ -364,7 +364,10 @@ class DataImporter:
 
         def _make_sample_otus():    
             ''' Generates tuples from a glob to be written to row.'''
-            for fname in sorted(glob(self._import_base + 'edna/separated-data/data/*.tsv')):
+            sample_otu_dir = self._import_base + 'edna/data/*.tsv'
+            logger.info("=======hi====================================")
+            logger.info(glob(self._import_base + '*'))
+            for fname in sorted(glob(self._import_base + 'edna/abundance_data/*.tsv')):
                 logger.info('writing abundance rows from %s' % fname)
                 file = open(fname, 'r')
                 reader = csv.DictReader(file, delimiter='\t')
