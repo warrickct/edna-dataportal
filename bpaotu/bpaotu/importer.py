@@ -213,7 +213,7 @@ class DataImporter:
 
         def _taxon_rows_iter():
             ''' Iterates over abundance file. Returns segmented version of the name otu's name field using ';' as the delimiting character. '''
-            for fname in sorted(glob(self._import_base + 'edna/data/*.tsv')):
+            for fname in sorted(glob(self._import_base + 'edna/abundance_data/*.tsv')):
                 # logger.info("Reading taxonomy file: %s" % fname)
                 with open(fname) as file:
                     reader = csv.DictReader(file, delimiter='\t')
