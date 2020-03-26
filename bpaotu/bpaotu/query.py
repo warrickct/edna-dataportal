@@ -550,9 +550,6 @@ class EdnaOTUQuery:
     def get_taxonomy_options(self, filters=None, page=1, page_size=50):
         ''' Retrieves taxonomic filter suggestions. If no entry in cache, queries the database then stores in the cache. '''
 
-        def _sort_by_element_index(elem):
-            return elem[0]
-
         cache = caches['edna_taxonomy_options_results']
         hash_str = 'eDNA_Taxonomy_Options:cached'
         key = sha256(hash_str.encode('utf8')).hexdigest()
@@ -676,12 +673,17 @@ class EdnaOTUQuery:
         ''' Returns all distinct values for a taxonomic columns that match other taxonomic classifications that are input. '''
         # specify taxon suggestions we want
         taxon_ids_query = self._session.query(OTU.__table__.c[taxon + "_id"]).distinct(OTU.__table__.c[taxon + "_id"])
+
+        # fish out the text value for later culling of results
+        text = ""
         for key, value in kwargs.items():
+            if key ==  "text":
+                text = value
+                continue
             if not value:
                 continue
             if key == "klass":
                 key = "class"
-            logger.info(key)
             logger.info(value)
             taxon_ids_query = taxon_ids_query.filter(OTU.__table__.c[key + "_id"] == value)
         taxon_ids = [r[0] for r in taxon_ids_query.all()]
@@ -697,7 +699,8 @@ class EdnaOTUQuery:
         }
         active_ontology_table = taxon_hierarchy[taxon]
         taxon_values_query = self._session.query(active_ontology_table.id, active_ontology_table.value).filter(active_ontology_table.id.in_(taxon_ids))
-        taxon_values = [{'id':r[0], 'text':r[1]} for r in taxon_values_query.all()]
+        # if austen wants only results that start with the text, change this line accordingly.
+        taxon_values = [{'id':r[0], 'text':r[1]} for r in taxon_values_query.all() if (text in r[1] or text is "")]
         return taxon_values
 
 class EdnaSampleOTUQuery:
