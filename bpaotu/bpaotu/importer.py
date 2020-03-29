@@ -273,6 +273,17 @@ class DataImporter:
         - Also made a sitelookup to pass in as our site data doesn't contain site data.
         '''
 
+        def _test_shapefile():
+            logger.info("TESTING SHAPEFILE........................")
+            shapefile_stream = open(self._import_base + 'edna/soil_classification_data/fsl-new-zealand-soil-classification.shp', 'rb')
+            shapefile_dbf = open(self._import_base + 'edna/soil_classification_data/fsl-new-zealand-soil-classification.dbf', 'rb')
+            shapefile_reader = shapefile.Reader(shp=shapefile_stream, dbf=shapefile_dbf, encoding='utf-8')
+            for index, shape in enumerate(shapefile_reader.iterShapeRecords()):
+               record = shapefile_reader.record(index)
+               logger.info(record)
+            a = 10/0
+            
+
         def _clean_value(value):
             ''' Makes sure the value for the entry is uniform '''
             if isinstance(value, str):
@@ -299,6 +310,7 @@ class DataImporter:
             ''' Iterates the metadata, Makes an object mirror a sample_context tuple and returns it 
             TODO: Allow for automated 0 values when a field is missing.
             '''
+            _test_shapefile()
 
             logger.info('loading edna contextual metadata from .tsv files')
             # site_id delcared here so we can go over multiple files at once.
@@ -312,7 +324,6 @@ class DataImporter:
                         attrs ={}
                         site_lookup[site_hash(file_row['Sample_identifier'].upper())] = site_id
                         # testing it won't grab two site id entries instead of overwrite existing
-
                         attrs['id'] = site_id
                         for edna_ontology_item in DataImporter.edna_sample_ontologies:
                             # if it's an ontology field just add '_id' to the end of the name
