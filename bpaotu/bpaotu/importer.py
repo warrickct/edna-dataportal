@@ -46,6 +46,9 @@ from .otu import (
     SCHEMA,
     make_engine)
 
+import shapefile
+import shapely
+
 # w: for clearing sample_otu cache upon import.
 from django.core.cache import caches
 from hashlib import sha256
