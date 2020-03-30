@@ -216,7 +216,7 @@ class DataImporter:
 
         def _taxon_rows_iter():
             ''' Iterates over abundance file. Returns segmented version of the name otu's name field using ';' as the delimiting character. '''
-            for fname in sorted(glob(self._import_base + 'edna/abundance_data/*.tsv')):
+            for fname in sorted(glob(self._import_base + 'edna/separated-data/abundance_data/*.tsv')):
                 # logger.info("Reading taxonomy file: %s" % fname)
                 with open(fname) as file:
                     reader = csv.DictReader(file, delimiter='\t')
@@ -320,7 +320,8 @@ class DataImporter:
             # since it's >100mb
             soil_shapefile = fiona.open("edna/soil_classification_data/fsl-new-zealand-soil-classification.shp")
             logger.info(soil_shapefile.schema)
-            # x= 2/0
+            # since soil classification takes a while
+            soil_class_lookup = {}
 
             for fname in file_paths:
                 with open(fname, "r") as file:
@@ -351,14 +352,21 @@ class DataImporter:
                         #     'coordinates': (float(attrs['longitude']), float(attrs['latitude']))
                         # })
                         attr_point = Point(float(attrs['longitude']), float(attrs['latitude']))
-                        soil_class = None
-                        for feature in soil_shapefile:
-                            # logger.info(feature)
-                            if  attr_point.within(shape(feature['geometry'])): 
-                                # logger.info(feature['properties']['nzsc_class'])
-                                soil_class = feature['properties']['nzsc_class']
-                        logger.info(soil_class)
-                        attrs['soil_type'] = soil_class
+                        attr_key = attrs['longitude'] + "," + attrs['latitude']
+                        if attr_key in soil_class_lookup:
+                            logger.info("soil data exists, using lookup value")
+                            attrs['soil_type'] = soil_class_lookup[attr_key]
+                        else:
+                            logger.info(attr_point)
+                            soil_class = None
+                            for feature in soil_shapefile:
+                                # logger.info(feature)
+                                if  attr_point.within(shape(feature['geometry'])): 
+                                    # logger.info(feature['properties']['nzsc_class'])
+                                    soil_class = feature['properties']['nzsc_class']
+                                    soil_class_lookup[attr_key] = feature['properties']['nzsc_class']
+                            logger.info(soil_class)
+                            attrs['soil_type'] = soil_class
                         yield SampleContext(**attrs)
 
         def _combined_rows(file_paths):
@@ -376,7 +384,7 @@ class DataImporter:
 
         # custom site lookup dictionary edna ones use the code rather than PK in the data files. For faster abundance loading
         site_lookup = {}
-        file_paths = sorted(glob(self._import_base + 'edna/metadata/*.csv'))
+        file_paths = sorted(glob(self._import_base + 'edna/separated-data/metadata/*.csv'))
         mappings = self._load_ontology(DataImporter.edna_sample_ontologies, _combined_rows(file_paths))
         self._session.bulk_save_objects(_make_context_entries(file_paths))
         self._session.commit()
@@ -399,10 +407,7 @@ class DataImporter:
 
         def _make_sample_otus():
             ''' Generates tuples from a glob to be written to row.'''
-            sample_otu_dir = self._import_base + 'edna/data/*.tsv'
-            logger.info("=======hi====================================")
-            logger.info(glob(self._import_base + '*'))
-            for fname in sorted(glob(self._import_base + 'edna/abundance_data/*.tsv')):
+            for fname in sorted(glob(self._import_base + 'edna/separated-data/abundance_data/*.tsv')):
                 logger.info('writing abundance rows from %s' % fname)
                 file = open(fname, 'r')
                 reader = csv.DictReader(file, delimiter='\t')

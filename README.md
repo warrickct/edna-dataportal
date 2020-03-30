@@ -31,6 +31,12 @@ docker exec -it bpaotu_runserver_1 bash
 $ docker-compose exec runserver bash
 root@420c1d1e9fe4:~# /app/docker-entrypoint.sh django-admin otu_ingest /data/
 ```
+accessing db
+```
+docker exec -it bpaotu_db_1 bash
+psql -U webapp
+set search_path=otu;
+```
 
 ### Contextual Metadata
 
