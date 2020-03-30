@@ -49,6 +49,8 @@ from .otu import (
 from shapely.geometry import Point, shape
 import fiona
 
+import time
+
 # w: for clearing sample_otu cache upon import.
 from django.core.cache import caches
 from hashlib import sha256
@@ -367,6 +369,8 @@ class DataImporter:
                                     soil_class_lookup[attr_key] = feature['properties']['nzsc_class']
                             logger.info(soil_class)
                             attrs['soil_type'] = soil_class
+                            if soil_class is None:
+                                soil_class_lookup[attr_key] = None
                         yield SampleContext(**attrs)
 
         def _combined_rows(file_paths):
@@ -386,7 +390,11 @@ class DataImporter:
         site_lookup = {}
         file_paths = sorted(glob(self._import_base + 'edna/separated-data/metadata/*.csv'))
         mappings = self._load_ontology(DataImporter.edna_sample_ontologies, _combined_rows(file_paths))
+        # timing performance
+        start_time = time.time()
         self._session.bulk_save_objects(_make_context_entries(file_paths))
+        end_time = time.time()
+        logger.info("Time taken: " + (end_time - start_time))
         self._session.commit()
         return site_lookup
 
