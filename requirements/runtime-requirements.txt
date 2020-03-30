@@ -30,4 +30,5 @@ celery==4.1.0
 
 # soil classification addition
 Shapely==1.7.0
-pyshp==2.1.0
+# not sure if the post1 is allowed
+fiona==1.8.13.post1

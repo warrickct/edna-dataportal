@@ -46,8 +46,8 @@ from .otu import (
     SCHEMA,
     make_engine)
 
-import shapefile
-import shapely
+from shapely.geometry import Point, shape
+import fiona
 
 # w: for clearing sample_otu cache upon import.
 from django.core.cache import caches
@@ -264,7 +264,7 @@ class DataImporter:
                 text('''COPY otu.otu from :csv CSV header''').execution_options(autocommit=True),
                 csv=fname)
         finally:
-        #     os.unlink(fname)
+            #     os.unlink(fname)
             return otu_lookup
 
     def load_edna_contextual_metadata(self):
@@ -275,14 +275,14 @@ class DataImporter:
 
         def _test_shapefile():
             logger.info("TESTING SHAPEFILE........................")
-            shapefile_stream = open(self._import_base + 'edna/soil_classification_data/fsl-new-zealand-soil-classification.shp', 'rb')
-            shapefile_dbf = open(self._import_base + 'edna/soil_classification_data/fsl-new-zealand-soil-classification.dbf', 'rb')
-            shapefile_reader = shapefile.Reader(shp=shapefile_stream, dbf=shapefile_dbf, encoding='utf-8')
-            for index, shape in enumerate(shapefile_reader.iterShapeRecords()):
-               record = shapefile_reader.record(index)
-               logger.info(record)
-            a = 10/0
-            
+            soil_shapefile = fiona.open("edna/soil_classification_data/fsl-new-zealand-soil-classification.shp")
+            logger.info(soil_shapefile.schema)
+            multipoints= ([pt for pt in fiona.open("edna/soil_classification_data/fsl-new-zealand-soil-classification.shp")])
+            # for i, pt in enumerate(points):
+            #     point = shape(['geometry'])
+            #     if point.within(shape(multi['geometry'])):
+            #         print(i, shape(points[i])['geometry'])
+            # a = 10/0
 
         def _clean_value(value):
             ''' Makes sure the value for the entry is uniform '''
@@ -306,7 +306,7 @@ class DataImporter:
             # Made all the fields have a underscore at the start to prevent python word conflicts. Probably need a better solution.
             return field
 
-        def _make_context(file_paths):
+        def _make_context_entries(file_paths):
             ''' Iterates the metadata, Makes an object mirror a sample_context tuple and returns it 
             TODO: Allow for automated 0 values when a field is missing.
             '''
@@ -315,6 +315,13 @@ class DataImporter:
             logger.info('loading edna contextual metadata from .tsv files')
             # site_id delcared here so we can go over multiple files at once.
             site_id = 0
+
+            # loading in soil multipoly so we don't have to redo it multiple times
+            # since it's >100mb
+            soil_shapefile = fiona.open("edna/soil_classification_data/fsl-new-zealand-soil-classification.shp")
+            logger.info(soil_shapefile.schema)
+            # x= 2/0
+
             for fname in file_paths:
                 with open(fname, "r") as file:
                     logger.info(fname)
@@ -338,6 +345,20 @@ class DataImporter:
                             if _clean_value(value) == '' or _clean_value(value) == ' ':
                                 attrs[cleaned_field] = 0
                         site_id += 1
+                        # adding soil classification
+                        # attr_point = shapely.geometry.shape({
+                        #     'type': 'Point',
+                        #     'coordinates': (float(attrs['longitude']), float(attrs['latitude']))
+                        # })
+                        attr_point = Point(float(attrs['longitude']), float(attrs['latitude']))
+                        soil_class = None
+                        for feature in soil_shapefile:
+                            # logger.info(feature)
+                            if  attr_point.within(shape(feature['geometry'])): 
+                                # logger.info(feature['properties']['nzsc_class'])
+                                soil_class = feature['properties']['nzsc_class']
+                        logger.info(soil_class)
+                        attrs['soil_type'] = soil_class
                         yield SampleContext(**attrs)
 
         def _combined_rows(file_paths):
@@ -357,10 +378,10 @@ class DataImporter:
         site_lookup = {}
         file_paths = sorted(glob(self._import_base + 'edna/metadata/*.csv'))
         mappings = self._load_ontology(DataImporter.edna_sample_ontologies, _combined_rows(file_paths))
-        self._session.bulk_save_objects(_make_context(file_paths))
+        self._session.bulk_save_objects(_make_context_entries(file_paths))
         self._session.commit()
         return site_lookup
-        
+
     def load_edna_otu_abundance(self, otu_lookup, site_lookup):
 
         def _validate_count(count):
@@ -376,7 +397,7 @@ class DataImporter:
                 # print("couldnt validate/find site " + column.upper() + " in site lookup")
                 return False
 
-        def _make_sample_otus():    
+        def _make_sample_otus():
             ''' Generates tuples from a glob to be written to row.'''
             sample_otu_dir = self._import_base + 'edna/data/*.tsv'
             logger.info("=======hi====================================")
@@ -431,9 +452,9 @@ class DataImporter:
             w.writerows(_make_sample_otus())
         try:
             self._engine.execute(
-                    text('''COPY otu.sample_otu from :csv CSV header''').execution_options(autocommit=True),
-                    # text('''COPY otu.sample_otu(sample_id, otu_id, count) from :csv CSV header''').execution_options(autocommit=True),
-                    csv=fname)
+                text('''COPY otu.sample_otu from :csv CSV header''').execution_options(autocommit=True),
+                # text('''COPY otu.sample_otu(sample_id, otu_id, count) from :csv CSV header''').execution_options(autocommit=True),
+                csv=fname)
             _clear_edna_caches()
         except:
             logger.critical("unable to import")
