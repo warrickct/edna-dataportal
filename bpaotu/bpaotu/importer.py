@@ -394,7 +394,7 @@ class DataImporter:
         start_time = time.time()
         self._session.bulk_save_objects(_make_context_entries(file_paths))
         end_time = time.time()
-        logger.info("Time taken: " + (end_time - start_time))
+        logger.info("Time taken: " + str(end_time - start_time))
         self._session.commit()
         return site_lookup
 
