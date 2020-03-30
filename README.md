@@ -29,7 +29,7 @@ All files should be placed under a base directory, and then the ingest can be ru
 ```bash
 docker exec -it bpaotu_runserver_1 bash
 $ docker-compose exec runserver bash
-root@420c1d1e9fe4:~# /app/docker-entrypoint.sh django-admin otu_ingest /data/otu/
+root@420c1d1e9fe4:~# /app/docker-entrypoint.sh django-admin otu_ingest /data/
 ```
 
 ### Contextual Metadata
