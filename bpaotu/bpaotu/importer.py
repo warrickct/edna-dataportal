@@ -394,8 +394,8 @@ class DataImporter:
         start_time = time.time()
         self._session.bulk_save_objects(_make_context_entries(file_paths))
         end_time = time.time()
-        logger.info("Time taken: " + str(end_time - start_time))
         self._session.commit()
+        logger.info("Time taken: " + str(end_time - start_time))
         return site_lookup
 
     def load_edna_otu_abundance(self, otu_lookup, site_lookup):
