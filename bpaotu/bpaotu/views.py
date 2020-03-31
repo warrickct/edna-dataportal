@@ -59,8 +59,11 @@ logger = logging.getLogger("rainbow")
 ORDERING_PATTERN = re.compile(r'^order\[(\d+)\]\[(dir|column)\]$')
 COLUMN_PATTERN = re.compile(r'^columns\[(\d+)\]\[(data|name|searchable|orderable)\]$')
 
-# use_cors = False
-use_cors = True
+# production
+use_cors = False
+
+# set true for dev
+# use_cors = True
 
 def make_environment_lookup():
     with OntologyInfo() as info:
