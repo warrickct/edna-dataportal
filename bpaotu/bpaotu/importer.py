@@ -275,17 +275,6 @@ class DataImporter:
         - Also made a sitelookup to pass in as our site data doesn't contain site data.
         '''
 
-        def _test_shapefile():
-            logger.info("TESTING SHAPEFILE........................")
-            soil_shapefile = fiona.open("edna/soil_classification_data/fsl-new-zealand-soil-classification.shp")
-            logger.info(soil_shapefile.schema)
-            multipoints= ([pt for pt in fiona.open("edna/soil_classification_data/fsl-new-zealand-soil-classification.shp")])
-            # for i, pt in enumerate(points):
-            #     point = shape(['geometry'])
-            #     if point.within(shape(multi['geometry'])):
-            #         print(i, shape(points[i])['geometry'])
-            # a = 10/0
-
         def _clean_value(value):
             ''' Makes sure the value for the entry is uniform '''
             if isinstance(value, str):
@@ -312,8 +301,6 @@ class DataImporter:
             ''' Iterates the metadata, Makes an object mirror a sample_context tuple and returns it 
             TODO: Allow for automated 0 values when a field is missing.
             '''
-            _test_shapefile()
-
             logger.info('loading edna contextual metadata from .tsv files')
             # site_id delcared here so we can go over multiple files at once.
             site_id = 0
