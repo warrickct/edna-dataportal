@@ -23,7 +23,7 @@ class DataEnhancer:
 
     def __init__(self, base_dir):
         self.base_dir = base_dir
-        self.sample_dir = self.base_dir + 'edna/separated-data/metadata/p7_sarah_thompson.csv'
+        self.sample_dir = self.base_dir + 'edna/metadata/p7_sarah_thompson.csv'
         self.geographic_dir = self.base_dir + 'edna/geographic-data/nzlri-soil.csv'
 
     # def using_shape():
@@ -35,7 +35,7 @@ class DataEnhancer:
 
 
     # def sample_context_file_iterator():
-    #     for row in iterate_csv('edna/separated-data/data/p7_sarah_thompson.csv'):
+    #     for row in iterate_csv('edna/data/p7_sarah_thompson.csv'):
     #         try:
     #             point = Point(float(row['Longitude']), float('-' + row['Latitude']))
     #         except:
@@ -47,7 +47,7 @@ class DataEnhancer:
         return file_path[:idx] + insert_str + file_path[idx:]
 
     def iterate_csv(self, path):
-        # edna/separated-data/data/p7_sarah_thompson.csv
+        # edna/data/p7_sarah_thompson.csv
         csv.field_size_limit(sys.maxsize)
         with open(path, mode='r', encoding='utf-8-sig') as file:
             reader = csv.DictReader(file, delimiter=',')
@@ -71,7 +71,7 @@ class DataEnhancer:
     def make_sample_list(self):
         print("making sample point lookup")
         samples_list = []
-        for row in self.iterate_csv(self.base_dir + 'edna/separated-data/metadata/p7_sarah_thompson.csv'):
+        for row in self.iterate_csv(self.base_dir + 'edna/metadata/p7_sarah_thompson.csv'):
             point = Point(float(row['Longitude']), float('-' + row['Latitude']))
             row['point'] = point
             samples_list.append(row)

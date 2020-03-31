@@ -812,7 +812,7 @@ class EdnaPostImport:
 
         def __classified_terms_iter():
             ''' Retrieves pathogenic definitions in iterable form '''
-            with open(import_base + 'edna/separated-data/pathogen_data/Potential_pathogens_list.txt', 'r') as f_input:
+            with open(import_base + 'edna/pathogen_data/Potential_pathogens_list.txt', 'r') as f_input:
                 lines = f_input.readlines()
                 with open('./potential_pathogens.csv', 'w') as f_out:
                     writer = csv.writer(f_out, delimiter=',')
