@@ -46,6 +46,11 @@ from .otu import (
     SCHEMA,
     make_engine)
 
+from shapely.geometry import Point, shape
+import fiona
+
+import time
+
 # w: for clearing sample_otu cache upon import.
 from django.core.cache import caches
 from hashlib import sha256
@@ -213,7 +218,7 @@ class DataImporter:
 
         def _taxon_rows_iter():
             ''' Iterates over abundance file. Returns segmented version of the name otu's name field using ';' as the delimiting character. '''
-            for fname in sorted(glob(self._import_base + 'edna/separated-data/data/*.tsv')):
+            for fname in sorted(glob(self._import_base + 'edna/abundance_data/*.tsv')):
                 # logger.info("Reading taxonomy file: %s" % fname)
                 with open(fname) as file:
                     reader = csv.DictReader(file, delimiter='\t')
@@ -261,7 +266,7 @@ class DataImporter:
                 text('''COPY otu.otu from :csv CSV header''').execution_options(autocommit=True),
                 csv=fname)
         finally:
-        #     os.unlink(fname)
+            #     os.unlink(fname)
             return otu_lookup
 
     def load_edna_contextual_metadata(self):
@@ -292,14 +297,21 @@ class DataImporter:
             # Made all the fields have a underscore at the start to prevent python word conflicts. Probably need a better solution.
             return field
 
-        def _make_context(file_paths):
+        def _make_context_entries(file_paths):
             ''' Iterates the metadata, Makes an object mirror a sample_context tuple and returns it 
             TODO: Allow for automated 0 values when a field is missing.
             '''
-
             logger.info('loading edna contextual metadata from .tsv files')
             # site_id delcared here so we can go over multiple files at once.
             site_id = 0
+
+            # loading in soil multipoly so we don't have to redo it multiple times
+            # since it's >100mb
+            soil_shapefile = fiona.open("edna/soil_classification_data/fsl-new-zealand-soil-classification.shp")
+            logger.info(soil_shapefile.schema)
+            # since soil classification takes a while
+            soil_class_lookup = {}
+
             for fname in file_paths:
                 with open(fname, "r") as file:
                     logger.info(fname)
@@ -309,7 +321,6 @@ class DataImporter:
                         attrs ={}
                         site_lookup[site_hash(file_row['Sample_identifier'].upper())] = site_id
                         # testing it won't grab two site id entries instead of overwrite existing
-
                         attrs['id'] = site_id
                         for edna_ontology_item in DataImporter.edna_sample_ontologies:
                             # if it's an ontology field just add '_id' to the end of the name
@@ -324,6 +335,29 @@ class DataImporter:
                             if _clean_value(value) == '' or _clean_value(value) == ' ':
                                 attrs[cleaned_field] = 0
                         site_id += 1
+                        # adding soil classification
+                        # attr_point = shapely.geometry.shape({
+                        #     'type': 'Point',
+                        #     'coordinates': (float(attrs['longitude']), float(attrs['latitude']))
+                        # })
+                        attr_point = Point(float(attrs['longitude']), float(attrs['latitude']))
+                        attr_key = attrs['longitude'] + "," + attrs['latitude']
+                        if attr_key in soil_class_lookup:
+                            logger.info("soil data exists, using lookup value")
+                            attrs['soil_type'] = soil_class_lookup[attr_key]
+                        else:
+                            logger.info(attr_point)
+                            soil_class = None
+                            for feature in soil_shapefile:
+                                # logger.info(feature)
+                                if  attr_point.within(shape(feature['geometry'])): 
+                                    # logger.info(feature['properties']['nzsc_class'])
+                                    soil_class = feature['properties']['nzsc_class']
+                                    soil_class_lookup[attr_key] = feature['properties']['nzsc_class']
+                            logger.info(soil_class)
+                            attrs['soil_type'] = soil_class
+                            if soil_class is None:
+                                soil_class_lookup[attr_key] = None
                         yield SampleContext(**attrs)
 
         def _combined_rows(file_paths):
@@ -341,12 +375,16 @@ class DataImporter:
 
         # custom site lookup dictionary edna ones use the code rather than PK in the data files. For faster abundance loading
         site_lookup = {}
-        file_paths = sorted(glob(self._import_base + 'edna/separated-data/metadata/*.csv'))
+        file_paths = sorted(glob(self._import_base + 'edna/metadata/*.csv'))
         mappings = self._load_ontology(DataImporter.edna_sample_ontologies, _combined_rows(file_paths))
-        self._session.bulk_save_objects(_make_context(file_paths))
+        # timing performance
+        start_time = time.time()
+        self._session.bulk_save_objects(_make_context_entries(file_paths))
+        end_time = time.time()
         self._session.commit()
+        logger.info("Time taken: " + str(end_time - start_time))
         return site_lookup
-        
+
     def load_edna_otu_abundance(self, otu_lookup, site_lookup):
 
         def _validate_count(count):
@@ -362,9 +400,9 @@ class DataImporter:
                 # print("couldnt validate/find site " + column.upper() + " in site lookup")
                 return False
 
-        def _make_sample_otus():    
+        def _make_sample_otus():
             ''' Generates tuples from a glob to be written to row.'''
-            for fname in sorted(glob(self._import_base + 'edna/separated-data/data/*.tsv')):
+            for fname in sorted(glob(self._import_base + 'edna/abundance_data/*.tsv')):
                 logger.info('writing abundance rows from %s' % fname)
                 file = open(fname, 'r')
                 reader = csv.DictReader(file, delimiter='\t')
@@ -414,9 +452,9 @@ class DataImporter:
             w.writerows(_make_sample_otus())
         try:
             self._engine.execute(
-                    text('''COPY otu.sample_otu from :csv CSV header''').execution_options(autocommit=True),
-                    # text('''COPY otu.sample_otu(sample_id, otu_id, count) from :csv CSV header''').execution_options(autocommit=True),
-                    csv=fname)
+                text('''COPY otu.sample_otu from :csv CSV header''').execution_options(autocommit=True),
+                # text('''COPY otu.sample_otu(sample_id, otu_id, count) from :csv CSV header''').execution_options(autocommit=True),
+                csv=fname)
             _clear_edna_caches()
         except:
             logger.critical("unable to import")

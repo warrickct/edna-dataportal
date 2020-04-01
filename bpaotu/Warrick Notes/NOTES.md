@@ -23,18 +23,19 @@ tar xzvf 16S.tar.gz
 
 ## Run the ingest
 
-docker-compose exec runserver bash
-/app/docker-entrypoint.sh django-admin otu_ingest /data/2018-03/
-
-Note: If on nectar vm there is no need to include 2018-03/ directory
+<!-- docker-compose exec runserver bash -->
+docker exec -it bpaotu_runserver_1 bash
 /app/docker-entrypoint.sh django-admin otu_ingest /data/
 
 ## Getting into the DB
 
-warrick@warrick-OptiPlex-9030-AIO:~/bpaotu$ docker-compose exec db bash
+(this has changed since)
+docker exec -it bpaotu_runserver_1 bash
+<!-- warrick@warrick-OptiPlex-9030-AIO:~/bpaotu$ docker-compose exec db bash -->
 root@d24533722fbf:/# psql -U postgres webapp
 List the Django tables:
-webapp=# set search_path=public;
+<!-- webapp=# set search_path=public; -->
+webapp=# set search_path=otu;
 webapp=# \dt
 Get into the OTU schema (SQLAlchemy rather than Django)
 webapp=# set search_path=otu;

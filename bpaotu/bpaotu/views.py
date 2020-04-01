@@ -60,6 +60,9 @@ ORDERING_PATTERN = re.compile(r'^order\[(\d+)\]\[(dir|column)\]$')
 COLUMN_PATTERN = re.compile(r'^columns\[(\d+)\]\[(data|name|searchable|orderable)\]$')
 
 use_cors = False
+# if dev set to true
+
+# use_cors = True
 
 def make_environment_lookup():
     with OntologyInfo() as info:
@@ -298,7 +301,6 @@ def test(request):
     })
 
 
-# TEST: Adding custom API for the visualisation
 @csrf_exempt
 @require_GET
 def edna_get_sample_otu(request):
@@ -425,7 +427,6 @@ def edna_filter_options(request):
                 filters = filters.lower()
             # filtering by text string, r[0]
             results = [r for r in results if (filters in r[0].lower())]
-        logger.info(results)
         return results
 
     filters = request.GET['q']
@@ -477,9 +478,9 @@ def edna_suggestions_3(request, taxon):
     family = request.GET.get('family', None)
     genus = request.GET.get('genus', None)
     species = request.GET.get('species', None)
+    text = request.GET.get('text', "")
     with EdnaOTUQuery() as q:
-        suggestions = q.get_taxon_suggestions(taxon, kingdom=kingdom, phylum=phylum, klass=klass, order=order, family=family, genus=genus, species=species)
-    # logger.info(phylum)
+        suggestions = q.get_taxon_suggestions(taxon, kingdom=kingdom, phylum=phylum, klass=klass, order=order, family=family, genus=genus, species=species, text=text)
     response = JsonResponse({
         'suggestions': suggestions
     })

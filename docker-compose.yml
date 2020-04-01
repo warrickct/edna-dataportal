@@ -18,12 +18,12 @@ services:
         file: docker-compose-common.yml
         service: cache
 
-    nginx:
-      extends:
-        file: docker-compose-common.yml
-        service: nginx
-      links:
-        - uwsgi
+    # nginx:
+    #   extends:
+    #     file: docker-compose-common.yml
+    #     service: nginx
+    #   links:
+    #     - uwsgi
 
     runserver:
       extends:
@@ -41,22 +41,22 @@ services:
           aliases:
             - web
 
-    celeryworker:
-      extends:
-        file: docker-compose-common.yml
-        service: celeryworker
-      volumes_from:
-        - datadev
-      depends_on:
-        - db
-        - cache
+    # celeryworker:
+    #   extends:
+    #     file: docker-compose-common.yml
+    #     service: celeryworker
+    #   volumes_from:
+    #     - datadev
+    #   depends_on:
+    #     - db
+    #     - cache
 
-    uwsgi:
-      extends:
-        file: docker-compose-common.yml
-        service: uwsgi
-      volumes_from:
-        - datadev
-      depends_on:
-        - db
-        - cache
+    # uwsgi:
+    #   extends:
+    #     file: docker-compose-common.yml
+    #     service: uwsgi
+    #   volumes_from:
+    #     - datadev
+    #   depends_on:
+    #     - db
+    #     - cache

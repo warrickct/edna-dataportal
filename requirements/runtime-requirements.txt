@@ -27,4 +27,8 @@ zipstream==1.1.4
 h5py==2.7.1
 numpy==1.14.1
 celery==4.1.0
-Shapely==1.6.4.post2
+
+# soil classification addition
+Shapely==1.7.0
+# not sure if the post1 is allowed
+fiona==1.8.13.post1

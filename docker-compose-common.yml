@@ -19,13 +19,13 @@ services:
     cache:
       image: redis:3-alpine
 
-    nginx:
-      image: muccg/nginx-uwsgi:1.10
-      ports:
-        - "8443:443"
-        - "8080:80"
-      volumes:
-        - ./data/nginx:/data
+    # nginx:
+    #   image: muccg/nginx-uwsgi:1.10
+    #   ports:
+    #     - "8443:443"
+    #     - "8080:80"
+    #   volumes:
+    #     - ./data/nginx:/data
 
     runserver:
       image: wazzx/edna-dev
@@ -35,23 +35,23 @@ services:
         - WAIT_FOR_DB=1
         - WAIT_FOR_CACHE=1
 
-    celeryworker:
-      image: wazzx/edna-dev
-      command: celery_worker
-      environment:
-        - WAIT_FOR_DB=1
-        - WAIT_FOR_CACHE=1
+    # celeryworker:
+    #   image: wazzx/edna-dev
+    #   command: celery_worker
+    #   environment:
+    #     - WAIT_FOR_DB=1
+    #     - WAIT_FOR_CACHE=1
 
-    uwsgi:
-      image: wazzx/edna-dev
-      command: uwsgi_local
-      environment:
-        - WAIT_FOR_DB=1
-        - WAIT_FOR_CACHE=1
-        - WAIT_FOR_RUNSERVER=1
-        # note: important to wait for runserver in dev as both will attempt to syncdb etc
-      ports:
-        - "9000:9000"
-        - "9001:9001"
-        - "9100:9100"
-        - "9101:9101"
+    # uwsgi:
+    #   image: wazzx/edna-dev
+    #   command: uwsgi_local
+    #   environment:
+    #     - WAIT_FOR_DB=1
+    #     - WAIT_FOR_CACHE=1
+    #     - WAIT_FOR_RUNSERVER=1
+    #     # note: important to wait for runserver in dev as both will attempt to syncdb etc
+    #   ports:
+    #     - "9000:9000"
+    #     - "9001:9001"
+    #     - "9100:9100"
+    #     - "9101:9101"

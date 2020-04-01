@@ -226,6 +226,7 @@ class SampleContext(SchemaMixin, Base):
     sample_description = Column(CIText, default="unknown")
     primer_sequence_f = Column(CIText, default = "unknown")
     primer_sequence_r = Column(CIText, default = "unknown")
+
     password = Column(String, nullable=True)
 
     def __repr__(self):
