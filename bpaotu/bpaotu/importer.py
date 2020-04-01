@@ -49,6 +49,8 @@ from .otu import (
 from shapely.geometry import Point, shape
 import fiona
 
+import time
+
 # w: for clearing sample_otu cache upon import.
 from django.core.cache import caches
 from hashlib import sha256
@@ -273,17 +275,6 @@ class DataImporter:
         - Also made a sitelookup to pass in as our site data doesn't contain site data.
         '''
 
-        def _test_shapefile():
-            logger.info("TESTING SHAPEFILE........................")
-            soil_shapefile = fiona.open("edna/soil_classification_data/fsl-new-zealand-soil-classification.shp")
-            logger.info(soil_shapefile.schema)
-            multipoints= ([pt for pt in fiona.open("edna/soil_classification_data/fsl-new-zealand-soil-classification.shp")])
-            # for i, pt in enumerate(points):
-            #     point = shape(['geometry'])
-            #     if point.within(shape(multi['geometry'])):
-            #         print(i, shape(points[i])['geometry'])
-            # a = 10/0
-
         def _clean_value(value):
             ''' Makes sure the value for the entry is uniform '''
             if isinstance(value, str):
@@ -310,8 +301,6 @@ class DataImporter:
             ''' Iterates the metadata, Makes an object mirror a sample_context tuple and returns it 
             TODO: Allow for automated 0 values when a field is missing.
             '''
-            _test_shapefile()
-
             logger.info('loading edna contextual metadata from .tsv files')
             # site_id delcared here so we can go over multiple files at once.
             site_id = 0
@@ -320,7 +309,8 @@ class DataImporter:
             # since it's >100mb
             soil_shapefile = fiona.open("edna/soil_classification_data/fsl-new-zealand-soil-classification.shp")
             logger.info(soil_shapefile.schema)
-            # x= 2/0
+            # since soil classification takes a while
+            soil_class_lookup = {}
 
             for fname in file_paths:
                 with open(fname, "r") as file:
@@ -351,14 +341,23 @@ class DataImporter:
                         #     'coordinates': (float(attrs['longitude']), float(attrs['latitude']))
                         # })
                         attr_point = Point(float(attrs['longitude']), float(attrs['latitude']))
-                        soil_class = None
-                        for feature in soil_shapefile:
-                            # logger.info(feature)
-                            if  attr_point.within(shape(feature['geometry'])): 
-                                # logger.info(feature['properties']['nzsc_class'])
-                                soil_class = feature['properties']['nzsc_class']
-                        logger.info(soil_class)
-                        attrs['soil_type'] = soil_class
+                        attr_key = attrs['longitude'] + "," + attrs['latitude']
+                        if attr_key in soil_class_lookup:
+                            logger.info("soil data exists, using lookup value")
+                            attrs['soil_type'] = soil_class_lookup[attr_key]
+                        else:
+                            logger.info(attr_point)
+                            soil_class = None
+                            for feature in soil_shapefile:
+                                # logger.info(feature)
+                                if  attr_point.within(shape(feature['geometry'])): 
+                                    # logger.info(feature['properties']['nzsc_class'])
+                                    soil_class = feature['properties']['nzsc_class']
+                                    soil_class_lookup[attr_key] = feature['properties']['nzsc_class']
+                            logger.info(soil_class)
+                            attrs['soil_type'] = soil_class
+                            if soil_class is None:
+                                soil_class_lookup[attr_key] = None
                         yield SampleContext(**attrs)
 
         def _combined_rows(file_paths):
@@ -378,8 +377,12 @@ class DataImporter:
         site_lookup = {}
         file_paths = sorted(glob(self._import_base + 'edna/metadata/*.csv'))
         mappings = self._load_ontology(DataImporter.edna_sample_ontologies, _combined_rows(file_paths))
+        # timing performance
+        start_time = time.time()
         self._session.bulk_save_objects(_make_context_entries(file_paths))
+        end_time = time.time()
         self._session.commit()
+        logger.info("Time taken: " + str(end_time - start_time))
         return site_lookup
 
     def load_edna_otu_abundance(self, otu_lookup, site_lookup):
@@ -399,9 +402,6 @@ class DataImporter:
 
         def _make_sample_otus():
             ''' Generates tuples from a glob to be written to row.'''
-            sample_otu_dir = self._import_base + 'edna/data/*.tsv'
-            logger.info("=======hi====================================")
-            logger.info(glob(self._import_base + '*'))
             for fname in sorted(glob(self._import_base + 'edna/abundance_data/*.tsv')):
                 logger.info('writing abundance rows from %s' % fname)
                 file = open(fname, 'r')

@@ -26,11 +26,37 @@ Three categories of file are ingested:
 
 All files should be placed under a base directory, and then the ingest can be run as a Django management command:
 
+## Running ingestion
+
+SSH into the host running this server application.
+
+Navigate to the root directory where the application is located. For Auckland's instance of the application this will be
+```
+cd ~/repos/edna-bpaotu
+```
+
 ```bash
 docker exec -it bpaotu_runserver_1 bash
 $ docker-compose exec runserver bash
-root@420c1d1e9fe4:~# /app/docker-entrypoint.sh django-admin otu_ingest /data/
+
+# This commented code was the previous way and now deprecated.
+# root@420c1d1e9fe4:~ /app/docker-entrypoint.sh django-admin otu_ingest /data/
 ```
+
+### Adding password protected data
+
+There is support for primitive password protected datasets. To do this, add a column with the header "password" and in enter in the password as plain text in the cells which require a password.
+
+If there is no password column is provided, the password will be null and the data will be returned in public results.
+
+## Accessing the database
+```
+docker exec -it bpaotu_db_1 bash
+psql -U webapp
+set search_path=otu;
+```
+
+
 
 ### Contextual Metadata
 

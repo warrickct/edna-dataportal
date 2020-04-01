@@ -32,7 +32,7 @@ class DataCleaner:
         ''' Combines abundance values for rows that contain the exact same OTU definition within a file.'''
         # TODO: Make the duplicate search apply across entire dataset or better yet, handle it within database entry rather than data pre-import cleaning.
         logger.info(self._import_base)
-        for fname in sorted(glob(self._import_base + 'edna/separated-data/data/*.tsv')):
+        for fname in sorted(glob(self._import_base + 'edna/data/*.tsv')):
             with open(fname, 'rU') as input_file:
                 input_reader = csv.reader(input_file, delimiter='\t')
                 headers = next(input_reader)
