@@ -23,3 +23,5 @@ data/dev/2018-03/*
 *.tags
 *.tags1
 .env_local
+
+.DS_Store
